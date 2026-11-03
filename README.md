@@ -3,12 +3,13 @@
 Replacement heating controller for Home Assistant.
 
 ## Project status (2026-11-03)
-- **G0**: ADR01–07 and four owner clarifications approved.
-- **WP0**: audited and reviewed in [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2).
-- **WP1A**: accepted into main in [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6); 92 offline tests and Python 3.12/3.13/3.14 CI.
-- **WP1B NOW AUTHORIZED**: **offline-only** SQLite critical store, fake gateway and crash/replay/failure simulator. See [owner approval](docs/wp1b/APPROVAL-2026-11-03.md) and [detailed Codex task](docs/wp1b/WP1B-TASK.md), [Issue #7](https://github.com/dragonidf/ha-heating-2/issues/7).
-- **G1 remains BLOCKED** with B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
-- **Not authorized**: WP1C, live HA integration, real device command gateway, deploying, physical tests, migration or cutover. Follow [roadmap and gates](docs/ROADMAP-TO-LAUNCH.md).
+
+- **G0** approved: ADR01–07 and owner clarifications.
+- **WP0** reviewed in [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2); **G1 still BLOCKED** on B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
+- **WP1A** accepted in [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6): pure contracts and safety reducer.
+- **WP1B** accepted in [PR #9](https://github.com/dragonidf/ha-heating-2/pull/9): offline SQLite store and fake gateway, 155 reported tests / six successful final-SHA CI jobs on Python 3.12/3.13/3.14.
+- **WP1C CURRENTLY AUTHORIZED, OFFLINE ONLY**: [owner's approval](docs/wp1c/APPROVAL-2026-11-03.md), [complete task](docs/wp1c/WP1C-TASK.md), [Issue #11](https://github.com/dragonidf/ha-heating-2/issues/11). Pure thermal model, deterministic planner, synthetic champion/challenger verification and fan-demand arbitration.
+- **NOT AUTHORIZED**: WP2A onward, actual HA control integration, live gateway, deployment, physical testing, migration or cutover. See [gated roadmap](docs/ROADMAP-TO-LAUNCH.md).
 
 ## Documentation
 - [Project handoff](docs/spec/heating-ai-2.0/HANDOFF.md)
@@ -42,7 +43,7 @@ The pure WP1A modules retain their standard-library boundary. The combined test 
 
 ## WP1B offline proof
 
-`packages/control_store` persists synthetic critical state; `packages/simulator` can only record fake actions in memory. See the [report](docs/wp1b/REPORT.md), [decisions](docs/wp1b/ADR-WP1B.md), [additive requirements](docs/wp1b/requirements-coverage.csv) and [scenarios](docs/wp1b/scenario-coverage.csv). G1/B01–B08 remain BLOCKED; no WP1C or real device transport exists.
+`packages/control_store` persists synthetic critical state; `packages/simulator` can only record fake actions in memory. See the [report](docs/wp1b/REPORT.md), [decisions](docs/wp1b/ADR-WP1B.md), [additive requirements](docs/wp1b/requirements-coverage.csv) and [scenarios](docs/wp1b/scenario-coverage.csv). G1/B01–B08 remain BLOCKED. WP1C offline development is separately authorized but no real device transport exists.
 
 Run only in a disposable Linux development/CI environment. The pinned SQLite build downloads official source and creates a test library under `/tmp`; it does not replace system or production libraries:
 
@@ -54,4 +55,4 @@ LD_LIBRARY_PATH=/tmp/heating-wp1b-sqlite-3510300 TMPDIR=/tmp/heating-wp1b-db-tmp
 sha256sum --check docs/wp1b/SHA256SUMS
 ```
 
-Use a disposable directory on the filesystem being evaluated as `TMPDIR` and record its type; tmpfs does not prove disk durability. The actual linked SQLite/version/source ID must qualify before any simulated HEAT. CI checks 3.12/3.13/3.14 with the pinned library, retains every WP1A test and exercises isolated SIGKILL/fault scenarios. The deliverable remains an unmerged review PR.
+Use a disposable directory on the filesystem being evaluated as `TMPDIR` and record its type; tmpfs does not prove disk durability. The actual linked SQLite/version/source ID must qualify before any simulated HEAT. CI checks 3.12/3.13/3.14 with the pinned library, retains every WP1A test and exercises isolated SIGKILL/fault scenarios. WP1B has been independently reviewed and merged via PR #9; this remains an offline-only simulator, not a deployable controller.
