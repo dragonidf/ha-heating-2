@@ -2,19 +2,22 @@
 
 Replacement heating controller for Home Assistant.
 
-## Current status
+## Project status (2026-11-03)
+- **G0**: Architecture ADR01–07 and four owner clarifications approved.
+- **WP0**: Review completed and merged as [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2). **G1 remains BLOCKED** — [eight evidence issues](https://github.com/dragonidf/ha-heating-2/issues/3).
+- **WP1A only**: Pure typed contracts and safety reducer, synthetic/offline tests, with **no control authority**. Work is scoped by [WP1A task](docs/wp1a/WP1A-TASK.md) and root [AGENTS.md](AGENTS.md).
+- WP1B, HA integration, command gateway, compute runtime, deployment, physical tests and migration: **NOT AUTHORIZED**.
 
-**Architecture approved 2026-11-03 (ADR01–07). WP0 only.**
-No new controller code, production deployment, or physical commissioning is approved.
-
-- [Start here: HANDOFF](docs/spec/heating-ai-2.0/HANDOFF.md)
-- [Approval and constraints](docs/spec/heating-ai-2.0/APPROVAL-2026-11-03.md)
-- [WP0 task for Codex](docs/spec/heating-ai-2.0/CODEX-WP0.md)
-- [Complete technical specification](docs/spec/heating-ai-2.0/03-Codex-specification.md)
+## Documentation
+- [Project handoff](docs/spec/heating-ai-2.0/HANDOFF.md)
+- [Owner approval](docs/spec/heating-ai-2.0/APPROVAL-2026-11-03.md)
+- [Full architecture](docs/spec/heating-ai-2.0/02-Architecture.md)
+- [Full engineering specification](docs/spec/heating-ai-2.0/03-Codex-specification.md)
+- [Tests](docs/spec/heating-ai-2.0/04-Test-strategy.md)
 - [Requirements](docs/spec/heating-ai-2.0/requirements.csv)
-- [Test scenarios](docs/spec/heating-ai-2.0/test-scenarios.csv)
-- [Migration and acceptance gates](docs/spec/heating-ai-2.0/06-Migration-and-acceptance.md)
+- [Scenarios](docs/spec/heating-ai-2.0/test-scenarios.csv)
+- [Migration gates](docs/spec/heating-ai-2.0/06-Migration-and-acceptance.md)
+- [WP0 audit readiness](docs/wp0/07-gate-G1-readiness.md)
+- [WP0 blockers](docs/wp0/06-open-questions-and-blockers.md)
 
-The old application `dragonidf/ha-heating-ai` is a **read-only reference**.
-
-No credentials, personal addresses, private runtime state, telemetry, backups, or full device configuration belong in this repository.
+The legacy application `dragonidf/ha-heating-ai` is a read-only baseline. **No secrets, addresses, production config, runtime state, telemetry or backups may be committed to this repository.**
