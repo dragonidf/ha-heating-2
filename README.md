@@ -3,10 +3,12 @@
 Replacement heating controller for Home Assistant.
 
 ## Project status (2026-11-03)
-- **G0**: Architecture ADR01–07 and four owner clarifications approved.
-- **WP0**: Review completed and merged as [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2). **G1 remains BLOCKED** — [eight evidence issues](https://github.com/dragonidf/ha-heating-2/issues/3).
-- **WP1A only**: Pure typed contracts and safety reducer, synthetic/offline tests, with **no control authority**. Work is scoped by [WP1A task](docs/wp1a/WP1A-TASK.md) and root [AGENTS.md](AGENTS.md).
-- WP1B, HA integration, command gateway, compute runtime, deployment, physical tests and migration: **NOT AUTHORIZED**.
+- **G0**: ADR01–07 and four owner clarifications approved.
+- **WP0**: audited and reviewed in [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2).
+- **WP1A**: accepted into main in [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6); 92 offline tests and Python 3.12/3.13/3.14 CI.
+- **WP1B NOW AUTHORIZED**: **offline-only** SQLite critical store, fake gateway and crash/replay/failure simulator. See [owner approval](docs/wp1b/APPROVAL-2026-11-03.md) and [detailed Codex task](docs/wp1b/WP1B-TASK.md), [Issue #7](https://github.com/dragonidf/ha-heating-2/issues/7).
+- **G1 remains BLOCKED** with B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
+- **Not authorized**: WP1C, live HA integration, real device command gateway, deploying, physical tests, migration or cutover. Follow [roadmap and gates](docs/ROADMAP-TO-LAUNCH.md).
 
 ## Documentation
 - [Project handoff](docs/spec/heating-ai-2.0/HANDOFF.md)
@@ -36,4 +38,4 @@ make benchmark PYTHON=.venv/bin/python
 sha256sum --check docs/wp1a/SHA256SUMS
 ```
 
-The dependency-free tests also run with `python -m unittest discover -v`. The benchmark describes this host only; it cannot accept the future N100 gate. No installation or Home Assistant connection is needed or provided. WP1B requires separate authorization.
+The dependency-free tests also run with `python -m unittest discover -v`. The benchmark describes this host only; it cannot accept the future N100 gate. No installation or Home Assistant connection is needed or provided. WP1B is approved **strictly for synthetic offline development**, not for real device access.
