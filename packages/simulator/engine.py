@@ -147,7 +147,17 @@ class Simulator:
     def update_inputs(self, snapshot: ControlSnapshot, clock: Clock) -> None:
         """Advance explicitly injected virtual inputs; never read a system clock."""
         with self._lock:
+            if self._inputs is not None:
+                previous_snapshot, previous_clock = self._inputs
+                if (clock.boot_id != self.state.boot_id or clock.monotonic < previous_clock.monotonic
+                        or clock.utc + self._view.policy.max_skew_s < previous_clock.utc
+                        or snapshot.grid_epoch < previous_snapshot.grid_epoch
+                        or snapshot.captured_at < previous_snapshot.captured_at):
+                    self._halt(clock, "input_clock_or_epoch_rollback")
+                    return
             self._inputs = (snapshot, clock)
+            if self.state.desired_action is Action.HEAT and not evaluate(self.state, snapshot, self._view.policy, clock).allowed:
+                self._halt(clock, "current_input_permission_denied")
 
     def _install(self, decision: Decision, clock: Clock, one_shot_id: str | None = None) -> None:
         self._view = StoreView(self._view.revision, decision.state, self._view.policy)
@@ -168,7 +178,7 @@ class Simulator:
         if event.kind is not EventKind.SAFETY_STOP:
             raise ValueError("Emergency assertion required")
         with self._lock:
-            self._inputs = (snapshot, clock)
+            self.update_inputs(snapshot, clock)
             trusted = replace(event, authorized=self.authority.accepts(event, proof))
             decision = reduce(self.state, trusted, snapshot, self._view.policy, clock)
             if decision.state != self.state or decision.intents:
@@ -186,7 +196,7 @@ class Simulator:
         if event.kind is EventKind.SAFETY_STOP:
             return self.emergency(event, snapshot, clock, proof=proof)
         with self._lock:
-            self._inputs = (snapshot, clock)
+            self.update_inputs(snapshot, clock)
             p = self._view.policy
             if event.kind in (EventKind.RECONCILE, EventKind.MANUAL_CHANGE, EventKind.UNKNOWN_CHANGE):
                 if observation is None or not self.actuator.accepts(observation, self.state, clock, p.snapshot_max_age_s, p.max_skew_s):
@@ -217,9 +227,11 @@ class Simulator:
             self.last_error = reason
             if self._closed:
                 return
+            self.audit_missing += 1
             self._pending = None
             self._generation += 1
-            self._view = StoreView(self._view.revision, replace(self.state, desired_action=Action.STOP,
+            mode = self.state.mode if self.state.mode in (RuntimeMode.SHADOW, RuntimeMode.MANUAL_PAUSE, RuntimeMode.OFF) else RuntimeMode.SAFE_HOLD
+            self._view = StoreView(self._view.revision, replace(self.state, desired_action=Action.STOP, mode=mode,
                                   plan=None, accepted_input_hash=None, reconciled=False), self._view.policy)
             self.actuator.fence(self._writer, self.state, self._generation)
             if self.state.mode not in (RuntimeMode.SHADOW, RuntimeMode.MANUAL_PAUSE):
@@ -229,7 +241,9 @@ class Simulator:
         with self._lock:
             if self._closed or self._pending is None:
                 return False
-            self._inputs = (snapshot, clock)
+            self.update_inputs(snapshot, clock)
+            if self._pending is None:
+                return False
             intent, shot = self._pending
             self._pending = None
             generation, view = self._generation, self._view

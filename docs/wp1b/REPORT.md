@@ -11,7 +11,7 @@ Authority: [owner approval](APPROVAL-2026-11-03.md), [task](WP1B-TASK.md), [Issu
 | `packages/control_store/qualification.py` | Actual linked SQLite version/source observation; known minimum/future-major rejection; no inferred backport or target qualification. |
 | `packages/control_store/store.py` | Disposable SQLite-only path boundary; frozen protocol/schema; v1→v2 atomic rehearsal; WAL/FULL readback; checksums; config/state CAS; boot/owner fencing; immutable event identity; durable prepare/claim/receipt stages; manual/OFF and armed preservation; generic one-shot consumed/unknown markers. |
 | `packages/simulator/engine.py` | Exact in-memory FakeActuator only; one writer; one pending ordinary desire; fresh boundary permission checks; fake issuer-bound trust/observations; no raw authorized-boolean authentication; independent STOP; deferred bounded audit; no HEAT replay after restart. |
-| Tests/fixtures | 92 retained WP1A methods plus **56 WP1B methods**; 13 SIGKILL cut points; OS/VFS failure witnesses; lock/read-only/corruption/CAS/timeout/manual/one-shot/replay/async/compute cases; closed import graph and network-deny probe; standalone benchmark. |
+| Tests/fixtures | 92 retained WP1A methods plus **58 WP1B methods**; 13 SIGKILL cut points; OS/VFS failure witnesses; lock/read-only/corruption/CAS/timeout/manual/one-shot/replay/async/compute cases; closed import graph and network-deny probe; standalone benchmark. |
 | Dev/CI | Existing strict mypy and **95% coverage threshold unchanged**. Three-interpreter workflows build a pinned test-only SQLite when native 3.46.1 cannot qualify, assert actual linked version/source, run the full suite and checksum verification. |
 | Review evidence | [ADR](ADR-WP1B.md), [86-row additive requirements map](requirements-coverage.csv), [38-row scenario map](scenario-coverage.csv), [benchmark](BENCHMARK.json), SHA256SUMS and CI evidence. |
 
@@ -29,18 +29,18 @@ Local `/tmp` is **tmpfs**. The complete filesystem run explicitly selects `/work
 
 | Command / scope | Result |
 |---|---|
-| `TMPDIR=/workspace/wp1b-test-tmp make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: 148 tests; strict mypy (12 files); coverage 97.50%, above unchanged 95% threshold. |
-| `TMPDIR=/workspace/wp1b-test-tmp LD_LIBRARY_PATH=/tmp/wp1b-sqlite-build /usr/bin/python3.13 -m unittest discover -q` | PASS: 148 tests, no warnings/failures/errors/skips, Python 3.13.5 with verified test SQLite 3.51.3. No production library changed. |
+| `TMPDIR=/workspace/wp1b-test-tmp make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: 150 tests; strict mypy (12 files); coverage 97.36%, above unchanged 95% threshold. |
+| `TMPDIR=/workspace/wp1b-test-tmp LD_LIBRARY_PATH=/tmp/wp1b-sqlite-build /usr/bin/python3.13 -m unittest discover -q` | PASS: 150 tests, no warnings/failures/errors/skips, Python 3.13.5 with verified test SQLite 3.51.3. No production library changed. |
 | `python -m unittest tests.unit.test_store_failures tests.unit.test_simulator_faults tests.unit.test_vfs_failures -v` | Focused negative/fault checks pass in the qualified environment. Regression cases preceded fixes; no tests muted/skipped and no threshold raised to hide failures. |
 | `python -B -m tests.fixtures.network_denied_probe` (also a test) | Imports, prepare/send/ACK/echo, emergency and audit execute with network APIs disabled. Only disposable local file/SQLite access is allowed. |
 | `sha256sum --check docs/wp1a/SHA256SUMS` and `docs/wp1b/SHA256SUMS` | Integrity manifests verified for the reviewed source/evidence. |
 | `git diff --check` | No whitespace errors in prepared changes. |
 
-Final suite: **148 tests**, including all **92 WP1A** tests, **0 failures/errors/skips**. Strict mypy covers **12 runtime source files**. Final local Python 3.12 combined line/branch coverage is **97.50%** (1,353/1,374 statements; 404/428 branches); raw final totals appear in CI evidence. No coverage exclusions were introduced. Counts may differ with interpreter instrumentation; reports retain their actual values. Coverage cannot establish the absence of logic errors or physical safety.
+Final suite: **150 tests**, including all **92 WP1A** tests, **0 failures/errors/skips**. Strict mypy covers **12 runtime source files**. Final local Python 3.12 combined line/branch coverage is **97.36%** (1,362/1,385 statements; 411/436 branches); raw final totals appear in CI evidence. No coverage exclusions were introduced. Counts may differ with interpreter instrumentation; reports retain their actual values. Coverage cannot establish the absence of logic errors or physical safety.
 
 The original 4,440 WP1A generated cases remain, plus **40 seeded send-boundary guard-failure cases and 200 seeded emergency replays** in WP1B. Capacity-one ordinary scheduling, deferred audit coalescing/missing evidence, duplicate ACK/echo, fake service failure, compute loss, frozen asynchronous measurements and clock rollback have focused checks. These are deterministic synthetic cases, not household telemetry replay or a 24-hour soak.
 
-Early whole-suite checks exposed untested branches/coverage below 95%; the suite was expanded around failure behavior without changing that criterion. Regression work also found and corrected ordinary-event owner acquisition/OFF-latch clearing, stale-owner send claims, receipt fact rewrites, stale worker access after close/restart, and loss of the newest emergency frontier under audit overload. Python 3.13 exposed unclosed connections in test fixtures; those connections are explicitly closed, not warning-suppressed.
+Early whole-suite checks exposed untested branches/coverage below 95%; the suite was expanded around failure behavior without changing that criterion. Regression work also found and corrected ordinary-event owner acquisition/OFF-latch clearing, stale-owner send claims, receipt fact rewrites, stale worker access after close/restart, and loss of the newest emergency frontier under audit overload. Final queue review reproduced two more unsafe cases: an old pump frame erased newer grid-failure/expiry data. Centralized input admission now immediately fences unsafe inputs and rejects backward context; old queued calls cannot re-arm. Python 3.13 exposed unclosed connections in test fixtures; those connections are explicitly closed, not warning-suppressed.
 
 ## Crash and storage-failure evidence
 
@@ -60,10 +60,10 @@ An injected STOP is a demand change in RAM, **not actual relay OFF**. Service re
 
 | Measured path | p50 ms | p95 ms | p99 ms | max ms |
 |---|---:|---:|---:|---:|
-| Cold store/bootstrap | 14.765506 | 20.513952 | 27.407822 | 44.461495 |
-| Prepare + claim + fake send + sent receipt | 9.066622 | 14.046941 | 18.905108 | 29.894258 |
-| Trusted STOP while DB write-locked | 0.122144 | 0.235153 | 0.345269 | 0.746902 |
-| Checkpoint | 0.218128 | 0.359049 | 0.466621 | 0.590697 |
+| Cold store/bootstrap | 14.264779 | 20.785089 | 28.151347 | 28.208543 |
+| Prepare + claim + fake send + sent receipt | 9.208257 | 13.786996 | 17.117870 | 22.364601 |
+| Trusted STOP while DB write-locked | 0.164572 | 0.361883 | 0.497777 | 0.512259 |
+| Checkpoint | 0.243521 | 0.499550 | 0.867663 | 1.095585 |
 
 100/100 fast-path synthetic HEAT admissions succeeded; separate 270 ms and held-until-release stalls deny emission and exercise STOP. These are cloud observations only. **N100 kernel/control/event-loop SLO, real HA/device delay and physical OFF remain NOT_TESTED.** No production performance gate is passed.
 

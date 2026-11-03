@@ -306,3 +306,16 @@ class SimulatorFaultTests(unittest.TestCase):
                   fresh(111, boot_id=c.boot_id, owner_epoch=sim.state.owner_epoch, compute_available=False), expired)
         self.assertEqual(sim.state.desired_action, Action.STOP)
         self.assertEqual(sim.actuator.calls[-1].action, Action.STOP)
+
+    def test_stale_pump_frame_cannot_erase_a_newer_known_grid_failure(self):
+        sim, s, c = self.ready()
+        sim.update_inputs(replace(s, grid_actual=None), c)
+        self.assertFalse(sim.pump(s, c))
+        self.assertFalse(any(call.action is Action.HEAT for call in sim.actuator.calls))
+
+    def test_stale_pump_clock_cannot_renew_an_already_expired_intent(self):
+        sim, s, c = self.ready()
+        sim.update_inputs(fresh(111, boot_id=c.boot_id, owner_epoch=sim.state.owner_epoch),
+                          replace(c, utc=111, monotonic=1011))
+        self.assertFalse(sim.pump(s, c))
+        self.assertFalse(any(call.action is Action.HEAT for call in sim.actuator.calls))

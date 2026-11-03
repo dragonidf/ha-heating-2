@@ -1,17 +1,17 @@
 {
   "admitted_heat": 100,
   "checkpoint": {
-    "max_ms": 0.590697,
-    "p50_ms": 0.2181275,
-    "p95_ms": 0.359049,
-    "p99_ms": 0.466621,
+    "max_ms": 1.095585,
+    "p50_ms": 0.2435205,
+    "p95_ms": 0.49955,
+    "p99_ms": 0.867663,
     "samples": 100
   },
   "cold_bootstrap": {
-    "max_ms": 44.461495,
-    "p50_ms": 14.7655055,
-    "p95_ms": 20.513952,
-    "p99_ms": 27.407822,
+    "max_ms": 28.208543,
+    "p50_ms": 14.2647795,
+    "p95_ms": 20.785089,
+    "p99_ms": 28.151347,
     "samples": 100
   },
   "file_and_directory_fsync_acknowledged": true,
@@ -21,10 +21,10 @@
   "machine": "x86_64",
   "prepare_budget_ms": 250,
   "prepare_claim_fake_send_and_sent_receipt": {
-    "max_ms": 29.894258,
-    "p50_ms": 9.066622,
-    "p95_ms": 14.046941,
-    "p99_ms": 18.905108,
+    "max_ms": 22.364601,
+    "p50_ms": 9.208257,
+    "p95_ms": 13.786996,
+    "p99_ms": 17.11787,
     "samples": 100
   },
   "python": "3.12.14",
@@ -32,10 +32,10 @@
   "sqlite": "3.53.1",
   "sqlite_source_id": "2026-05-05 10:34:17 c88b22011a54b4f6fbd149e9f8e4de77658ce58143a1af0e3785e4e6475127e9",
   "trusted_stop_while_sqlite_write_locked": {
-    "max_ms": 0.746902,
-    "p50_ms": 0.1221435,
-    "p95_ms": 0.235153,
-    "p99_ms": 0.345269,
+    "max_ms": 0.512259,
+    "p50_ms": 0.164572,
+    "p95_ms": 0.361883,
+    "p99_ms": 0.497777,
     "samples": 100
   }
 }

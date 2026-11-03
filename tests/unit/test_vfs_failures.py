@@ -17,7 +17,7 @@ class VFSFailureTests(unittest.TestCase):
             for kind, signature in (("sync", "WP1B_VFS_EIO"), ("full", "WP1B_VFS_ENOSPC")):
                 with self.subTest(kind=kind), tempfile.TemporaryDirectory(prefix="heating-wp1b-") as root:
                     preload = str(library) + (" " + os.environ["LD_PRELOAD"] if os.environ.get("LD_PRELOAD") else "")
-                    child_env = dict(os.environ, LD_PRELOAD=preload, WP1B_FAULT_ROOT=root, WP1B_FAULT_KIND=kind)
+                    child_env = dict(os.environ, LD_PRELOAD=preload, WP1B_FAULT_ROOT=str(Path(root).resolve()), WP1B_FAULT_KIND=kind)
                     result = subprocess.run([sys.executable, "-B", "-m", "tests.fixtures.vfs_failure_worker", root],
                                             env=child_env, capture_output=True, text=True, timeout=15)
                     self.assertIn(signature, result.stderr)
