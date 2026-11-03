@@ -1,26 +1,29 @@
 # AGENTS.md — Heating AI 2.0
 
-Before working, read these repository documents in full:
-1. `docs/spec/heating-ai-2.0/HANDOFF.md`
-2. `docs/spec/heating-ai-2.0/APPROVAL-2026-11-03.md`
-3. `docs/spec/heating-ai-2.0/CODEX-WP0.md`
-4. `docs/spec/heating-ai-2.0/02-Architecture.md`
-5. `docs/spec/heating-ai-2.0/06-Migration-and-acceptance.md`
-6. `docs/spec/heating-ai-2.0/requirements.csv` and `test-scenarios.csv`
+Read in this order:
+1. `docs/spec/heating-ai-2.0/HANDOFF.md` and `APPROVAL-2026-11-03.md`
+2. `docs/wp0/07-gate-G1-readiness.md` and `06-open-questions-and-blockers.md`
+3. `docs/wp1a/WP1A-TASK.md` (**current work scope**)
+4. `docs/spec/heating-ai-2.0/02-Architecture.md` and `03-Codex-specification.md`
+5. `docs/spec/heating-ai-2.0/04-Test-strategy.md`, `requirements.csv`, `test-scenarios.csv`
+6. `docs/spec/heating-ai-2.0/06-Migration-and-acceptance.md`
 
-## Current authorization
-Only **WP0: read-only inventory, source mapping, risk and blocker analysis, compatibility review, and documentation in this repository** is approved.
-Architecture ADR01–07 is approved with the four owner's clarifications in the approval file.
-Do not begin WP1 or implement/install new controller code.
+## Current phase and authorization
 
-## Hard constraints
-- Never change production Home Assistant settings, files, helpers, automations, services, running add-ons, entities, or connected devices.
-- Never issue control commands, reboots, updates, or physical fault injections.
-- Never modify `dragonidf/ha-heating-ai`; it is read-only baseline.
-- Do not create production backups or retrieve/commit unredacted private runtime dumps without separate authorization.
-- Do not place credentials, token values, private IP/addresses, identifiable telemetry, or private configuration in GitHub, PRs, logs, or CI artifacts.
-- Check actual evidence and distinguish confirmed findings from assumptions or historical observations. Mark unavailable evidence **BLOCKED**.
-- Work in a dedicated branch and PR, preserving traceability. WP0 report must state what was read, verified, not verified, and what is blocked.
-- No automatic progression from WP0 to WP1 or production cutover.
+- **G0:** architecture ADR01–07 and owner clarifications approved 2026-11-03.
+- **WP0:** read-only audit documents merged as PR #2; **G1 remains BLOCKED**, per docs/wp0/07 and [issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
+- **WP1A:** following owner's request to continue after reviewing WP0, **only synthetic pure typed contracts and safety reducer with tests** are authorized. Follow `docs/wp1a/WP1A-TASK.md` exactly.
+- **WP1B and later:** not authorized. Do not create running integration, command gateway, compute daemon, live bindings, installation, migration, physical tests or cutover.
+- WP1A is *not* a waiver of G1 blockers and does not mark any future G3–G9 gate passed.
 
-All safety-critical and operating decisions defer to the approved docs and explicit owner approval.
+## Hard boundaries
+
+- Never modify the production Home Assistant installation, settings, files, helpers, automations, services, running add-ons, devices, telemetry or network.
+- Never issue control commands, start/stop/restart/update Home Assistant/AppDaemon, or run physical failure tests.
+- Never modify `dragonidf/ha-heating-ai`; it is immutable read-only source baseline unless separately authorized in the future.
+- No production backup creation or private runtime export/replay without explicit scoped authorization.
+- Do not place credentials, access tokens, private IP/addresses, identifying private data, full configuration, state/history/telemetry, or device identities in GitHub, PRs, CI or test fixtures.
+- Use only synthetic test data in WP1A. Unverified premises are BLOCKED, not default values or fake PASS.
+- Work in a dedicated branch/PR with tests, traceability, and evidence. Leave WP1A PR open for review; do not auto-merge or proceed to WP1B.
+
+If this file conflicts with old pre-approval wording in original specification, the explicit later approval and the narrow current phase scope take precedence **only within their authorized boundaries**.
