@@ -39,6 +39,8 @@ Purity proof combines a closed AST import allowlist, actuator/dynamic-execution/
 
 CI uses pinned checkout v4.2.2 and setup-python v5.6.0 commit SHAs verified against public tag refs. Jobs have read-only repository permission, checkout credential persistence disabled, no production connection/secrets/deployment step, pinned isolated dev installation, checks and checksum verification. CI status is reported by the PR; target packaging and linked SQLite qualification remain B06.
 
+**Remote CI observed PASS on all three matrix versions (3.12/3.13/3.14):** [run 41647612609](https://github.com/dragonidf/ha-heating-2/actions/runs/41647612609), tested source commit `1f1d22d864404539a213d559d53e519f5c6a226b`, [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6). Each job completed type/test/coverage and checksum steps successfully. Public run/job metadata is captured in [CI-EVIDENCE.json](CI-EVIDENCE.json). Matrix minor versions are recorded; remote patch versions/timings were not extracted. This evidence follow-up changes documentation and its manifest only; source/test hashes are unchanged.
+
 ## 100,000 synthetic snapshots
 
 Command: `python -m tests.properties.benchmark`, Python 3.12.14, same isolated cloud host. 1,000 warmup calls; 100,000 timed calls, equally divided safe HEAT, hard-stop, unknown actual grid and SHADOW; immutable inputs constructed outside timing; `perf_counter_ns` used only in test harness. Nearest-rank p95/p99 and median:
