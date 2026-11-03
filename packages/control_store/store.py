@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from hashlib import sha256
 from pathlib import Path
 from time import monotonic
-from typing import Callable, Iterator, TypeVar
+from typing import Callable, Iterator, Literal, TypeVar
 
 from packages.contracts import (
     Action, Clock, CommandIntent, CommandReceipt, ControlEvent, ControlPolicy, ControlSnapshot,
@@ -353,6 +353,19 @@ class ControlStore:
         with self._connection() as con:
             return self._receipt(con, identity)[1]
 
+    def delivery_status(self, identity: str) -> Literal["in_flight", "unknown", "confirmed", "failed"]:
+        """Historical delivery outcome, never a statement of current device state."""
+        with self._connection() as con:
+            current = self._view(con).state
+            intent, receipt = self._receipt(con, identity)
+            if receipt.stage is ReceiptStage.FAILED:
+                return "failed"
+            if receipt.stage in (ReceiptStage.ACKNOWLEDGED, ReceiptStage.ECHOED, ReceiptStage.PHYSICAL_EVIDENCE):
+                return "confirmed"
+            if receipt.stage is ReceiptStage.UNKNOWN or (intent.boot_id, intent.owner_epoch) != (current.boot_id, current.owner_epoch):
+                return "unknown"
+            return "in_flight"
+
     def claim(self, intent: CommandIntent, fence: ControlState, snapshot: ControlSnapshot, clock: Clock) -> None:
         with self._write() as con:
             current = self._view(con)
@@ -402,8 +415,7 @@ class ControlStore:
             self._save(con, updated)
             con.execute("INSERT INTO boots VALUES (?)", (new_boot,))
             for (identity,) in con.execute("SELECT id FROM outbox").fetchall():
-                _, old = self._receipt(con, identity)
-                self._put_receipt(con, replace(old, stage=ReceiptStage.UNKNOWN))
+                self._receipt(con, identity)  # Validate historical evidence without rewriting it.
             for identity, payload, checksum in con.execute("SELECT id,payload,checksum FROM oneshots").fetchall():
                 shot = _decode(payload, checksum, OneShot)
                 if shot.outcome is OneShotOutcome.CONSUMED:

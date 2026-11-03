@@ -391,5 +391,6 @@
     "no N100 or real hardware SLO",
     "no physical power-loss qualification",
     "fake observations are synthetic fixture premises; no actual authentication/device transport"
-  ]
+  ],
+  "historical_only": "150-test evidence predates review 6610149771; corrected 155-test final-SHA CI is in PR #9 checks/description."
 }

@@ -11,7 +11,7 @@ Authority: [owner approval](APPROVAL-2026-11-03.md), [task](WP1B-TASK.md), [Issu
 | `packages/control_store/qualification.py` | Actual linked SQLite version/source observation; known minimum/future-major rejection; no inferred backport or target qualification. |
 | `packages/control_store/store.py` | Disposable SQLite-only path boundary; frozen protocol/schema; v1→v2 atomic rehearsal; WAL/FULL readback; checksums; config/state CAS; boot/owner fencing; immutable event identity; durable prepare/claim/receipt stages; manual/OFF and armed preservation; generic one-shot consumed/unknown markers. |
 | `packages/simulator/engine.py` | Exact in-memory FakeActuator only; one writer; one pending ordinary desire; fresh boundary permission checks; fake issuer-bound trust/observations; no raw authorized-boolean authentication; independent STOP; deferred bounded audit; no HEAT replay after restart. |
-| Tests/fixtures | 92 retained WP1A methods plus **58 WP1B methods**; 13 SIGKILL cut points; OS/VFS failure witnesses; lock/read-only/corruption/CAS/timeout/manual/one-shot/replay/async/compute cases; closed import graph and network-deny probe; standalone benchmark. |
+| Tests/fixtures | 92 retained WP1A methods plus **63 WP1B methods**; 13 SIGKILL cut points; OS/VFS failure witnesses; lock/read-only/corruption/CAS/timeout/manual/one-shot/replay/async/compute cases; closed import graph and network-deny probe; standalone benchmark. |
 | Dev/CI | Existing strict mypy and **95% coverage threshold unchanged**. Three-interpreter workflows build a pinned test-only SQLite when native 3.46.1 cannot qualify, assert actual linked version/source, run the full suite and checksum verification. |
 | Review evidence | [ADR](ADR-WP1B.md), [86-row additive requirements map](requirements-coverage.csv), [38-row scenario map](scenario-coverage.csv), [benchmark](BENCHMARK.json), SHA256SUMS and CI evidence. |
 
@@ -29,18 +29,18 @@ Local `/tmp` is **tmpfs**. The complete filesystem run explicitly selects `/work
 
 | Command / scope | Result |
 |---|---|
-| `TMPDIR=/workspace/wp1b-test-tmp make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: 150 tests; strict mypy (12 files); coverage 97.36%, above unchanged 95% threshold. |
-| `TMPDIR=/workspace/wp1b-test-tmp LD_LIBRARY_PATH=/tmp/wp1b-sqlite-build /usr/bin/python3.13 -m unittest discover -q` | PASS: 150 tests, no warnings/failures/errors/skips, Python 3.13.5 with verified test SQLite 3.51.3. No production library changed. |
+| `TMPDIR=/workspace/wp1b-test-tmp make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: 155 tests; strict mypy (12 files); coverage 97.45%, above unchanged 95% threshold. |
+| `TMPDIR=/workspace/wp1b-test-tmp LD_LIBRARY_PATH=/tmp/wp1b-sqlite-build /usr/bin/python3.13 -m unittest discover -q` | PASS: 155 tests, no warnings/failures/errors/skips, Python 3.13.5 with verified test SQLite 3.51.3. No production library changed. |
 | `python -m unittest tests.unit.test_store_failures tests.unit.test_simulator_faults tests.unit.test_vfs_failures -v` | Focused negative/fault checks pass in the qualified environment. Regression cases preceded fixes; no tests muted/skipped and no threshold raised to hide failures. |
 | `python -B -m tests.fixtures.network_denied_probe` (also a test) | Imports, prepare/send/ACK/echo, emergency and audit execute with network APIs disabled. Only disposable local file/SQLite access is allowed. |
 | `sha256sum --check docs/wp1a/SHA256SUMS` and `docs/wp1b/SHA256SUMS` | Integrity manifests verified for the reviewed source/evidence. |
 | `git diff --check` | No whitespace errors in prepared changes. |
 
-Final suite: **150 tests**, including all **92 WP1A** tests, **0 failures/errors/skips**. Strict mypy covers **12 runtime source files**. Final local Python 3.12 combined line/branch coverage is **97.36%** (1,362/1,385 statements; 411/436 branches); raw final totals appear in CI evidence. No coverage exclusions were introduced. Counts may differ with interpreter instrumentation; reports retain their actual values. Coverage cannot establish the absence of logic errors or physical safety.
+Final suite: **155 tests**, including all **92 WP1A** tests, **0 failures/errors/skips**. Strict mypy covers **12 runtime source files**. Final local Python 3.12 combined line/branch coverage is **97.45%** (1,374/1,397 statements; 420/444 branches); raw final totals appear in CI evidence. No coverage exclusions were introduced. Counts may differ with interpreter instrumentation; reports retain their actual values. Coverage cannot establish the absence of logic errors or physical safety.
 
 The original 4,440 WP1A generated cases remain, plus **40 seeded send-boundary guard-failure cases and 200 seeded emergency replays** in WP1B. Capacity-one ordinary scheduling, deferred audit coalescing/missing evidence, duplicate ACK/echo, fake service failure, compute loss, frozen asynchronous measurements and clock rollback have focused checks. These are deterministic synthetic cases, not household telemetry replay or a 24-hour soak.
 
-### Remote compatibility proof
+### Historical remote compatibility proof (before review fixes)
 
 [PR #9](https://github.com/dragonidf/ha-heating-2/pull/9), source/test commit `50a41889e9720cdcaf5369b08fc47bbe5bea5afb`: [WP1B run 41672300606](https://github.com/dragonidf/ha-heating-2/actions/runs/41672300606) and [combined foundation run 41672301105](https://github.com/dragonidf/ha-heating-2/actions/runs/41672301105) both PASS, all six jobs completed successfully. Decoded WP1B logs confirm the following; sanitized run/job/runtime summaries are retained in [CI-EVIDENCE.json](CI-EVIDENCE.json).
 
@@ -58,7 +58,7 @@ Early whole-suite checks exposed untested branches/coverage below 95%; the suite
 
 | Class | Exercised boundaries / result |
 |---|---|
-| Command SIGKILL (10) | Before prepare; after prepare; before send; after claim; after fake send; after sent receipt; before ACK receipt; after ACK; after echo arrival/before durable echo receipt; after echo receipt. A synced synthetic call trace proves whether one fake HEAT occurred. After restart no fake HEAT is replayed; plan/reconcile readiness clears; prepared outcomes and consumed markers stay UNKNOWN. |
+| Command SIGKILL (10) | Before prepare; after prepare; before send; after claim; after fake send; after sent receipt; before ACK receipt; after ACK; after echo arrival/before durable echo receipt; after echo receipt. A synced synthetic call trace proves whether one fake HEAT occurred. After restart no fake HEAT is replayed; plan/reconcile readiness clears; historical receipt stages stay byte-identical, unresolved delivery is separately unknown, and consumed one-shot markers stay UNKNOWN. |
 | Other SIGKILL (3) | During owner/manual transaction, during v1→v2 migration, and while SQLite VM executes checkpoint. Recovery preserves committed state or the prior transaction, never silently defaults/re-arms. A lost uncommitted manual update still starts closed and requires new trusted fake observation. |
 | Actual SQLite failures | Read-only URI; cross-process write lock; SQLITE_FULL through bounded page allocation; truncated/checksum/identity/protocol corruption; rejected CAS/boot reuse. Failed transactions cannot prepare HEAT. |
 | Actual VFS error-return injection | Disposable Linux child preloads a shim restricted to its control.sqlite3 files. fsync/fdatasync receives EIO; pwrite/pwrite64 receives ENOSPC. A stderr witness confirms each path was exercised. No fake HEAT occurs; recovery is STARTING/STOP or explicitly BLOCKED on untrusted storage, without reset/replay. |
@@ -103,3 +103,13 @@ Future real transport/authentication, actual adapter sampling/continuous schedul
 Production HA connections/reads/writes, device commands, component installs, lifecycle changes and production backups in WP1B: **0**. Legacy repository mutations: **0**. All DB/process/compiler/fault artifacts are disposable sandbox files; no private payload, address, credential, entity/device identity or household recording was added. Public SQLite source is the sole additional CI build download, outside runtime packages.
 
 Ready for **independent offline WP1B review**, with exact source/test/evidence hashes in SHA256SUMS and CI observations in the PR. The final SHA must pass Python 3.12/3.13/3.14 before handoff. The PR remains open; no auto-merge, installation, rollout or automatic WP1C. G1 and actual target readiness remain BLOCKED.
+
+## Consolidated review corrections — Issue #10 / comment 6610149771
+
+Both findings were reproduced before implementation in `tests/unit/test_wp1b_review.py`, then fixed as one package. Codex performs implementation/self-testing; independent acceptance remains with ChatGPT.
+
+- Restart no longer rewrites any outbox receipt. The seven-stage PREPARED/SENT/ACK/ECHO/PHYSICAL/FAILED/UNKNOWN matrix verifies exact payload/checksum/evidence preservation across repeated boots, corruption rejection, no old send claim and no replay. Typed derived delivery status distinguishes unresolved old work from confirmed historical evidence; current device state stays unreconciled with no live receipt. No schema migration or default reset is needed.
+- Fresh unexpected HEAT cannot establish a STOP startup baseline. Trusted active-heat observations become durable manual/unknown-causation pause without overriding external demand. Tests include known/unknown authors, manual HEAT, stale/fresh STOP, denied plan admission, untrusted resume, and the positive explicit-resume/fresh-STOP/new-plan procedure. Fake observations remain synthetic premises, never physical proof.
+- Existing crash assertions were corrected to preserve historical stage AND check delivery uncertainty; their no-replay, boot fencing and consumed-marker checks remain. All 150 prior tests and all 92 WP1A tests remain, plus five focused methods. No skips, lowered thresholds or new dependency.
+
+Local full checks: 155 tests on Python 3.12.14 and qualified 3.13.5, 0 failures/errors/skips; strict mypy 12 files; combined coverage 97.45% (unchanged 95% criterion). Earlier CI tables/CI-EVIDENCE.json retain explicitly historical observations and do not certify this correction. The final-SHA six-job 3.12/3.13/3.14 result is recorded in the native repository [PR checks](https://github.com/dragonidf/ha-heating-2/pull/9/checks) and PR description after execution. G1/B01–B08 remain BLOCKED; no production/legacy/device changes, merge or WP1C.

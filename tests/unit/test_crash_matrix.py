@@ -51,6 +51,7 @@ class CrashMatrixTests(unittest.TestCase):
                 self.assertEqual(heat_count, int(index >= 4))
                 store = ControlStore(root)
                 intent = store.view().state.last_intent
+                historical = store.receipt(intent.intent_id) if index > 0 else None
                 sim = Simulator(store, FakeActuator(), "synthetic.parent-reboot")
                 self.addCleanup(sim.close)
                 self.assertEqual(sim.state.desired_action, Action.STOP)
@@ -66,7 +67,8 @@ class CrashMatrixTests(unittest.TestCase):
                 else:
                     self.assertEqual(shot.outcome, OneShotOutcome.UNKNOWN)
                     self.assertIsNotNone(shot.consumed_at)
-                    self.assertEqual(store.receipt(intent.intent_id).stage, ReceiptStage.UNKNOWN)
+                    self.assertEqual(store.receipt(intent.intent_id), historical)
+                    self.assertEqual(store.delivery_status(intent.intent_id), "confirmed" if index >= 7 else "unknown")
 
     def test_sigkill_owner_transaction_migration_and_checkpoint_preserve_safe_restart(self):
         for point in ("owner_before_commit", "migration_before_commit", "checkpoint_during"):

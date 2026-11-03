@@ -202,7 +202,10 @@ class Simulator:
                 if observation is None or not self.actuator.accepts(observation, self.state, clock, p.snapshot_max_age_s, p.max_skew_s):
                     self.last_error = "untrusted_or_stale_fake_observation"
                     return None
-                if event.kind is EventKind.RECONCILE and (observation.action is None or not observation.writers_known):
+                if event.kind is EventKind.RECONCILE and observation.action is Action.HEAT:
+                    event = replace(event, kind=EventKind.UNKNOWN_CHANGE)
+                if (event.kind is EventKind.RECONCILE and not observation.manual
+                        and (observation.action is not Action.STOP or not observation.writers_known)):
                     self.last_error = "unknown_external_state_or_writers"
                     return None
                 if observation.manual:
