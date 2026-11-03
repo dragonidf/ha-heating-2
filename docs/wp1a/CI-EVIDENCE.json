@@ -1,0 +1,230 @@
+{
+  "repository": "dragonidf/ha-heating-2",
+  "pr": 6,
+  "review_comment": "https://github.com/dragonidf/ha-heating-2/pull/6#issuecomment-6605790334",
+  "run_id": 41651720915,
+  "run_url": "https://github.com/dragonidf/ha-heating-2/actions/runs/41651720915",
+  "tested_commit": "bc04a7e768fdfe452e0d40afd5df56afafe44661",
+  "status": "completed",
+  "conclusion": "success",
+  "evidence_source": "Public GitHub Actions run/job metadata and decoded job logs; only sanitized tool/test summaries retained",
+  "commands": [
+    "make check",
+    "sha256sum --check docs/wp1a/SHA256SUMS"
+  ],
+  "jobs": [
+    {
+      "id": 125971333452,
+      "name": "Python 3.12 synthetic checks",
+      "python_version": "3.12.16",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dragonidf/ha-heating-2/actions/runs/41651720915/job/125971333452",
+      "test_summary": {
+        "tests": 92,
+        "seconds": 7.726,
+        "result": "OK",
+        "failures": 0,
+        "errors": 0,
+        "skips": 0
+      },
+      "typecheck": "Success: no issues found in 7 source files",
+      "coverage": {
+        "statements": 768,
+        "missing_statements": 6,
+        "branches": 232,
+        "partial_branches": 5,
+        "display": "99%"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install isolated development tools",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Type, negative, contract, property, mutation and purity checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify reviewed source and evidence checksums",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 125971333721,
+      "name": "Python 3.13 synthetic checks",
+      "python_version": "3.13.17",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dragonidf/ha-heating-2/actions/runs/41651720915/job/125971333721",
+      "test_summary": {
+        "tests": 92,
+        "seconds": 11.326,
+        "result": "OK",
+        "failures": 0,
+        "errors": 0,
+        "skips": 0
+      },
+      "typecheck": "Success: no issues found in 7 source files",
+      "coverage": {
+        "statements": 768,
+        "missing_statements": 6,
+        "branches": 232,
+        "partial_branches": 5,
+        "display": "99%"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install isolated development tools",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Type, negative, contract, property, mutation and purity checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify reviewed source and evidence checksums",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 125971334203,
+      "name": "Python 3.14 synthetic checks",
+      "python_version": "3.14.9",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dragonidf/ha-heating-2/actions/runs/41651720915/job/125971334203",
+      "test_summary": {
+        "tests": 92,
+        "seconds": 2.153,
+        "result": "OK",
+        "failures": 0,
+        "errors": 0,
+        "skips": 0
+      },
+      "typecheck": "Success: no issues found in 7 source files",
+      "coverage": {
+        "statements": 661,
+        "missing_statements": 6,
+        "branches": 232,
+        "partial_branches": 5,
+        "display": "99%"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install isolated development tools",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Type, negative, contract, property, mutation and purity checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify reviewed source and evidence checksums",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["packages"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95

@@ -21,3 +21,19 @@ Replacement heating controller for Home Assistant.
 - [WP0 blockers](docs/wp0/06-open-questions-and-blockers.md)
 
 The legacy application `dragonidf/ha-heating-ai` is a read-only baseline. **No secrets, addresses, production config, runtime state, telemetry or backups may be committed to this repository.**
+
+## WP1A offline library
+
+`packages/contracts` provides immutable versioned data; `packages/control` provides pure evaluation/reduction into intent descriptions. They contain no actuator route. All policy values and fixtures are synthetic; G1 remains BLOCKED. See the [WP1A report](docs/wp1a/REPORT.md), [decisions](docs/wp1a/ADR-WP1A.md), [86 requirement mappings](docs/wp1a/requirements-coverage.csv) and [38 scenario mappings](docs/wp1a/scenario-coverage.csv).
+
+Python 3.12/3.13 are the specified baseline; CI also checks 3.14 compatibility. Runtime dependencies: standard library only. Use an isolated local environment:
+
+```sh
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+make check PYTHON=.venv/bin/python
+make benchmark PYTHON=.venv/bin/python
+sha256sum --check docs/wp1a/SHA256SUMS
+```
+
+The dependency-free tests also run with `python -m unittest discover -v`. The benchmark describes this host only; it cannot accept the future N100 gate. No installation or Home Assistant connection is needed or provided. WP1B requires separate authorization.
