@@ -40,6 +40,18 @@ Final suite: **150 tests**, including all **92 WP1A** tests, **0 failures/errors
 
 The original 4,440 WP1A generated cases remain, plus **40 seeded send-boundary guard-failure cases and 200 seeded emergency replays** in WP1B. Capacity-one ordinary scheduling, deferred audit coalescing/missing evidence, duplicate ACK/echo, fake service failure, compute loss, frozen asynchronous measurements and clock rollback have focused checks. These are deterministic synthetic cases, not household telemetry replay or a 24-hour soak.
 
+### Remote compatibility proof
+
+[PR #9](https://github.com/dragonidf/ha-heating-2/pull/9), source/test commit `50a41889e9720cdcaf5369b08fc47bbe5bea5afb`: [WP1B run 41672300606](https://github.com/dragonidf/ha-heating-2/actions/runs/41672300606) and [combined foundation run 41672301105](https://github.com/dragonidf/ha-heating-2/actions/runs/41672301105) both PASS, all six jobs completed successfully. Decoded WP1B logs confirm the following; sanitized run/job/runtime summaries are retained in [CI-EVIDENCE.json](CI-EVIDENCE.json).
+
+| Interpreter | Actual test SQLite / FS | Full checks |
+|---|---|---|
+| Python 3.12.15 | 3.51.3 / ext4 | 150 tests, 0 failures/errors/skips; 12-file mypy; coverage and both manifests PASS |
+| Python 3.13.17 | 3.51.3 / ext4 | 150 tests, 0 failures/errors/skips; 12-file mypy; coverage and both manifests PASS |
+| Python 3.14.9 | 3.51.3 / ext4 | 150 tests, 0 failures/errors/skips; 12-file mypy; coverage and both manifests PASS |
+
+Native 3.46.1 was observed as unqualified in every job before the pinned test library was selected. The test source ID matches ADR-WP1B exactly. Python 3.12/3.13 report 1,385 statements/23 missing; 3.14 reports 1,258/23; all report 436 branches/25 partial and display 97% combined. No ResourceWarning appears. This follow-up changes only report/evidence/checksums; source/test hashes are unchanged. The final-head matrix is separately verified after publishing it and linked from the PR description; it is not inferred from a prior code SHA.
+
 Early whole-suite checks exposed untested branches/coverage below 95%; the suite was expanded around failure behavior without changing that criterion. Regression work also found and corrected ordinary-event owner acquisition/OFF-latch clearing, stale-owner send claims, receipt fact rewrites, stale worker access after close/restart, and loss of the newest emergency frontier under audit overload. Final queue review reproduced two more unsafe cases: an old pump frame erased newer grid-failure/expiry data. Centralized input admission now immediately fences unsafe inputs and rejects backward context; old queued calls cannot re-arm. Python 3.13 exposed unclosed connections in test fixtures; those connections are explicitly closed, not warning-suppressed.
 
 ## Crash and storage-failure evidence
