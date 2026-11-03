@@ -59,6 +59,7 @@ class Reason(str, Enum):
     NATIVE_UNQUALIFIED = "native_fallback_not_qualified"
     STALE_EVENT = "stale_event"
     RESUME_DENIED = "resume_not_authorized"
+    STOP_DENIED = "safety_stop_not_authorized"
     INTENT_EXPIRED = "intent_expired_or_not_due"
     DUPLICATE = "duplicate_sequence"
     ECHO_MISMATCH = "unconfirmed_echo"
@@ -103,7 +104,7 @@ class ControlPolicy:
     thermostat_max_age_s: float
     grid_max_age_s: float
     snapshot_max_age_s: float
-    max_skew_s: float
+    max_skew_s: float  # Clock/order tolerance; independent of each source's age budget.
     min_on_s: float
     min_off_s: float
     intent_ttl_s: float
@@ -265,6 +266,7 @@ class ControlState:
     off_latched: bool = False
     reconciled: bool = False
     last_event_sequence: int = -1
+    last_safety_stop_sequence: int = -1
     last_event_at: float = 0.0
     last_monotonic: float = 0.0
     changed_at_monotonic: float | None = None
@@ -281,8 +283,8 @@ class ControlState:
         text(self.boot_id)
         counter(self.owner_epoch)
         counter(self.command_sequence)
-        require(type(self.last_event_sequence) is int and -1 <= self.last_event_sequence < 2**63,
-                "Invalid event sequence")
+        for sequence in (self.last_event_sequence, self.last_safety_stop_sequence):
+            require(type(sequence) is int and -1 <= sequence < 2**63, "Invalid event sequence")
         require(isinstance(self.mode, RuntimeMode) and isinstance(self.desired_action, Action),
                 "Invalid control state")
         for flag in (self.manual_paused, self.off_latched, self.reconciled):

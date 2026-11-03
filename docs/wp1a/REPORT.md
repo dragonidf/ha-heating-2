@@ -16,7 +16,19 @@ Authority: [issue #5](https://github.com/dragonidf/ha-heating-2/issues/5), [WP1A
 
 Main safeguards: unknown is never zero; received-at refresh never refreshes observed-at; signed power is explicit; aliases/derived balances cannot claim independence; actual grid is distinct from forecast. Upper/return, hard stop, bad data, windows and expiry take priority over min-on. SHADOW emits zero descriptions. Manual priority requires explicit resume and new ownership/reconciliation. Faults discard old plans and require stable inputs plus a newly admitted plan. Fallback deliberately stops when a valid plan cannot be held; it does not implement qualified native heating.
 
-Regression development caught and fixed unsafe early returns from rejected plans/echoes, hard-stop processing during manual events, actual-grid cross-source skew omission, weak physical-evidence shape validation and reuse of a plan issued exactly at failure time. Their focused tests remain in the suite.
+Regression development caught and fixed unsafe early returns from rejected plans/echoes, hard-stop processing during manual events, source-timestamp handling, weak physical-evidence shape validation and reuse of a plan issued exactly at failure time. Their focused tests remain in the suite.
+
+### Review correction 6605790334
+
+All three findings from [the review](https://github.com/dragonidf/ha-heating-2/pull/6#issuecomment-6605790334) were reproduced as failing behavioral assertions on the previous head `f18e90357710059a7938fc0ba1d375cc23c588c5` before implementation. The prior cross-source spread rule and failure-time-plan proof were incomplete; this revision supersedes those claims. Twenty added test methods cover the corrections and their boundaries in `tests/unit/test_review_regressions.py` and `tests/properties/test_review_invariants.py`.
+
+| Finding | Correction / regression proof |
+|---|---|
+| Asynchronous timestamps falsely denied | Source-specific ages and explicit snapshot as-of cut replace equal-cadence spread. Clock tolerance remains **2 s** in these fixtures. Mixed slow/fast VALID readings pass; exact and exceeded age limits for every source, future skew, frozen observed-at with new receipt, actual grid OFF, room/return upper and ESTIMATED readings remain independently checked. No interpolated/age-bounded estimate is invented or relabeled VALID. Actual household freshness qualification remains B01/B05. |
+| Late emergency lost behind normal queue | Explicit trusted assertion (`authorized`, current boot/owner, nonfuture time) bypasses ordinary queue sequence/expiry. Its independent validated `last_safety_stop_sequence` rejects duplicates/older assertions even after recovery; unauthorized or wrong-epoch messages cannot change safe demand or either frontier. Outgoing intent expiry is unchanged. Emergency cannot clear manual pause; SHADOW emits zero descriptions. Authentication remains a future trusted-adapter precondition, not a claim about a caller-supplied JSON flag. |
+| Failure-time plan readmission | Recovery requires **`issued_at > recovery_at`**. Same-hash/revision plans at equality or just below are denied; next representable float above and later issue times pass only with stability and the other guards. |
+
+The former equal-timestamp-spread test is explicitly corrected to accept its fresh 3-second grid observation and additionally reject an observation beyond grid TTL. Two existing positive emergency fixtures now explicitly assert trust; their expected safety STOP remains unchanged. No checks were skipped, no thresholds/coverage criteria lowered, no errors hidden, and no clock tolerance enlarged. The rest of the 72 original methods remain in the suite.
 
 ## Reproducible local results
 
@@ -24,22 +36,22 @@ Host: isolated x86_64 cloud Linux sandbox, kernel `6.18.57`; not the target N100
 
 | Command (repository root) | Observed result |
 |---|---|
-| `make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: strict mypy, 7 source files; **72 tests**, 0 failures/errors/skips; branch coverage enabled. |
-| `/usr/bin/python3.13 -m unittest discover -q` | PASS: **72 tests**, 0 failures/errors/skips. This interpreter ran stdlib-only tests, not the 3.12 dev tool environment. |
+| `make check PYTHON=/tmp/wp1a-venv/bin/python` | PASS: strict mypy, 7 source files; **92 tests**, 0 failures/errors/skips; branch coverage enabled. |
+| `/usr/bin/python3.13 -m unittest discover -q` | PASS: **92 tests**, 0 failures/errors/skips. This interpreter ran stdlib-only tests, not the 3.12 dev tool environment. |
 | `python -B -m tests.properties.import_probe` (also run by unittest) | PASS: fresh imports, construction, reduction and JSON roundtrip with file/network/subprocess/database/system-clock/random APIs disabled. Import machinery may read module code; application data I/O is forbidden. |
 | `git diff --check` | PASS for prepared changes. |
 | `sha256sum --check docs/wp1a/SHA256SUMS` | Required final integrity check. Manifest covers source/tests/config/README and WP1A review evidence; excludes itself and unchanged task. |
 | `python3.14 --version` | Not installed locally; no local 3.14 PASS claimed. CI explicitly includes 3.12/3.13/3.14; see PR checks for remote results. |
 
-Coverage: **759/765 executable statements (99.22%)**, **225/230 branches (97.83%)**, combined **98.89%** (tool displays 99%). No coverage suppression added; remaining paths include defensive codec annotation/encoding errors, optional non-strict windows and unexercised early plan branches. Coverage is code execution evidence, not proof of every possible state or physical safety.
+Coverage: **762/768 executable statements (99.22%)**, **227/232 branches (97.84%)**, combined **98.90%** (tool displays 99%). No coverage suppression added; remaining paths include defensive codec annotation/encoding errors, optional non-strict windows and unexercised early plan branches. Coverage is code execution evidence, not proof of every possible state or physical safety.
 
-The 72 test methods include **3,800 deterministic generated checks**: 300 permission/mode/grid/quality combinations, 2,000 seeded upper/return/hard-stop cases, 1,000 stale-event/manual replays and 500 corrupt payloads. Seeds are fixed in `test_invariants.py`. Six in-memory policy guard deletions are killed by independent witnesses: hard stop, armed permission, actual grid, room upper, return upper, monotonic/owner check. The event layer provides additional defense in the clock case; mutation evidence concerns pure eligibility, not simulated equipment execution. All eight runtime modes are reached in synthetic transitions. No skipped expected failures hide a P0 regression.
+The 92 test methods include **4,440 deterministic generated checks**: the original 300 permission/mode/grid/quality combinations, 2,000 seeded upper/return/hard-stop cases, 1,000 stale-event/manual replays and 500 corrupt payloads, plus **128 emergency trust/scope/replay/time cases, 500 asynchronous age sets and 12 recovery issue-time/stability pairs**. Seeds and exact matrix sizes are fixed in `test_invariants.py` and `test_review_invariants.py`. Six in-memory policy guard deletions are killed by independent witnesses: hard stop, armed permission, actual grid, room upper, return upper, monotonic/owner check. The event layer provides additional defense in the clock case; mutation evidence concerns pure eligibility, not simulated equipment execution. All eight runtime modes are reached in synthetic transitions. No skipped expected failures hide a P0 regression.
 
 Purity proof combines a closed AST import allowlist, actuator/dynamic-execution/system-clock call scan, negative tests for the scanner itself, fresh-interpreter API denial and execution under the same guard. This proves the reviewed module graph's boundary; it does not sandbox arbitrary future code.
 
 CI uses pinned checkout v4.2.2 and setup-python v5.6.0 commit SHAs verified against public tag refs. Jobs have read-only repository permission, checkout credential persistence disabled, no production connection/secrets/deployment step, pinned isolated dev installation, checks and checksum verification. CI status is reported by the PR; target packaging and linked SQLite qualification remain B06.
 
-**Remote CI observed PASS on all three matrix versions (3.12/3.13/3.14):** [run 41647612609](https://github.com/dragonidf/ha-heating-2/actions/runs/41647612609), tested source commit `1f1d22d864404539a213d559d53e519f5c6a226b`, [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6). Each job completed type/test/coverage and checksum steps successfully. Public run/job metadata is captured in [CI-EVIDENCE.json](CI-EVIDENCE.json). Matrix minor versions are recorded; remote patch versions/timings were not extracted. This evidence follow-up changes documentation and its manifest only; source/test hashes are unchanged.
+Historical initial CI passed all three matrix versions in [run 41647612609](https://github.com/dragonidf/ha-heating-2/actions/runs/41647612609), tested source commit `1f1d22d864404539a213d559d53e519f5c6a226b`. It does **not** certify the review corrections. Corrected-source CI results are recorded separately in [CI-EVIDENCE.json](CI-EVIDENCE.json) and [PR #6 checks](https://github.com/dragonidf/ha-heating-2/pull/6/checks); final-head CI must pass all three versions before handing back for repeat review. Local 3.14 is still unavailable; no local 3.14 result is claimed.
 
 ## 100,000 synthetic snapshots
 
@@ -47,7 +59,7 @@ Command: `python -m tests.properties.benchmark`, Python 3.12.14, same isolated c
 
 | p50 | p95 | p99 | max |
 |---|---|---|---|
-| 0.039029 ms | 0.094732 ms | 0.207691 ms | 12.894131 ms |
+| 0.040771 ms | 0.084657 ms | 0.169324 ms | 3.814808 ms |
 
 Microbenchmark does not cover event loop, physical commands, planner load, persistence, imports, soak or target scheduling. **N100 p99≤10 ms and safety OFF latency gates remain NOT_EXECUTED; these measurements cannot pass them.**
 

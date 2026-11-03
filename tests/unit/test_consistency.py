@@ -7,11 +7,13 @@ from tests.fixtures.synthetic import clock, event, policy, reading, snapshot, st
 
 
 class ConsistencyTests(unittest.TestCase):
-    def test_grid_and_temperature_sources_must_obey_snapshot_skew_together(self):
-        result = reduce(state(), event(), snapshot(grid_actual=reading(True, Unit.BOOLEAN,
-                        observed_at=97, received_at=100)), policy(), clock())
-        self.assertFalse(result.permit.allowed)
-        self.assertFalse(any(i.action is Action.HEAT for i in result.intents))
+    def test_grid_has_its_own_age_limit_instead_of_matching_temperature_timestamps(self):
+        # Review #6: a 3-second grid/temperature spread is valid within each source TTL.
+        for observed, allowed in ((97, True), (89.999, False)):
+            result = reduce(state(), event(), snapshot(grid_actual=reading(True, Unit.BOOLEAN,
+                            observed_at=observed, received_at=100)), policy(), clock())
+            self.assertEqual(result.permit.allowed, allowed)
+            self.assertEqual(any(i.action is Action.HEAT for i in result.intents), allowed)
 
     def test_future_stale_conflicting_held_and_estimated_sources_fail_closed(self):
         base = reading(18, Unit.CELSIUS)

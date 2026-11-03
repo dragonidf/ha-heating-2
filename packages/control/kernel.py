@@ -19,6 +19,7 @@ def _reading_ok(reading: Reading | None, max_age: float, snapshot: ControlSnapsh
     return (-skew <= clock.utc - reading.observed_at <= max_age
             and reading.quality.age_s <= max_age
             and reading.observed_at - skew <= reading.received_at <= clock.utc + skew
+            and reading.observed_at <= snapshot.captured_at + skew
             and reading.received_at <= snapshot.captured_at + skew)
 
 
@@ -53,10 +54,7 @@ def _safety_reason(state: ControlState, snapshot: ControlSnapshot,
              (snapshot.thermostat, policy.thermostat_max_age_s))
     if not all(_reading_ok(r, age, snapshot, policy, clock) for r, age in roles):
         return Reason.READING
-    observed = [r.observed_at for r, _ in roles if r is not None]
-    observed.append(snapshot.grid_actual.observed_at)
-    if max(observed) - min(observed) > policy.max_skew_s:
-        return Reason.SNAPSHOT
+    # Latest observations have independent age budgets, not a simultaneous sample time.
     # Units and scalar kinds are validated by ControlSnapshot/Reading constructors.
     if (snapshot.room is not None and snapshot.room.value is not None
             and float(snapshot.room.value) >= policy.room_upper_c):
@@ -103,7 +101,7 @@ def evaluate(state: ControlState, snapshot: ControlSnapshot,
             if reason is Reason.ALLOWED and state.recovery_at is not None:
                 if (state.healthy_since is None
                         or clock.monotonic - state.healthy_since < policy.recovery_stable_s
-                        or state.plan is None or state.plan.issued_at < state.recovery_at):
+                        or state.plan is None or state.plan.issued_at <= state.recovery_at):
                     reason = Reason.RECOVERY
             if reason is Reason.ALLOWED and state.desired_action is Action.STOP:
                 if (state.changed_at_monotonic is None
@@ -182,7 +180,14 @@ def _ignore(state: ControlState, snapshot: ControlSnapshot, policy: ControlPolic
 def reduce(state: ControlState, event: ControlEvent, snapshot: ControlSnapshot,
            policy: ControlPolicy, clock: Clock) -> Decision:
     """One event in, immutable state/intent descriptions out. All clocks are injected."""
-    event_ok = (event.boot_id == clock.boot_id == state.boot_id
+    emergency = event.kind is EventKind.SAFETY_STOP
+    trusted_stop = (emergency and event.authorized
+                    and event.boot_id == clock.boot_id == state.boot_id
+                    and event.owner_epoch == state.owner_epoch
+                    and event.sequence > state.last_safety_stop_sequence
+                    and event.at <= clock.utc + policy.max_skew_s)
+    # Emergency assertions have a separate replay frontier; ordinary queue TTL/order cannot drop them.
+    event_ok = (not emergency and event.boot_id == clock.boot_id == state.boot_id
                 and event.owner_epoch == state.owner_epoch
                 and event.sequence > state.last_event_sequence
                 and state.last_event_at <= event.at <= clock.utc + policy.max_skew_s
@@ -190,19 +195,25 @@ def reduce(state: ControlState, event: ControlEvent, snapshot: ControlSnapshot,
                 and clock.monotonic >= state.last_monotonic)
     updated = (replace(state, last_event_sequence=event.sequence, last_event_at=event.at,
                        last_monotonic=clock.monotonic) if event_ok else state)
+    if trusted_stop:
+        updated = replace(updated, last_safety_stop_sequence=event.sequence,
+                          last_monotonic=max(state.last_monotonic, clock.monotonic))
     manual_event = event_ok and event.kind in (EventKind.MANUAL_CHANGE, EventKind.UNKNOWN_CHANGE, EventKind.OFF)
     if manual_event:
         updated = replace(updated, owner_epoch=state.owner_epoch + 1,
                           manual_paused=event.kind is not EventKind.OFF,
                           off_latched=event.kind is EventKind.OFF, plan=None,
                           accepted_input_hash=None, last_intent=None, last_receipt=None,
-                          healthy_since=None)
+                          healthy_since=None, last_safety_stop_sequence=-1)
     if policy.operating_mode is ControlMode.SHADOW:
         shadow = replace(updated, reconciled=False, plan=None, accepted_input_hash=None)
         return _decision(shadow, snapshot, policy, clock, Reason.SHADOW,
                          Action.STOP, RuntimeMode.SHADOW, suppress=True)
-    if snapshot.hard_stop:
+    if snapshot.hard_stop or trusted_stop:
         return _force_stop(updated, snapshot, policy, clock, Reason.HARD_STOP)
+    if emergency:
+        return _ignore(state, snapshot, policy, clock,
+                       Reason.STOP_DENIED if not event.authorized else Reason.STALE_EVENT)
     if not event_ok:
         return _ignore(state, snapshot, policy, clock, Reason.STALE_EVENT)
     if manual_event:
@@ -215,7 +226,8 @@ def reduce(state: ControlState, event: ControlEvent, snapshot: ControlSnapshot,
             return _ignore(updated, snapshot, policy, clock, Reason.RESUME_DENIED)
         updated = replace(updated, owner_epoch=state.owner_epoch + 1, manual_paused=False,
                           off_latched=False, reconciled=False, plan=None, accepted_input_hash=None,
-                          last_intent=None, last_receipt=None, healthy_since=None, recovery_at=clock.utc)
+                          last_intent=None, last_receipt=None, healthy_since=None, recovery_at=clock.utc,
+                          last_safety_stop_sequence=-1)
         return _decision(updated, snapshot, policy, clock, Reason.STARTING,
                          Action.STOP, RuntimeMode.STARTING, suppress=True)
     if event.kind is EventKind.RECONCILE:
@@ -241,8 +253,6 @@ def reduce(state: ControlState, event: ControlEvent, snapshot: ControlSnapshot,
                               healthy_since=None)
             return _decision(updated, snapshot, policy, clock, Reason.ECHO_MISMATCH,
                              Action.STOP, RuntimeMode.SAFE_HOLD)
-    if event.kind is EventKind.SAFETY_STOP:
-        return _force_stop(updated, snapshot, policy, clock, Reason.HARD_STOP)
     safety = _safety_reason(updated, snapshot, policy, clock)
     if updated.recovery_at is not None:
         updated = replace(updated, healthy_since=(updated.healthy_since if updated.healthy_since is not None

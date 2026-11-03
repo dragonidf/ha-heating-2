@@ -66,7 +66,7 @@ class SafetyTests(unittest.TestCase):
         heated = self.decide().state
         held = self.decide(heated, event(sequence=2, kind=EventKind.STOP_REQUEST))
         self.assertEqual(held.state.desired_action, Action.HEAT)
-        stopped = self.decide(heated, event(sequence=2, kind=EventKind.SAFETY_STOP))
+        stopped = self.decide(heated, event(sequence=2, kind=EventKind.SAFETY_STOP, authorized=True))
         self.assertEqual(stopped.state.desired_action, Action.STOP)
 
     def test_segment_end_and_plan_expiry_do_not_wait_for_min_on(self):
@@ -108,7 +108,7 @@ class SafetyTests(unittest.TestCase):
         self.assertIsNone(reconciled.state.plan)
 
     def test_shadow_has_zero_intents_even_on_explicit_safety_stop(self):
-        result = self.decide(e=event(kind=EventKind.SAFETY_STOP),
+        result = self.decide(e=event(kind=EventKind.SAFETY_STOP, authorized=True),
                              p=policy(operating_mode=ControlMode.SHADOW))
         self.assertEqual(result.state.mode, RuntimeMode.SHADOW)
         self.assertEqual(result.intents, ())

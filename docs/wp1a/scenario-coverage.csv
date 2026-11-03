@@ -1,14 +1,14 @@
 scenario_id,requirements,wp1a_status,verified_aspect_and_limit,test_modules
-SC01,S03;S04;P01,PARTIAL_PURE_ASPECTS_PASS,Current grid-off STOP description only; no worker kill or timeline SLO,tests/properties/test_invariants.py;tests/properties/test_mutations.py;tests/unit/test_consistency.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py
-SC02,S04;S09;O01,PARTIAL_PURE_ASPECTS_PASS,Upper/min-on precedence only; no database hang or physical latency,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py
-SC03,S05;S06,PARTIAL_PURE_ASPECTS_PASS,Synthetic delayed own receipt and replay ordering; no HA adapter,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py
-SC04,S06;S08,PARTIAL_PURE_ASPECTS_PASS,In-memory manual latch and explicit resume only; no durable restart,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py;tests/unit/test_transitions.py
+SC01,S03;S04;P01,PARTIAL_PURE_ASPECTS_PASS,Current grid-off STOP description only; no worker kill or timeline SLO,tests/properties/test_invariants.py;tests/properties/test_mutations.py;tests/unit/test_consistency.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
+SC02,S04;S09;O01,PARTIAL_PURE_ASPECTS_PASS,Upper/min-on precedence only; no database hang or physical latency,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
+SC03,S05;S06,PARTIAL_PURE_ASPECTS_PASS,Synthetic delayed own receipt and replay ordering; no HA adapter,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
+SC04,S06;S08,PARTIAL_PURE_ASPECTS_PASS,In-memory manual latch and explicit resume only; no durable restart,tests/properties/test_invariants.py;tests/unit/test_kernel.py;tests/unit/test_ownership.py;tests/unit/test_transitions.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
 SC05,S07;F05,PARTIAL_PURE_ASPECTS_PASS,ACK/echo/independent-evidence contracts; no physical fan/boiler test,tests/contracts/test_evidence.py;tests/unit/test_ownership.py
 SC06,S08;S14,PARTIAL_PURE_ASPECTS_PASS,One-shot data shape and startup precondition only; no persistence/crash executor,tests/contracts/test_control_records.py;tests/unit/test_kernel.py;tests/unit/test_transitions.py
-SC07,S11;S12,PARTIAL_PURE_ASPECTS_PASS,Injected stability and new-plan admission; STOP-only fallback; no transport/native reserve,tests/unit/test_ownership.py;tests/unit/test_recovery.py
-SC08,D02;D10,PARTIAL_PURE_ASPECTS_PASS,Reading observed-age and receipt refresh only; no humidity adapter or bias fallback,tests/contracts/test_readings.py;tests/unit/test_kernel.py
+SC07,S11;S12,PARTIAL_PURE_ASPECTS_PASS,Injected stability and new-plan admission; STOP-only fallback; no transport/native reserve,tests/unit/test_ownership.py;tests/unit/test_recovery.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
+SC08,D02;D10,PARTIAL_PURE_ASPECTS_PASS,Reading observed-age and receipt refresh only; no humidity adapter or bias fallback,tests/contracts/test_readings.py;tests/unit/test_kernel.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
 SC09,D03;D04;D08,PARTIAL_PURE_ASPECTS_PASS,Independence helper rejects alias/overlap; no electrical topology or balance configuration,tests/contracts/test_boundaries.py;tests/contracts/test_evidence.py;tests/contracts/test_readings.py;tests/unit/test_consistency.py
-SC10,D03;D05,PARTIAL_PURE_ASPECTS_PASS,Signed readings and freshness only; no actual Deye balance adapter,tests/contracts/test_boundaries.py;tests/contracts/test_readings.py;tests/unit/test_consistency.py;tests/unit/test_kernel.py
+SC10,D03;D05,PARTIAL_PURE_ASPECTS_PASS,Signed readings and freshness only; no actual Deye balance adapter,tests/contracts/test_boundaries.py;tests/contracts/test_readings.py;tests/unit/test_consistency.py;tests/unit/test_kernel.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
 SC11,D04;E01;E02,PARTIAL_PURE_ASPECTS_PASS,Provenance/quality data only; no gap integration or ledger,tests/contracts/test_evidence.py;tests/contracts/test_readings.py;tests/unit/test_consistency.py
 SC12,D06;P07,PARTIAL_PURE_ASPECTS_PASS,Conditional type and current guards only; no weather provider/fallback,tests/properties/test_invariants.py;tests/unit/test_kernel.py
 SC13,D07;P05,PARTIAL_PURE_ASPECTS_PASS,Unknown actual-grid inhibition only; no Svitlo provider/date validation,tests/properties/test_invariants.py;tests/unit/test_kernel.py
@@ -29,7 +29,7 @@ SC27,F01;F02;F03,NOT_IMPLEMENTED,No full scenario executed; requires later autho
 SC28,F04;F06,NOT_IMPLEMENTED,No full scenario executed; requires later authorized modules/evidence,
 SC29,U02;U03;U07;U09,NOT_IMPLEMENTED,No full scenario executed; requires later authorized modules/evidence,
 SC30,O02;O03;O04;O07,NOT_IMPLEMENTED,No full scenario executed; requires later authorized modules/evidence,
-SC31,O05;O06,PARTIAL_PURE_ASPECTS_PASS,Schema mismatch/replay data only; no API auth/update/runtime fallback,tests/contracts/test_boundaries.py;tests/contracts/test_codec.py;tests/properties/test_purity.py
+SC31,O05;O06,PARTIAL_PURE_ASPECTS_PASS,Schema mismatch/replay data only; no API auth/update/runtime fallback,tests/contracts/test_boundaries.py;tests/contracts/test_codec.py;tests/properties/test_purity.py;tests/unit/test_review_regressions.py;tests/properties/test_review_invariants.py
 SC32,G01;G02;G03;G04,BLOCKED,No full scenario executed; requires later authorized modules/evidence,
 SC33,S15;G05,BLOCKED,No full scenario executed; requires later authorized modules/evidence,
 SC34,U01;U04;U06;U08;U10,NOT_IMPLEMENTED,No full scenario executed; requires later authorized modules/evidence,
