@@ -1,0 +1,39 @@
+scenario_id,requirements,wp1b_slice_status,verified_aspect_and_limit,test_modules
+SC01,S03;S04;P01,PARTIAL_OFFLINE_ASPECTS_PASS,Fake producer/store stall and grid denial; no real planner worker/SLO,tests/properties/test_simulated_sequences.py;tests/unit/test_simulator_faults.py;tests/unit/test_vfs_failures.py
+SC02,S04;S09;O01,PARTIAL_OFFLINE_ASPECTS_PASS,Upper/min-on fake STOP before blocked DB audit; no physical latency gate,tests/unit/test_control_store.py;tests/unit/test_crash_matrix.py;tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py;tests/unit/test_vfs_failures.py
+SC03,S05;S06,PARTIAL_OFFLINE_ASPECTS_PASS,Stale/reordered command and duplicate evidence/fencing in fake pipeline,tests/unit/test_control_store.py;tests/unit/test_crash_matrix.py;tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py;tests/unit/test_wp1b_review.py
+SC04,S06;S08,PARTIAL_OFFLINE_ASPECTS_PASS,Durable manual latch plus owner transaction kill; no real author attribution,tests/unit/test_crash_matrix.py;tests/unit/test_simulator.py;tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py;tests/unit/test_wp1b_review.py
+SC05,S07;F05,PARTIAL_OFFLINE_ASPECTS_PASS,Sent/ACK/echo/UNKNOWN preserved; physical evidence remains unknown,tests/unit/test_simulator.py;tests/unit/test_store_failures.py;tests/unit/test_wp1b_review.py
+SC06,S08;S14,PARTIAL_OFFLINE_ASPECTS_PASS,Consumed/unknown one-shot and command crash boundaries; no session executor,tests/properties/test_simulated_sequences.py;tests/unit/test_control_store.py;tests/unit/test_crash_matrix.py;tests/unit/test_simulator.py;tests/unit/test_vfs_failures.py;tests/unit/test_wp1b_review.py
+SC07,S11;S12,PARTIAL_OFFLINE_ASPECTS_PASS,Fake compute loss/restart requires new observation/plan; no qualified native reserve,tests/unit/test_recovery.py;tests/unit/test_simulator.py;tests/unit/test_simulator_faults.py;tests/unit/test_wp1b_review.py
+SC08,D02;D10,PARTIAL_OFFLINE_ASPECTS_PASS,Slow asynchronous valid room and frozen observation pipeline; no real bias adapter,tests/unit/test_simulator_faults.py
+SC09,D03;D04;D08,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC10,D03;D05,PARTIAL_OFFLINE_ASPECTS_PASS,Actual-grid freshness denial only; no Deye balance adapter,tests/properties/test_simulated_sequences.py;tests/unit/test_simulator_faults.py
+SC11,D04;E01;E02,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC12,D06;P07,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC13,D07;P05,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC14,P03;P04;P05,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC15,P03;P12,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC16,P02;P06,PARTIAL_OFFLINE_ASPECTS_PASS,Stored revisions/epochs only; no forecast/planner stability implementation,tests/unit/test_control_store.py;tests/unit/test_simulator_faults.py
+SC17,P08;P09,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC18,P10;P11,PARTIAL_OFFLINE_ASPECTS_PASS,Pure expiry/segment semantics retained; no actual scheduler/search,
+SC19,M01;M02,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC20,M04;M05;M06,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC21,M07,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC22,M08;M09,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC23,E03;E04,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC24,E05;G02,BLOCKED,No WP1B implementation; full scenario remains deferred/blocked,
+SC25,E06;E08;U05,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC26,E06;E07;E08,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC27,F01;F02;F03,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC28,F04;F06,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC29,U02;U03;U07;U09,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC30,O02;O03;O04;O07,PARTIAL_OFFLINE_ASPECTS_PASS,Bounded fake queue/audit and DB failure checks; no 24h soak/analytics/history,tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py
+SC31,O05;O06,PARTIAL_OFFLINE_ASPECTS_PASS,Protocol mismatch and fake trust boundary; no real auth/update endpoint,tests/properties/test_offline_boundary.py;tests/unit/test_crash_matrix.py;tests/unit/test_simulator.py;tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py;tests/unit/test_wp1b_review.py
+SC32,G01;G02;G03;G04,BLOCKED,No WP1B implementation; full scenario remains deferred/blocked,
+SC33,S15;G05,BLOCKED,No WP1B implementation; full scenario remains deferred/blocked,
+SC34,U01;U04;U06;U08;U10,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC35,S01;S02;S10;S13,PARTIAL_OFFLINE_ASPECTS_PASS,Import/no-network boundary and fake duplicate writer; no HA offset/N100,tests/properties/test_offline_boundary.py;tests/properties/test_purity.py;tests/unit/test_simulator.py
+SC36,D01;M03,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC37,M10;O08,NOT_IMPLEMENTED,No WP1B implementation; full scenario remains deferred/blocked,
+SC38,D09;G06;O09,PARTIAL_OFFLINE_ASPECTS_PASS,Scoped action audit and actual test SQLite version; G3/production remain BLOCKED,tests/properties/test_offline_boundary.py;tests/unit/test_simulator_faults.py;tests/unit/test_storage_qualification.py;tests/unit/test_vfs_failures.py

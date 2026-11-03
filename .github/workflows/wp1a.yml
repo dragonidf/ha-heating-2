@@ -24,6 +24,14 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install isolated development tools
         run: python -m pip install -r requirements-dev.txt
+      - name: Build pinned SQLite for the combined offline regression suite
+        run: |
+          python -m tests.fixtures.build_sqlite
+          echo "LD_LIBRARY_PATH=/tmp/heating-wp1b-sqlite-3510300" >> "$GITHUB_ENV"
+      - name: Use disposable runner filesystem for combined offline tests
+        run: |
+          mkdir -p "$RUNNER_TEMP/heating-wp1b-db-tmp"
+          echo "TMPDIR=$RUNNER_TEMP/heating-wp1b-db-tmp" >> "$GITHUB_ENV"
       - name: Type, negative, contract, property, mutation and purity checks
         run: make check
       - name: Verify reviewed source and evidence checksums
