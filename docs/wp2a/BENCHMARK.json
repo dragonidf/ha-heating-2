@@ -1,0 +1,14 @@
+{
+  "actual_total_kwh": 35.599999999999085,
+  "archive_records": 3073,
+  "fake_stop_s": 0.0005054089997429401,
+  "finalize_1024_intervals_s": 2.2846729350058013,
+  "indexed_page_256_s": 0.03184728499763878,
+  "machine": "x86_64",
+  "platform": "Linux",
+  "python": "3.12.14",
+  "raw_1025_append_s": 0.14023134700255468,
+  "release": "6.18.57",
+  "scope": "synthetic disposable host; G1/B01-B08 BLOCKED",
+  "summary_s": 0.5796338029977051
+}
