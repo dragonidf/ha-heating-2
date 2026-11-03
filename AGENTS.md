@@ -1,29 +1,35 @@
 # AGENTS.md — Heating AI 2.0
 
-Read in this order:
-1. `docs/spec/heating-ai-2.0/HANDOFF.md` and `APPROVAL-2026-11-03.md`
-2. `docs/wp0/07-gate-G1-readiness.md` and `06-open-questions-and-blockers.md`
-3. `docs/wp1a/WP1A-TASK.md` (**current work scope**)
-4. `docs/spec/heating-ai-2.0/02-Architecture.md` and `03-Codex-specification.md`
-5. `docs/spec/heating-ai-2.0/04-Test-strategy.md`, `requirements.csv`, `test-scenarios.csv`
-6. `docs/spec/heating-ai-2.0/06-Migration-and-acceptance.md`
+## What to read first (current instructions)
 
-## Current phase and authorization
+1. **Current phase**: `docs/wp1b/APPROVAL-2026-11-03.md` and `docs/wp1b/WP1B-TASK.md`.
+2. **Current safety blockers**: `docs/wp0/07-gate-G1-readiness.md`, `docs/wp0/06-open-questions-and-blockers.md`, GitHub Issue #3.
+3. **Completed foundation**: `docs/wp1a/REPORT.md`, `docs/wp1a/ADR-WP1A.md`, all `packages/contracts/` and `packages/control/`.
+4. **Architecture and scope**: `docs/spec/heating-ai-2.0/HANDOFF.md`, `APPROVAL-2026-11-03.md`, `02-Architecture.md`, `03-Codex-specification.md`, `04-Test-strategy.md`, `06-Migration-and-acceptance.md`.
+5. `docs/spec/heating-ai-2.0/requirements.csv` and `test-scenarios.csv`, and `docs/ROADMAP-TO-LAUNCH.md`.
 
-- **G0:** architecture ADR01–07 and owner clarifications approved 2026-11-03.
-- **WP0:** read-only audit documents merged as PR #2; **G1 remains BLOCKED**, per docs/wp0/07 and [issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
-- **WP1A:** following owner's request to continue after reviewing WP0, **only synthetic pure typed contracts and safety reducer with tests** are authorized. Follow `docs/wp1a/WP1A-TASK.md` exactly.
-- **WP1B and later:** not authorized. Do not create running integration, command gateway, compute daemon, live bindings, installation, migration, physical tests or cutover.
-- WP1A is *not* a waiver of G1 blockers and does not mark any future G3–G9 gate passed.
+## Current authorization, superseding obsolete earlier phase labels
 
-## Hard boundaries
+- G0: architecture ADR01–07 and four owner clarifications approved.
+- WP0: read-only audit accepted in PR #2. **G1 remains BLOCKED: B01–B08** in Issue #3.
+- WP1A: pure contract/safety reducer implemented and reviewed/merged in PR #6; retain all its regression tests.
+- **WP1B: explicitly approved 2026-11-03, OFFLINE ONLY**, for isolated SQLite state durability, a fake non-HA command gateway, synthetic crash/restart/queue and failure tests, and associated docs. See `docs/wp1b/WP1B-TASK.md` and Issue #7.
+- WP1C, real HA adapters, running integration, physical tests and deployment/cutover **NOT AUTHORIZED**. Do not auto-start after WP1B.
+- Future gates G2–G9 require evidence and stage-specific approvals. Offline test success does **not** close G1/G3 or certify N100/real hardware safety.
 
-- Never modify the production Home Assistant installation, settings, files, helpers, automations, services, running add-ons, devices, telemetry or network.
-- Never issue control commands, start/stop/restart/update Home Assistant/AppDaemon, or run physical failure tests.
-- Never modify `dragonidf/ha-heating-ai`; it is immutable read-only source baseline unless separately authorized in the future.
-- No production backup creation or private runtime export/replay without explicit scoped authorization.
-- Do not place credentials, access tokens, private IP/addresses, identifying private data, full configuration, state/history/telemetry, or device identities in GitHub, PRs, CI or test fixtures.
-- Use only synthetic test data in WP1A. Unverified premises are BLOCKED, not default values or fake PASS.
-- Work in a dedicated branch/PR with tests, traceability, and evidence. Leave WP1A PR open for review; do not auto-merge or proceed to WP1B.
+## Hard boundaries (never bypass)
 
-If this file conflicts with old pre-approval wording in original specification, the explicit later approval and the narrow current phase scope take precedence **only within their authorized boundaries**.
+- Never modify or deploy to production Home Assistant: no settings, files, helpers, automations, services, add-ons, dashboards, HA database, entities, devices, HACS, Z2M, Deye, Sky Radar, AppDaemon lifecycle, network or OS changes.
+- No device actuation of any kind. No HA service call, fan/thermostat/MQTT/Tuya/Deye control, real network device connector, physical test or restart.
+- Legacy `dragonidf/ha-heating-ai` is immutable **read-only reference**; do not change it.
+- No private production backups/exports/replay without separate specific authorization. No household telemetry, real entity/device IDs, IPs, location, credentials, unredacted logs or config in this **public** GitHub repository, CI, PR or fixtures.
+- Only synthetic/fake actuator adapters on disposable sandbox DB/filesystem/processes. **Never create an actually dispatchable gateway or enabled Home Assistant integration in WP1B.**
+- Keep `packages/contracts/` and `packages/control/` **pure**, with no database/network/HA/clock imports or I/O. All I/O confined to `packages/control_store/` and local fake simulator adapters.
+- Verify actual test-host linked SQLite, WAL/FULL and crash behavior; do not infer production qualification. Unverified evidence = BLOCKED, never PASS.
+- Don't reinterpret legacy one-shot to OFF-on-grid-return; B08 180-minute cap scope unresolved, no global cap invention.
+- Manual priority, proper current-grid freshness, trusted emergency stop, stale event fencing and 92 WP1A tests are invariants, not optional regressions.
+- All work in dedicated `feature/wp1b-offline-store-simulator` branch, open PR **without merge**, run CI, report tests/faults and exact requirement IDs; no WP1C work. Stop for independent review.
+
+## Precedence
+
+This is a new owner-approved phase. It supersedes only outdated "WP0 only" / "WP1A only" text in prior docs; it **does not** change architecture, manual priority, blocklists, reliability gates or operational permissions.
