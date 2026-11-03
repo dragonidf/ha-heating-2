@@ -1,0 +1,7 @@
+3.12.14 Linux 6.18.57 x86_64
+24h cold: 0.083630s work=7170 status=SHORTFALL energy=134.250000
+24h warm: 0.077685s work=7170 status=PROPOSAL energy=0.000000
+24h fire: 0.078787s work=7170 status=SHORTFALL energy=60.750000
+72h cold: 0.236798s work=21570 status=SHORTFALL energy=345.500000
+72h warm: 0.262519s work=21570 status=PROPOSAL energy=0.000000
+72h fire: 0.275137s work=21570 status=SHORTFALL energy=135.000000
