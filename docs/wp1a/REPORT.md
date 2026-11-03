@@ -53,6 +53,16 @@ CI uses pinned checkout v4.2.2 and setup-python v5.6.0 commit SHAs verified agai
 
 Historical initial CI passed all three matrix versions in [run 41647612609](https://github.com/dragonidf/ha-heating-2/actions/runs/41647612609), tested source commit `1f1d22d864404539a213d559d53e519f5c6a226b`. It does **not** certify the review corrections. Corrected-source CI results are recorded separately in [CI-EVIDENCE.json](CI-EVIDENCE.json) and [PR #6 checks](https://github.com/dragonidf/ha-heating-2/pull/6/checks); final-head CI must pass all three versions before handing back for repeat review. Local 3.14 is still unavailable; no local 3.14 result is claimed.
 
+**Corrected-source CI PASS:** [run 41651720915](https://github.com/dragonidf/ha-heating-2/actions/runs/41651720915), tested commit `bc04a7e768fdfe452e0d40afd5df56afafe44661`. Decoded job logs confirm all commands, not merely overall status:
+
+| CI interpreter | Tests | Strict types | Coverage / checksums |
+|---|---|---|---|
+| Python 3.12.16 | 92, OK, 0 skips | 7 files, PASS | 768 statements / 6 missing; 232 branches / 5 partial; manifest PASS |
+| Python 3.13.17 | 92, OK, 0 skips | 7 files, PASS | 768 statements / 6 missing; 232 branches / 5 partial; manifest PASS |
+| Python 3.14.9 | 92, OK, 0 skips | 7 files, PASS | 661 statements / 6 missing; 232 branches / 5 partial; manifest PASS |
+
+All reports display 99%; the precise 98.90% figure above is from local Python 3.12. Statement counts differ by interpreter and are retained as observed. The follow-up that records these logs changes only CI evidence, report and their checksums; corrected source/tests retain the same hashes. The PR's final-head checks are separately verified after that follow-up and linked from its description. No acceptance criteria or CI commands were changed.
+
 ## 100,000 synthetic snapshots
 
 Command: `python -m tests.properties.benchmark`, Python 3.12.14, same isolated cloud host. 1,000 warmup calls; 100,000 timed calls, equally divided safe HEAT, hard-stop, unknown actual grid and SHADOW; immutable inputs constructed outside timing; `perf_counter_ns` used only in test harness. Nearest-rank p95/p99 and median:
