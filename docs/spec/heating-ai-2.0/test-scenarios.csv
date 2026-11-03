@@ -1,0 +1,39 @@
+﻿scenario_id,requirements,preconditions,steps,expected,level,status
+SC01,S03;S04;P01,"Planner CPU busy, active HEAT, grid off event",Зупинити worker та подати grid epoch off у стенді,Stop intent≤1с;0 new heat;worker kill≤10с,integration/fault,planned_not_executed
+SC02,S04;S09;O01,"Room=upper під час min-on, DB writer завис",Затримати commit на30с,Safety OFF не чекає DB/min-on,fault,planned_not_executed
+SC03,S05;S06,Старий auto event після новішого heat echo,Reorder event timestamps як інцидент03.11,False manual pause відсутній;new state чинний,integration,planned_not_executed
+SC04,S06;S08,Справжня ручна зміна під час pending command,Змінити actual у стенді й рестарт runtime,Durable manual pause;немає auto reclaim,integration,planned_not_executed
+SC05,S07;F05,"HA service success,device echo є,power missing",Не подавати physical evidence,Статус echo confirmed;physical unknown,unit/practical,planned_not_executed
+SC06,S08;S14,Crash на prepare/send/receipt one-shot,Kill у кожному checkpoint,No duplicate one-shot;unknown outcome явний,fault,planned_not_executed
+SC07,S11;S12,Compute offline/online flapping,Розірвати transport10разів,Qualified fallback;60с стабільності до AUTO,integration,planned_not_executed
+SC08,D02;D10,"Температура стара,вологість свіжа,bias старий",Оновити лише humidity і thermostat receipt,Room stale;не вигадано fresh backup,unit,planned_not_executed
+SC09,D03;D04;D08,"Local/cloud aliases,group і load перекриваються",Подати дублікати physical_id/overlap,Відхилений конфіг;без подвійного subtraction,contract,planned_not_executed
+SC10,D03;D05,"Deye GRID signed export,LOAD online,GRID frozen",Fresh input/LOAD але old GRID stamp,Unknown/conflict balance;LOAD не заміняє GRID,integration,planned_not_executed
+SC11,D04;E01;E02,Standby held45с і gap10хв,Нерівномірні power timestamps,Тільки дозволений hold;gap unknown;no nominal fill,property,planned_not_executed
+SC12,D06;P07,"Weather API empty/stale,source outside доступний",Drop Internet та repeat last forecast point,Conditional bounded forecast;safe control працює,contract,planned_not_executed
+SC13,D07;P05,"Svitlo No data,порожнє завтра,updated старий",Варіювати region/queue/date/emergency,Не normal;future sessions conditional,contract,planned_not_executed
+SC14,P03;P04;P05,"3кВт,ранкове вікно30хв,outage06–07",Plan до07 з наступним heat23,1.5кВтгод не deemed sufficient без model;shift/deficit explicit,replay,planned_not_executed
+SC15,P03;P12,"Ранок уже20хв підтверджено,remaining10",Recompute/restart з credible elapsed evidence,Не починати30хв заново;gap не credited,unit,planned_not_executed
+SC16,P02;P06,"19 малих weather updates,потім major outage",Завершити старий worker після нового epoch,Малі updates зберігають session;unsafe знімає;old result rejected,integration,planned_not_executed
+SC17,P08;P09,"Strict window,сильний deficit,search timeout","−25°C,3кВт,known outage",Strict не порушено;no solution≠physical proof,property,planned_not_executed
+SC18,P10;P11,End segment під час36h expanded search,Advance clock до half-open end,OFF без очікування full recompute;scope explicit,integration,planned_not_executed
+SC19,M01;M02,"Тепла підлога/холодна обратка,power gap",Apply old cooling observer baseline,Збережений inventory не стерто;це estimate не surface,replay,planned_not_executed
+SC20,M04;M05;M06,Candidate з leakage/зміною parent/failed disk,Подати майбутні дані і save fail,Champion незмінний;no false readiness loss,contract/fault,planned_not_executed
+SC21,M07,AI offline/NaN/команда довільного service,Подати зловмисну proposal,No command;candidate rejected;plan чинний,security,planned_not_executed
+SC22,M08;M09,Profile6→9 при actual3кВт,Зберегти settings у стенді,Опис/recommendation оновлено;0 stage switch;contradiction visible,integration/browser,planned_not_executed
+SC23,E03;E04,"Initial17.9594,known22.11794,gap583.628с",Відтворити qualified historical ledger,Initial незмінний;+4.15854 lower-bound;не savings,replay,planned_not_executed
+SC24,E05;G02,Recovery33.05 повторено після reboot,"Id/hash однакові,потім overlap conflict",Один приріст;recovered не training label,fault,planned_not_executed
+SC25,E06;E08;U05,"Forecast старший12h,немає фізичного edge",Calendar checkpoint та actual reports,Eligible original curve;actual не обрізано;no retro replay,history/browser,planned_not_executed
+SC26,E06;E07;E08,"DST fall/spring,month boundary,zero/null",Custom inclusive dates у Києві,Правильний UTC range;0 збережено;gaps розірвані,contract/browser,planned_not_executed
+SC27,F01;F02;F03,"Fire fading,Δ3→2.9,night900с закінчився",Тренд/таймер/нічні boundaries,Hysteresis/cooldown;night end не гасить fire demand,unit,planned_not_executed
+SC28,F04;F06,"Manual fan,recuperator on,bath unknown",Auto no-demand і grid unknown,Manual semantics чинні;0 vent write calls,integration,planned_not_executed
+SC29,U02;U03;U07;U09,"Two clients,200%text320px,offline Save",Concurrent revision і reconnect,Conflict не lost update;no overflow;pending не success,browser,planned_not_executed
+SC30,O02;O03;O04;O07,30d history flood+disk pressure+sensor storm,24h soak під CPU/I/O навантаженням,Bounded queue/store;protected evidence;control SLO,soak,planned_not_executed
+SC31,O05;O06,"Unauthorized/replayed API,major mismatch update",Drop auth/alter schema/replay nonce,Rejected write;qualified fallback;AppDaemon не restart,security/integration,planned_not_executed
+SC32,G01;G02;G03;G04,Legacy total/one-shot плюс нові події після cutover,Forward import і rollback на стенді,Totals≤1e-6;one-shot consumed;sole writer;rollback≤5хв,migration,planned_not_executed
+SC33,S15;G05,"Фізична втрата HA/живлення,OEM pump/anti-freeze",Лише окремо погоджене commissioning вікно,Задокументований safe outcome й реальна реакція,practical,planned_not_executed
+SC34,U01;U04;U06;U08;U10,"Actual heat при paused control,short MAE,no long proof",Synthetic truthfulness UI fixture,За10с стан зрозумілий;24h не verified;один notice,usability/browser,planned_not_executed
+SC35,S01;S02;S10;S13,"Дубль integration,термостат step0.5 bounds5–35",Перебрати всі режими й import boundaries;100тис kernel snapshots,Другий gateway rejected;offset/clamp коректний;kernel SLO,unit/benchmark,planned_not_executed
+SC36,D01;M03,0/null/false/missing у relay/weather/temperature,Roundtrip з різною вентиляцією й invalid units,Типи не злиті;relay не airflow;unknown feature збережена,contract,planned_not_executed
+SC37,M10;O08,"Local10:00/20:45,external report,restart у тому самому слоті",Кілька clock ticks/зовнішній summary/proposal,Один fit/slot;report не обходить candidate gate,integration,planned_not_executed
+SC38,D09;G06;O09,Production diff і dependency linked-version у G3,Перевірити action log/scoped diff/SQLite runtime,Unrelated configs unchanged;approval gates intact;patched SQLite required,audit/CI,planned_not_executed

@@ -1,0 +1,87 @@
+﻿id,priority,source,requirement,acceptance,verification,test_id,status
+S01,P0,U0;R2,Ядро не залежить від planner/AI/диска,Kernel не імпортує I/O/HA/planner; p99≤10 мс на N100,Import-boundary test і 100000 snapshot benchmark,T-S01,specified_not_implemented
+S02,P0,U0;H1;R2,Один автоматичний gateway на термостат і fan,Другий config entry/binding відхилено; усі керовані writers лише intent,Integration duplicate-writer і service-call audit,T-S02,specified_not_implemented
+S03,P0,U0;R7,HEAT тільки за придатних guards,"0 HEAT при grid off/unknown, armed off, manual/observation або непридатних даних",Property matrix із вилученням кожного guard,T-S03,specified_not_implemented
+S04,P0,R2;H3,Safety OFF не чекає важкої роботи,"min-on/CPU/disk hang не затримують stop intent: p99≤250 мс, max1с",Fault suite з monotonic timeline,T-S04,specified_not_implemented
+S05,P0,R2;H2,Захист від stale/duplicate команд,"Boot/owner epoch, sequence, TTL перевірені; прострочена команда не виконується",Reorder/replay/restart integration,T-S05,specified_not_implemented
+S06,P0,R2;U1,Ручний контроль зберігає пріоритет,Actual external change→durable pause; старий event не створює false pause,Manual vs delayed echo fixture,T-S06,specified_not_implemented
+S07,P0,R0;U1,Розрізняти command receipt і фізичний результат,Service/echo/physical timestamps окремі; без evidence фізичний успіх не заявлено,Fake HA echo без power; practical ON/OFF,T-S07,specified_not_implemented
+S08,P0,U0;R2,Reconcile після crash,Kill після prepare/send/echo не дає blind HEAT replay; actual state звірено,Crash-point matrix з real DB,T-S08,specified_not_implemented
+S09,P0,R0;H0,Дотримання upper/return й інерції,При upper або configured return limit новий heat заборонено; min-on переривається,Boundary fixtures upper±0.1 і return limit,T-S09,specified_not_implemented
+S10,P1,U1;R0,Зберегти heat offset interface,"Уставка thermostat current±2, step/clamp коректні; missing temp не offset від старого",Parameterized capability tests,T-S10,specified_not_implemented
+S11,P1,U0;R0,Fallback автономний від compute,При planner/App unavailable HA тримає qualified local/native reserve; unsafe inputs→SAFE_HOLD,Kill compute у стенді,T-S11,specified_not_implemented
+S12,P0,U0;R2,Повернення з резерву без гонки,60с stable inputs і новий valid plan перед AUTO; manual pause не скинуто,Flapping/recovery sequence tests,T-S12,specified_not_implemented
+S13,P1,U1;H0,Чітка семантика чотирьох режимів,Observation/Auto/native/Off окремо; actual heat видно незалежно,State machine coverage і browser states,T-S13,specified_not_implemented
+S14,P0,U1;R0,One-shot типізований і одноразовий,Kind/expiry/consumed/outcome durable; після reboot не повторено; legacy kind не змінено,Exactly-once intent-marker crash tests,T-S14,specified_not_implemented
+S15,P0,U0;R0,Межі програмного й OEM захисту явні,Commissioning підтверджує OFF/anti-freeze/pump/втрату HA; невідоме блокує активацію,Практичний checklist без симуляції у live аудиті,T-S15,specified_not_implemented
+D01,P0,U0;H0,Типізовані якісні Reading,None/0/false/missing різні; finite/unit/range/schema validation,Roundtrip/fuzz NaN/Infinity/oversize,T-D01,specified_not_implemented
+D02,P0,R1;H0,Свіжість саме виміру температури,Нова вологість не освіжає стару temperature; bias має власний age,Source timestamp fixtures,T-D02,specified_not_implemented
+D03,P0,R4;H0,Баланс A/B без подвійного віднімання,Group і дочірній load не сумуються; aliases один physical_id; signed GRID коректний,Topology tests import/export/load overlap,T-D03,specified_not_implemented
+D04,P0,R4;R5,Достовірність не вигадується,Derived balance independent=false; held standby estimated; conflict не average,Provenance schema і source-failure tests,T-D04,specified_not_implemented
+D05,P0,R0;H0,Часова узгодженість snapshot,Skew/age source-specific перевірено; new received_at не змінює observed_at,Frozen payload/skew tests,T-D05,specified_not_implemented
+D06,P1,H1;R0,Погода із provenance і bounded fallback,Provider horizon не подовжується копією точки; API off не блокує safety,Weather stale/empty/last-point fixture,T-D06,specified_not_implemented
+D07,P0,R7;H0,Розділяти графік і фізичне живлення,normal/scheduled/unknown/emergency; No data не all-clear; region/queue/date перевірені,Svitlo contract/DST/empty tomorrow tests,T-D07,specified_not_implemented
+D08,P0,R0;H0,Підтвердити фізичну топологію,"Перед active немає невизначених phase mapping, overlap і signed direction",Commissioning loads/phase map report,T-D08,specified_not_implemented
+D09,P0,U0;U1,Не змінювати чужі системи,Z2M/grid alerts/Deye/Sky Radar/vent timers не змінені,Scoped config diff до/після,T-D09,specified_not_implemented
+D10,P1,R1;H0,Резерв кімнатної температури кваліфікований,Thermostat fresh/plausible і verified bias; інакше unknown,Stale bias і contradictory source tests,T-D10,specified_not_implemented
+P01,P0,U0;R2,Процесно ізольований bounded planner,"Одна planner process; baseline≤2с, hard≤10с; killed job не блокує HA",CPU hang і deadline benchmark,T-P01,specified_not_implemented
+P02,P0,R2;R5,Застарілий plan result відкидається,Mismatch будь-якої revision/epoch/hash не може стати active plan,Concurrent config/grid/model changes,T-P02,specified_not_implemented
+P03,P1,U1;R3,Ранкові 30 безперервних хвилин,Якщо потрібно/безпечно/можливо — ≥30 хв; два розривні 15 не рахуються,Morning minimum/elapsed restart tests,T-P03,specified_not_implemented
+P04,P1,U1;R3,Ранок забезпечує енергію і резерв,План оцінює комфорт до наступного доступного тепла+delay; 3кВт30хв не замінює 9кВт30хв,3/6/9/AUTO shortage fixtures,T-P04,specified_not_implemented
+P05,P1,R3;U1,Правильна дата й зміщення ранку,Cycle date/DST коректні; outage переносить резерв у allowed advance; skipped пояснений,Before/after07 midnight spring/fall tests,T-P05,specified_not_implemented
+P06,P1,R0;U1,Стабільний near-term план,Малі updates не зсувають сеанс без причини; safety update скасовує stability,19+ малих forecast updates і unsafe update,T-P06,specified_not_implemented
+P07,P0,R7;R5,Умовні майбутні сеанси не є дозволом,Unknown tomorrow явно conditional; запуск лише за current physical guards,Schedule unknown→grid off/on matrix,T-P07,specified_not_implemented
+P08,P1,U1;R0,Тепло переважно вночі за стратегією,Strict hours не порушені; comfort strategy допускає обґрунтоване денне тепло,Дві стратегії з deficit/overheat fixtures,T-P08,specified_not_implemented
+P09,P0,R5;H0,Чесний результат пошуку,Timeout/no candidate не названо фізичною неможливістю; proof має assumptions,Incomplete search/status assertions,T-P09,specified_not_implemented
+P10,P1,R0;R2,Сегмент починається/закінчується за абсолютним часом,"Dispatch не чекає recompute; [start,end), stop deadlines у SLO",Planner busy на межі segment,T-P10,specified_not_implemented
+P11,P1,R3;R5,Достатній горизонт і scope,"24h + reserve до next heat+delay, cap72h; known coverage відокремлено",24/36/48/72h і partial weather tests,T-P11,specified_not_implemented
+P12,P1,U1;R0,"Фізичні ліміти, min-on/off і session cap",600/900с та imported180хв збережено; safety stop пріоритет; жодного моментального restart обходу cap,Switching/cap boundary і restart tests,T-P12,specified_not_implemented
+M01,P1,R0;U1,Перенести перевірену теплову модель,Coefficients/units/version збережені; baseline replay parity задокументована,Golden input/trajectory comparison,T-M01,specified_not_implemented
+M02,P0,R4;R5,Stored heat не видається за поверхню підлоги,UI/source labels і observer uncertainty відділені від probe; gap не nominal energy,Cold pipe/warm slab/gap fixtures,T-M02,specified_not_implemented
+M03,P1,U1;R4,Враховувати fireplace/vent/external gains,Ознаки on/off/unknown й uncertainty збережені; relay не airflow/ККД,Comparable-day і unknown ventilation tests,T-M03,specified_not_implemented
+M04,P0,U0;R0,Bounded навчання поза control,Learner не пише champion/commands; pending/rejected не знімає готовність чинної моделі,Worker failure/import-boundary tests,T-M04,specified_not_implemented
+M05,P1,R0;R5;X0,Незалежний holdout і довгі метрики,≥7 train/3 holdout днів; gate MAE/peak по горизонтах і режимах; no leakage,Temporal split/leakage і candidate validation,T-M05,specified_not_implemented
+M06,P0,U1;R0,Atomic promotion/rollback моделі,"Parent revision CAS, durable receipt; rollback не змінює energy/history",Disk failure/stale candidate/restart tests,T-M06,specified_not_implemented
+M07,P0,U0;R0,"AI опційний, не safety dependency",Timeout/bad advice не впливає на guards; auto_apply тільки validated candidate,AI offline/malicious proposal tests,T-M07,specified_not_implemented
+M08,P1,U1;R4,3/6/9/AUTO як фізичні профілі,Вибір profile не service stage switch; calibration по режимах окремо,Service spy і contradiction fixtures,T-M08,specified_not_implemented
+M09,P1,U1;R4,Корисні рекомендації потужності,Mode/deadline/deficit/calibration/assumptions видно; uncalibrated не verified,Power shortage і browser advice tests,T-M09,specified_not_implemented
+M10,P1,R0;U1,Зберегти розклад навчання й аналізів,Local learning10:00/20:45 Europe/Kyiv із daily dedup; зовнішні звіти не дублюють fit/commands,Clock/restart/daily-dedup tests і read-only перевірка report automation,T-M10,specified_not_implemented
+E01,P0,R4;R5,Єдиний energy ledger,Origin+derived+estimated+recovered без duplicate intervals; unknown coverage окремо,Method switch/reset/recovery property tests,T-E01,specified_not_implemented
+E02,P0,R4;R0,Фактична енергія за часовими вимірами,Інтегратор≤0.1% на reference; gap>45с не nominal fill,Variable power/irregular time fixtures,T-E02,specified_not_implemented
+E03,P0,U1;R5,Immutable initial/prestart baseline,Poststart plans не змінюють initial; known spend віднімається навіть при gap,Historical cycle +23.2% fixture,T-E03,specified_not_implemented
+E04,P1,U1;R5,Відхилення чесне і пояснене,Scope/cycle/coverage/changed inputs видимі; partial negative не savings,Partial actual і cycle vs24h browser tests,T-E04,specified_not_implemented
+E05,P0,R4,Recovery адміністративний і idempotent,Dry-run/evidence hash/expected total/backup; repeat не додає; не training label,Crash/repeat/overlap recovery tests,T-E05,specified_not_implemented
+E06,P0,U1;U2;R5,Незмінний завчасний прогноз≥12h,Latest original issue≤cutoff; actual lead/hash; missing не retrospective replay,Cutoff/forecast coverage/reload tests,T-E06,specified_not_implemented
+E07,P1,U1;H0,Статистика/тарифи/бюджет із періодами,"Day local midnight, rolling24h/cycle різні; dated tariff; budget soft",DST/month/reset/tariff history tests,T-E07,specified_not_implemented
+E08,P1,R5;U2,Історія переживає restart,Actual не закінчується разом із forecast; ranges/gaps/cursors immutable,History restart/null/custom-date tests,T-E08,specified_not_implemented
+F01,P1,R6;U1,Стани каміна й hysteresis,"Δ2/5/10/3, slope/cooldown імпортовані; gap90с скидає continuity",Table-driven phase/cooldown tests,T-F01,specified_not_implemented
+F02,P1,R6;H1,Арбітраж night і fireplace demand,End night не гасить fire; Auto no-demand→off після reload,Overlapping demand/reload tests,T-F02,specified_not_implemented
+F03,P1,R6;H0,Три fan рівні й нічна межа,38/42/50 імпортовано; night≤standard≤intense; capability rounding,Night/intense/speed-boundary tests,T-F03,specified_not_implemented
+F04,P0,U1;R6,Fan manual/stop/backup authority,Manual не гаситься auto; Stop припиняє auto; unknown power не дозвіл,Manual/mode/grid/backup matrix,T-F04,specified_not_implemented
+F05,P1,R6;R0,Підтверджувати фактичний fan state,Sent/echo/actual різні; stale percentage не показує running,Failed fan/offline/echo fixtures,T-F05,specified_not_implemented
+F06,P0,U1;R4,Вентиляцію тільки враховувати,0 нових write calls до recuperator/bath; schedules не змінені,Service spy і scoped config diff,T-F06,specified_not_implemented
+U01,P1,U0;U2,Мінімальний повсякденний екран,За10с видно комфорт/actual/next/причину; default390px≤1300px висоти,Usability tasks і browser layout,T-U01,specified_not_implemented
+U02,P1,U0;R9,Адаптивний дизайн і теми,"320–1920px,200%text без горизонтального overflow; HA light/dark",Chromium/WebKit screenshot/layout suite,T-U02,specified_not_implemented
+U03,P1,U0;R9,Доступні керування й графіки,"Touch≥44px, keyboard/focus/labels, контраст WCAG AA, не тільки колір",Browser a11y і practical phone check,T-U03,specified_not_implemented
+U04,P0,U1;R2,Actual/desired/control не плутаються,Heat6кВт при observation видно як actual heat + pause; unknown не0,Truthfulness fixture stale binary vs power,T-U04,specified_not_implemented
+U05,P1,U2;R5,Графік очікувана/факт для різних періодів,7d default;24h/30d/custom; actual-only; issued time і gaps,Range/cutoff/null/reconnect browser tests,T-U05,specified_not_implemented
+U06,P0,R5;H0,Readiness не дорівнює 24h accuracy,Кількість днів/горизонт/режим показані; short MAE не verified day,Model metrics labels fixtures,T-U06,specified_not_implemented
+U07,P0,R1;H0,Settings збережено лише durable,Revision/persisted receipt; failure/conflict зберігає draft і старий runtime,Two clients/disk fail/Undo tests,T-U07,specified_not_implemented
+U08,P1,U0;U2,Один priority notice й людські тексти,Safety>control>data>comfort>cost; технічні codes лише details,Notice priority і long Ukrainian text tests,T-U08,specified_not_implemented
+U09,P0,U0;R9,UI offline не удає live,Visible timestamp/stale; control disabled до reconnect; pending bounded10с,Network disconnect/reconnect tests,T-U09,specified_not_implemented
+U10,P1,U0;R9,Експертні можливості не втрачені,Sensors/model/history/recovery/advanced settings доступні через details; main не перевантажено,Feature navigation checklist,T-U10,specified_not_implemented
+O01,P0,U0;R0,Надійний critical store,SQLite local WAL/FULL прочитані назад; failed save не applied; corrupt→SAFE_HOLD,Actual SQLite ENOSPC/BUSY/crash tests,T-O01,specified_not_implemented
+O02,P0,U0;R1,Архів не блокує контроль,Separate DB/worker; retention raw30d forecasts90d; protected legacy не видалено,Capacity/compaction/history stress,T-O02,specified_not_implemented
+O03,P0,R1;R2,Bounded transport і черги,Sensors≤8192 default-JSON bytes; history≤64KiB; API≤256KiB; latest-wins bounded,Size tests/flood/memory soak,T-O03,specified_not_implemented
+O04,P1,U0;R2,Діагностика реального здоров'я,Loop lag/persistence/inputs/command/worker/coverage окремі; heartbeat не єдиний критерій,Inject кожну відмову й assert diagnostics,T-O04,specified_not_implemented
+O05,P0,U0;R0,Авторизація й приватність,Read/control/admin backend checks; no secrets/full state/config у public export,Unauthorized/replay/redaction tests,T-O05,specified_not_implemented
+O06,P1,U0;R8,Незалежні оновлення/версії,Compute update не рестартує AppDaemon; major mismatch→fallback; exact hashes,Upgrade/partial package/compat tests,T-O06,specified_not_implemented
+O07,P1,U0;R5,Швидкодія з вимірюваними межами,7d history cold p95≤2с server/3с LAN paint;control1с lagp99≤250мс,Bench і24h stress soak на N100,T-O07,specified_not_implemented
+O08,P1,U1;H0,Сумісність зовнішніх кліматичних звітів,Summary/quality compatibility contract збережено; scheduled analysis не отримує прихованого права міняти safety/config,Contract fixtures для наявного звіту й scoped permissions,T-O08,specified_not_implemented
+O09,P0,X0;https://www.sqlite.org/wal.html#walreset,SQLite містить виправлення WAL-reset,Linked version≥3.51.3 або documented patched3.44.6/3.50.7;неперевірена runtime library блокує WAL activation,Runtime linked-version check і storage compatibility CI,T-O09,specified_not_implemented
+G01,P0,U0;H0,Передміграційний фактологічний baseline,Повний app YAML/bindings/OEM/topology/backup hashes отримано до active,Read-only commissioning report,T-G01,specified_not_implemented
+G02,P0,U0;R8,Dry-run імпорту без втрат,Totals±1e-6кВтгод/model/settings/frozen hashes збігаються; rerun idempotent,Migration fixtures і private dry-run report,T-G02,specified_not_implemented
+G03,P0,U0;H1,Cutover без двох авторів,Legacy quiescent до new authority; watchdog/night routes погоджені; unrelated apps не зупинені,Service timeline/registry/config diff,T-G03,specified_not_implemented
+G04,P0,U0;R8,Rollback з новими даними,Bridge delta/consumed one-shot збережені; rehearsal≤5хв; без full HA restore,Staging forward+rollback rehearsal,T-G04,specified_not_implemented
+G05,P1,U0;X0,Shadow і проспективне приймання,≥7діб/3цикли shadow no writes;10циклів energy gates і7днів/horizon forecast або pending,Shadow/probation/quality acceptance report,T-G05,specified_not_implemented
+G06,P0,U0,Погодження до розробки й rollout,Зараз тільки аудит/документи; implementation і device tests лише після відповідного погодження,Audit tool action log і approval gate,T-G06,specified_not_implemented
