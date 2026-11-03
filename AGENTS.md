@@ -1,41 +1,42 @@
 # AGENTS.md — Heating AI 2.0
 
-## Start here — current authority (2026-11-03)
+## Current authorized phase (2026-11-03)
 
-1. Read `docs/wp1c/APPROVAL-2026-11-03.md` and `docs/wp1c/WP1C-TASK.md`, then the full [Issue #11](https://github.com/dragonidf/ha-heating-2/issues/11). They control the **currently authorized offline-only WP1C** work.
-2. Review the approved `docs/spec/heating-ai-2.0/APPROVAL-2026-11-03.md`, `02-Architecture.md`, `03-Codex-specification.md` (D/P/M/F requirements), `04-Test-strategy.md`, `06-Migration-and-acceptance.md`, `requirements.csv` and `test-scenarios.csv`.
-3. Read `docs/wp0/06-open-questions-and-blockers.md`, `07-gate-G1-readiness.md` and [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
-4. Read WP1A and WP1B reports, ADRs, all accepted contracts/kernel/store/simulator source and their complete regression tests; see `docs/ROADMAP-TO-LAUNCH.md`.
+**WP2A is APPROVED FOR ISOLATED OFFLINE DEVELOPMENT AND SYNTHETIC TESTS ONLY**, following explicit owner approval in `docs/wp2a/APPROVAL-2026-11-03.md`. Read, in order:
 
-## Current phase / approval
+1. `docs/wp2a/APPROVAL-2026-11-03.md`, `docs/wp2a/WP2A-TASK.md` and full [Issue #14](https://github.com/dragonidf/ha-heating-2/issues/14).
+2. Canonical owner-approved `docs/spec/heating-ai-2.0/APPROVAL-2026-11-03.md`, `02-Architecture.md`, `03-Codex-specification.md`, `04-Test-strategy.md`, `06-Migration-and-acceptance.md`, and the full 86 requirement / 38 test-scenario CSV registers.
+3. `docs/wp0/06-open-questions-and-blockers.md`, `docs/wp0/07-gate-G1-readiness.md`, [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
+4. Previously accepted WP1A/B/C implementation, reports and regression tests; `docs/ROADMAP-TO-LAUNCH.md`.
 
-- **G0:** architecture ADR01–07 and owner clarifications APPROVED.
-- **WP0:** read-only baseline audit REVIEWED (PR #2). **G1 remains BLOCKED: B01–B08** (Issue #3).
-- **WP1A:** immutable contracts + pure safety reducer ACCEPTED (PR #6).
-- **WP1B:** offline transactional control store + fake gateway ACCEPTED (PR #9); 155 reported tests / six cross-Python final checks.
-- **WP1C:** owner **explicitly APPROVED OFFLINE ONLY**, 2026-11-03, for synthetic thermal/model/observer/planner/learning and pure fan policy under Issue #11. New phase-specific instructions override obsolete older "WP1B only", "WP1C not authorized" wording **only for WP1C synthetic development**. The architecture/safety rules and G1/G2–G9 gates remain binding.
-- **WP2A and beyond, live HA integration, actual gateway, shadow deployment, real-device tests, backup/migration and cutover:** NOT AUTHORIZED by WP1C approval.
+## State / phase authorization
 
-## WP1C engineering execution
+- **G0** architecture ADR01–07 and owner clarifications approved; **WP0** baseline read-only audit reviewed, but **G1 BLOCKED: B01–B08** in Issue #3.
+- **WP1A accepted** in PR #6 — immutable typed contracts and pure safety reducer.
+- **WP1B accepted** in PR #9 — isolated SQLite critical store, fake gateway and crash/restart fault simulation.
+- **WP1C accepted** in PR #13 — synthetic thermal model, robust planner, learning gates and pure fan arbitration; 219 reported tests, nine final-head CI checks Python 3.12/3.13/3.14. WP1C main merge `9525e46d2c8155155aac513b95f49e30ca6ee749`.
+- **WP2A explicitly approved OFFLINE ONLY (2026-11-03)** — fake HA-facing typed integration seam, separate evidence/energy archive, **synthetic-only** legacy migration dry-run, fault/replay/CI tests. Full scope in Issue #14.
+- **WP2B and later NOT AUTHORIZED**. A live HA adapter, actual device writer, production installation, real shadow operation, private data import/export, OEM/physical tests, actual cutover and release require separate approvals and verified gate evidence.
 
-- Build one complete coherent package in `feature/wp1c-offline-model-planner` per `docs/wp1c/WP1C-TASK.md` and full Issue #11; implement **all offline aspects**, not a prototype. Pure typed planner outputs are **proposals**, never commands.
-- Required module groups: `packages/thermal/` (two-state baseline/observer with qualified provenance and uncertainty), `packages/planner/` (feasible deterministic schedule, 07:00 preheat, blackout/time/energy budget, stable frozen 12h reference), optional `packages/learning/` (champion/challenger with independent days, no leakage), `packages/fan_policy/` (fireplace and night demand arbitration).
-- No physical 3/6/9 kW stage selection; candidate power scenarios only. Preserve validated baseline coefficient units or report `NOT_PARITY_VERIFIED`. Unknown sensors/energy/outages remain uncertain, not zero. No missing/fake 12h historical forecast. Safety/manual/actual-grid priority cannot be bypassed by planner or AI.
-- Preserve all WP1A+WP1B behavior and 155 existing regression tests. Add substantive synthetic negative/fault/property tests, CI Python 3.12/3.13/3.14, type checks and traceability for 86 requirements/38 scenarios; never weaken critical tests to pass.
-- Output `docs/wp1c/REPORT.md`, ADR and reproducible evidence; single **open/unmerged PR** for independent review. Do not auto-merge, deploy or proceed to WP2A. Keep final chat handoff concise (PR URL/SHA/tests/critical blockers).
+## WP2A deliverable
 
-## Hard safety and privacy boundaries — mandatory
+- Complete **all offline WP2A** sections of Issue #14 as one cohesive implementation in `feature/wp2a-offline-integration-ledger`. Use synthetic inputs only. New modules for fake HA client/contracts, independent SQLite evidence ledger and synthetic migration rehearsal are allowed.
+- No actual `custom_components/heating_ai` enabled component, HA URL/token/connection, real MQTT/HTTP/WebSocket/device transport, real HA services or physical command path. Fake adapters must not be connectable to real devices by supplying a URL or token.
+- Preserve pure WP1A kernel, WP1C planner/thermal/fan boundaries and WP1B STOP/one-writer fencing. Integration outputs are **proposals**, synthetic state and provenance; actual HEAT remains unauthorized outside verified safety runtime.
+- Keep all 219 prior tests and negative regressions. Implement evidence idempotency, signed/overlapping metering, quality coverage vs zero, frozen original-12h comparison, history bounded queries, date-aware tariff, crash/restart and failure boundaries.
+- Run strict mypy and CI on Python 3.12/3.13/3.14, qualify *test* SQLite, preserve quality limits, document sources/checksums and honest 86/38 traceability; never treat a simulated success as actual ON/OFF or G1 PASS.
+- Create **one OPEN / UNMERGED code PR** with report, ADR, test outputs, source SHA and blockers. Fix ordinary sandbox defects autonomously before review; report a concise final handoff; don't start WP2B or self-merge.
 
-- **Never change production Home Assistant:** no files, entities, helpers, automations, services, dashboards, HACS, Zigbee2MQTT, Sky Radar, Deye, AppDaemon, database, OS/network, reload, restart, installs, actual backups, migrations or device commands.
-- No HA/MQTT/HTTP device connectivity, thermostat/fan actions, physical tests or live source reads in WP1C. No enabled integration, actual gateway or background heating scheduler.
-- Legacy `dragonidf/ha-heating-ai` may be inspected as **read-only reference** to verify historical thermal equations and units, but cannot be modified. Pin any cited source commit.
-- **Public repository:** synthetic/test data only. No user-specific live configuration, states/history, logs, entity IDs, physical address/location, private IP, credentials, access tokens or private backup in code, PR, CI or issues.
-- Preserve pure `packages/contracts`/`packages/control` boundaries; WP1C pure packages must not import I/O, store, simulated actuator, network or system-time operations. SQLite and FakeActuator remain WP1B-only test mechanisms, not a live transport.
-- Test-runtime linked SQLite proof does not qualify target host, real filesystem power loss, physical OFF timing or ownership. Such cases remain BLOCKED/NOT_TESTED.
-- Manual priority, emergency STOP, stale sensor/event fencing, one-writer invariant and consent gates are non-negotiable.
-- Legacy one-shot means `HEAT_AFTER_GRID_RESTORE`, **not** automatic OFF-on-return. **B08 is undecided; do not introduce a global 180-min cap or reinterpret session policy.**
-- **G1/B01–B08 remain BLOCKED**, regardless of passing synthetic tests; G2–G9 and any live integration require separate explicit approval.
+## Hard safety, privacy and project boundaries
+
+- **Do not read, modify or deploy anything in production Home Assistant** during WP2A. No HA config, entity/helper/automation/service, sensors, Recorder, database, add-ons, HACS, Zigbee2MQTT, Sky Radar, AppDaemon, Deye, network/router, dashboard, host/OS or scheduled job changes; no reloads, restarts, device operations, backups, imports or live-HA observation from code.
+- Legacy `dragonidf/ha-heating-ai` remains **read-only reference**; no edits, PRs, live production state, historical private export or installed application change.
+- This repository is **public**: no actual household entity IDs, locations, IPs, power topology, meters, credentials, raw live sensor states, user logs, configs, filenames revealing secrets, home history, backups or other private data in code/CI/issues/reports.
+- No real device command route or second writer. Manual priority, boot/owner epoch fencing, trusted emergency STOP, unknown-vs-zero, stale-input denial, one-shot durability, independent failure containment and safe fallback are mandatory. WP1B evidence-store delays cannot block STOP.
+- Do **not** infer the physical 3/6/9 kW mode, a verified signed Deye measurement, exact pump behavior or a valid home calibration from synthetic tests.
+- **B08** remains unresolved: preserve legacy `HEAT_AFTER_GRID_RESTORE` one-shot semantics and **do not invent a global 180-minute heating-session cap**.
+- Never claim G1/G2–G9, actual HA compatibility, production N100/SQLite durability, actual physical ON/OFF evidence, seven-day shadow, migration or household energy parity PASS from offline tests.
 
 ## Precedence
 
-This later owner's offline WP1C approval changes **only the permitted development phase**. It does not supersede ADR01–07, canonical P0/P1 requirements, device restrictions, private evidence gates or the rule that each new code PR stops for independent review.
+This is later **phase-specific** authorization and supersedes older statements saying `WP1C only` / `WP2A not authorized` **solely for sandbox WP2A development**. It does not supersede owner architectural ADRs, any P0/P1 safety rule, G1/B01–B08, physical-access bans, privacy rules or later staging/activation gates.
