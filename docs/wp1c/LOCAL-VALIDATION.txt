@@ -1,12 +1,12 @@
-WP1C local validation; synthetic/disposable environment only.
-Base 2106166a4e60ffa8bc7d5870f46f98131f9084bf
+WP1C independent-review corrections; synthetic/disposable environment only.
+Reviewed base 79c67084ca211f39890a272914faa4f4ebffcd04
 No production or target qualification.
 
 Python 312 full make check:
 Success: no issues found in 20 source files
-Ran 203 tests in 21.439s
+Ran 219 tests in 28.340s
 OK
-TOTAL                                      2365     25    708     27    98%
+TOTAL                                      2407     27    722     29    98%
 
 Name                                      Stmts   Miss Branch BrPart  Cover   Missing
 -------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ packages/control_store/qualification.py      19      0      2      0   100%
 packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
 packages/fan_policy/__init__.py              77      0     32      0   100%
 packages/learning/__init__.py               223      0     60      0   100%
-packages/planner/__init__.py                318      1     82      1    99%   720
+packages/planner/__init__.py                360      3     96      3    99%   750, 770, 846
 packages/planner/evidence.py                 44      0     10      0   100%
 packages/planner/policy.py                   60      0     20      0   100%
 packages/planner/sources.py                  90      0     26      0   100%
@@ -31,13 +31,13 @@ packages/simulator/engine.py                262      5     74      7    96%   86
 packages/thermal/__init__.py                 76      0      6      0   100%
 packages/thermal/wire.py                     80      1     28      1    98%   95
 -------------------------------------------------------------------------------------
-TOTAL                                      2365     25    708     27    98%
+TOTAL                                      2407     27    722     29    98%
 
 Python 313 full make check:
 Success: no issues found in 20 source files
-Ran 203 tests in 20.680s
+Ran 219 tests in 27.719s
 OK
-TOTAL                                      2365     25    708     27    98%
+TOTAL                                      2407     27    722     29    98%
 
 Name                                      Stmts   Miss Branch BrPart  Cover   Missing
 -------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ packages/control_store/qualification.py      19      0      2      0   100%
 packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
 packages/fan_policy/__init__.py              77      0     32      0   100%
 packages/learning/__init__.py               223      0     60      0   100%
-packages/planner/__init__.py                318      1     82      1    99%   720
+packages/planner/__init__.py                360      3     96      3    99%   750, 770, 846
 packages/planner/evidence.py                 44      0     10      0   100%
 packages/planner/policy.py                   60      0     20      0   100%
 packages/planner/sources.py                  90      0     26      0   100%
@@ -62,7 +62,7 @@ packages/simulator/engine.py                262      5     74      7    96%   86
 packages/thermal/__init__.py                 76      0      6      0   100%
 packages/thermal/wire.py                     80      1     28      1    98%   95
 -------------------------------------------------------------------------------------
-TOTAL                                      2365     25    708     27    98%
+TOTAL                                      2407     27    722     29    98%
 
 Environment: Python3.12.14 / SQLite3.53.1; Python3.13.5 / linked temporary SQLite3.51.3. TMPDIR disposable overlay filesystem.
-Python3.14 validation: final-SHA WP1C CI matrix; consult PR checks and workflow exact-SHA final evidence step.
+Python3.14 and final-SHA evidence: WP1C exact-head CI matrix; PR13 check records and description link all nine final jobs.

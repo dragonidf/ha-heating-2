@@ -215,6 +215,9 @@ class Proposal:
     reason: str
     work: int
     changes: tuple[str, ...] = ()
+    retention_key: str | None = None
+    morning_required: bool = False
+    segment_reasons: tuple[tuple[str, ...], ...] = ()
 
     def __post_init__(self) -> None:
         require(
@@ -236,6 +239,24 @@ class Proposal:
         if self.power_kw is not None:
             number(self.power_kw, nonnegative=True)
         counter(self.work)
+        if self.retention_key is not None:
+            digest(self.retention_key)
+        require(type(self.morning_required) is bool, "Invalid morning requirement")
+        require(
+            type(self.segment_reasons) is tuple
+            and (
+                not self.segment_reasons
+                or len(self.segment_reasons) == len(self.segments)
+            ),
+            "Invalid segment provenance",
+        )
+        for segment, reasons in zip(self.segments, self.segment_reasons):
+            require(
+                type(reasons) is tuple and segment.conditional == bool(reasons),
+                "Invalid segment reasons",
+            )
+            for reason in reasons:
+                text(reason)
         text(self.reason)
         require(
             type(self.budget_uncertain) is bool and type(self.changes) is tuple,
@@ -258,9 +279,26 @@ class _Node:
     segment_count: int
 
 
-def _eligible(req: Request, slot: Slot, index: int) -> bool:
+def _weather_current(req: Request) -> bool:
+    return (
+        req.weather.received <= req.state.at
+        and 0 <= req.state.at - req.weather.issue <= req.forecast_max_age_s
+    )
+
+
+def _retention_key(req: Request) -> str:
+    # Publication-only refreshes may differ; every objective/safety input has zero tolerance.
+    semantic = replace(
+        req,
+        stamp=replace(req.stamp, input_hash="0" * 64),
+        weather=replace(req.weather, issue=0, received=0),
+    )
+    return sha256(repr((semantic, _weather_current(req))).encode()).hexdigest()
+
+
+def _return_ready(req: Request) -> bool:
     probe = req.return_probe
-    current_return = (
+    return (
         probe is not None
         and probe.value is not None
         and req.return_upper_c is not None
@@ -271,15 +309,24 @@ def _eligible(req: Request, slot: Slot, index: int) -> bool:
         and probe.quality.age_s <= req.return_max_age_s
         and float(probe.value) < req.return_upper_c
     )
+
+
+def _state_ready(req: Request) -> bool:
+    return (
+        not req.state.estimated
+        and req.state.at - req.state.observed_at <= req.state_max_age_s
+    )
+
+
+def _eligible(req: Request, slot: Slot, index: int) -> bool:
     return (
         req.armed
         and not req.manual
         and (
             index > 0
             or req.actual_grid is True
-            and not req.state.estimated
-            and req.state.at - req.state.observed_at <= req.state_max_age_s
-            and current_return
+            and _state_ready(req)
+            and _return_ready(req)
         )
         and slot.grid not in ("scheduled_off", "emergency")
         and any(
@@ -287,6 +334,31 @@ def _eligible(req: Request, slot: Slot, index: int) -> bool:
             for w in req.allowed
         )
     )
+
+
+def _conditional_reasons(
+    req: Request, slot: Slot, state: ThermalState
+) -> tuple[str, ...]:
+    conditions = (
+        (slot.window.start > req.state.at, "future_execution_unverified"),
+        (req.actual_grid is not True, "actual_grid_unverified"),
+        (not _return_ready(req), "current_return_unverified"),
+        (not _state_ready(req), "current_state_unverified"),
+        (slot.grid == "unknown", "grid_forecast_unknown"),
+        (not slot.forcing.quality_valid or state.estimated, "thermal_inputs_uncertain"),
+        (
+            not req.weather.horizon.start
+            <= slot.window.start
+            < slot.window.end
+            <= req.weather.horizon.end,
+            "weather_horizon_missing",
+        ),
+        (not _weather_current(req), "weather_not_current"),
+        (slot.price is None, "price_unknown"),
+        (req.model.calibration != "SYNTHETIC_QUALIFIED", "model_not_qualified"),
+        (req.slots[-1].window.end < req.morning.window.end, "morning_horizon_missing"),
+    )
+    return tuple(reason for condition, reason in conditions if condition)
 
 
 def solve(
@@ -325,7 +397,20 @@ def solve(
             req.stamp, "BLOCKED", (), (), None, 0, 0, None, True, 0, "overheat", 0
         )
     coast = req.state
-    need = False
+    coasts = []
+    need = (
+        req.state.at == req.morning.window.end and coast.room.low < req.slots[0].target
+    )
+    reserve_end = next(
+        (
+            slot.window.start
+            for i, slot in enumerate(req.slots)
+            if slot.window.start >= req.morning.window.end
+            and slot.grid == "normal"
+            and _eligible(req, slot, i)
+        ),
+        req.slots[-1].window.end,
+    )
     for slot in req.slots:
         work += 1
         if work > req.max_work or cancelled():
@@ -335,20 +420,26 @@ def solve(
                 reason="cancelled_or_work_cap",
                 work=work,
             )
-        coast = step(
-            coast,
-            Forcing(
-                slot.forcing.outside,
-                Interval(0, 0),
-                slot.forcing.fire_delta,
-                slot.forcing.ventilation_loss,
-                slot.forcing.quality_valid,
-                slot.forcing.external_gain,
-            ),
-            req.model,
-            slot.window.end - slot.window.start,
-        )
-        if slot.window.end <= req.morning.window.end and coast.room.low < slot.target:
+        forcing = replace(slot.forcing, power_kw=Interval(0, 0))
+        if slot.window.start < req.morning.window.end < slot.window.end:
+            work += 1
+            if work > req.max_work or cancelled():
+                return replace(
+                    empty,
+                    status="SEARCH_EXHAUSTED",
+                    reason="cancelled_or_work_cap",
+                    work=work,
+                )
+            deadline = step(
+                coast, forcing, req.model, req.morning.window.end - slot.window.start
+            )
+            need |= deadline.room.low < slot.target
+        coast = step(coast, forcing, req.model, slot.window.end - slot.window.start)
+        coasts.append(coast)
+        if (
+            req.morning.window.end <= slot.window.end <= reserve_end
+            and coast.room.low < slot.target
+        ):
             need = True
     results = []
     advance = (
@@ -425,9 +516,19 @@ def solve(
                     run = node.run_s + duration if on and in_morning else 0
                     morning = max(node.morning_s, run)
                     energy = node.energy + (power * duration / 3600 if on else 0)
+                    target = slot.target
+                    # A safe natural warm-up to 07:00 is not a boiler comfort deficit.
+                    if (
+                        not need
+                        and req.slots[-1].window.end >= req.morning.window.end
+                        and req.morning.window.start
+                        <= slot.window.start
+                        < slot.window.end
+                        <= req.morning.window.end
+                    ):
+                        target = min(target, coasts[index].room.low)
                     deficit = (
-                        node.deficit
-                        + max(0, slot.target - state.room.low) * duration / 3600
+                        node.deficit + max(0, target - state.room.low) * duration / 3600
                     )
                     following.append(
                         _Node(
@@ -518,27 +619,16 @@ def solve(
     state = req.state
     segments: list[PlanSegment] = []
     conditional = False
+    segment_reasons: list[tuple[str, ...]] = []
     for slot, on in zip(req.slots, best.path):
-        uncertain = (
-            slot.grid == "unknown"
-            or not slot.forcing.quality_valid
-            or not req.weather.horizon.start
-            <= slot.window.start
-            < slot.window.end
-            <= req.weather.horizon.end
-            or req.weather.received > req.state.at
-            or req.weather.issue > req.state.at
-            or req.state.at - req.weather.issue > req.forecast_max_age_s
-            or slot.price is None
-            or req.model.calibration != "SYNTHETIC_QUALIFIED"
-            or state.estimated
-        )
+        reasons = _conditional_reasons(req, slot, state)
+        uncertain = bool(reasons)
         if on:
             conditional |= uncertain
             if (
                 segments
                 and segments[-1].end == slot.window.start
-                and segments[-1].conditional == uncertain
+                and segment_reasons[-1] == reasons
             ):
                 old = segments.pop()
                 segments.append(
@@ -547,6 +637,7 @@ def solve(
                     )
                 )
             else:
+                segment_reasons.append(reasons)
                 segments.append(
                     PlanSegment(
                         start=slot.window.start,
@@ -606,6 +697,9 @@ def solve(
             )
         ),
         work,
+        retention_key=_retention_key(req),
+        morning_required=need,
+        segment_reasons=tuple(segment_reasons),
     )
 
 
@@ -616,6 +710,14 @@ def bridge(proposal: Proposal, current: Stamp, issued: float, expires: float) ->
         "Stale/blocked proposal",
     )
     require(bool(proposal.trajectory), "No trajectory")
+    require(
+        len(proposal.segment_reasons) == len(proposal.segments),
+        "Missing segment provenance",
+    )
+    require(
+        all(s.conditional for s in proposal.segments if s.start > issued),
+        "Unconditional future heat",
+    )
     return Plan(
         plan_id=sha256(repr(proposal).encode()).hexdigest(),
         boot_id=current.boot_id,
@@ -635,6 +737,8 @@ def retain(previous: Proposal, request: Request) -> bool:
     if replace(
         previous.stamp, input_hash=request.stamp.input_hash
     ) != request.stamp or len(previous.trajectory) != len(request.slots):
+        return False
+    if previous.retention_key != _retention_key(request):
         return False
     state = request.state
     for i, slot in enumerate(request.slots):
@@ -693,8 +797,30 @@ def replan(
         replay = solve(
             replace(request, stages_kw=(previous.power_kw,)), cancelled, _fixed=fixed
         )
-        if replay.status not in ("BLOCKED", "SEARCH_EXHAUSTED"):
-            return replace(replay, reason="retained_after_current_safety_replay")
+        if replay.status not in ("BLOCKED", "SEARCH_EXHAUSTED") and (
+            replay.status,
+            replay.morning_required,
+            replay.morning_s,
+            replay.deficit_degree_hours,
+            replay.energy_kwh,
+            replay.projected_overrun,
+            replay.budget_uncertain,
+            replay.trajectory,
+        ) == (
+            previous.status,
+            previous.morning_required,
+            previous.morning_s,
+            previous.deficit_degree_hours,
+            previous.energy_kwh,
+            previous.projected_overrun,
+            previous.budget_uncertain,
+            previous.trajectory,
+        ):
+            return replace(
+                replay,
+                reason="retained_after_current_safety_replay",
+                retention_key=_retention_key(request),
+            )
     result = solve(request, cancelled)
     if previous is not None:
         causes = tuple(
