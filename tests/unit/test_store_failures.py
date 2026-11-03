@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import unittest
+from contextlib import closing
 from dataclasses import replace
 from pathlib import Path
 
@@ -23,8 +24,9 @@ class StoreFailureTests(unittest.TestCase):
         self.store = ControlStore.create(self.root, state(), policy())
 
     def sql(self, statement, parameters=()):
-        with sqlite3.connect(self.store.path) as con:
-            return con.execute(statement, parameters).fetchall()
+        with closing(sqlite3.connect(self.store.path)) as con:
+            with con:
+                return con.execute(statement, parameters).fetchall()
 
     def heating(self):
         before = self.store.view()
@@ -139,7 +141,7 @@ class StoreFailureTests(unittest.TestCase):
 
     def test_locked_database_and_failed_sync_never_commit_prepare(self):
         view, intent = self.heating()
-        with sqlite3.connect(self.store.path, isolation_level=None) as locked:
+        with closing(sqlite3.connect(self.store.path, isolation_level=None)) as locked:
             locked.execute("BEGIN IMMEDIATE")
             with self.assertRaises(StoreFailure):
                 self.store.prepare(intent, snapshot(), clock(), view.revision)
@@ -155,7 +157,7 @@ class StoreFailureTests(unittest.TestCase):
 
     def test_actual_sqlite_full_rolls_back_without_resetting_control(self):
         before = self.store.view()
-        with sqlite3.connect(self.store.path) as con:
+        with closing(sqlite3.connect(self.store.path)) as con:
             pages = con.execute("PRAGMA page_count").fetchone()[0]
             con.execute(f"PRAGMA max_page_count={pages}")
             with self.assertRaises(sqlite3.OperationalError) as error:
@@ -172,8 +174,9 @@ class StoreFailureTests(unittest.TestCase):
                 self.addCleanup(tmp.cleanup)
                 root = Path(tmp.name)
                 other = ControlStore.create(root, state(), policy())
-                with sqlite3.connect(other.path) as con:
-                    con.execute(mutation)
+                with closing(sqlite3.connect(other.path)) as con:
+                    with con:
+                        con.execute(mutation)
                 before = other.path.read_bytes()
                 with self.assertRaises(StoreFailure):
                     ControlStore(root)

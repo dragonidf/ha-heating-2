@@ -8,6 +8,7 @@ class SQLiteQualificationTests(unittest.TestCase):
     def test_wal_reset_minimum_is_explicit_and_unknown_backports_are_not_assumed(self):
         for version, accepted in (("3.51.3", True), ("3.53.1", True), ("3.51.2", False),
                                   ("3.46.1", False), ("3.44.6", False), ("3.50.7", False),
+                                  ("4.0.0", False),
                                   ("3.51.3-patched", False), ("unknown", False)):
             with self.subTest(version=version):
                 self.assertEqual(supported_sqlite(version), accepted)

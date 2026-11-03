@@ -1,0 +1,41 @@
+{
+  "admitted_heat": 100,
+  "checkpoint": {
+    "max_ms": 0.590697,
+    "p50_ms": 0.2181275,
+    "p95_ms": 0.359049,
+    "p99_ms": 0.466621,
+    "samples": 100
+  },
+  "cold_bootstrap": {
+    "max_ms": 44.461495,
+    "p50_ms": 14.7655055,
+    "p95_ms": 20.513952,
+    "p99_ms": 27.407822,
+    "samples": 100
+  },
+  "file_and_directory_fsync_acknowledged": true,
+  "filesystem": "overlay",
+  "injected_stalls": "unit tests separately hold/fail prepare and exceed 250ms; no HEAT admitted",
+  "linked_minimum_qualified": true,
+  "machine": "x86_64",
+  "prepare_budget_ms": 250,
+  "prepare_claim_fake_send_and_sent_receipt": {
+    "max_ms": 29.894258,
+    "p50_ms": 9.066622,
+    "p95_ms": 14.046941,
+    "p99_ms": 18.905108,
+    "samples": 100
+  },
+  "python": "3.12.14",
+  "scope": "disposable sandbox; process-crash proof only; no physical power-loss/N100 qualification",
+  "sqlite": "3.53.1",
+  "sqlite_source_id": "2026-05-05 10:34:17 c88b22011a54b4f6fbd149e9f8e4de77658ce58143a1af0e3785e4e6475127e9",
+  "trusted_stop_while_sqlite_write_locked": {
+    "max_ms": 0.746902,
+    "p50_ms": 0.1221435,
+    "p95_ms": 0.235153,
+    "p99_ms": 0.345269,
+    "samples": 100
+  }
+}

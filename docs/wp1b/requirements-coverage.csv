@@ -1,0 +1,87 @@
+requirement_id,priority,test_id,wp1a_status,wp1b_slice_status,verified_offline_slice,test_modules,remaining_acceptance,scenario_ids
+S01,P0,T-S01,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Pure graph unchanged; independent fake stop,tests/properties/test_purity.py;tests/properties/test_offline_boundary.py,N100 kernel latency; actual runtime integration,SC35
+S02,P0,T-S02,NOT_IMPLEMENTED,PARTIAL_OFFLINE_TESTS_PASS,One fake writer token; duplicate binding rejected,tests/unit/test_simulator.py,Actual HA binding/author inventory; B04,SC35
+S03,P0,T-S03,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Durable prepare and fresh boundary guards,tests/unit/test_simulator_faults.py;tests/properties/test_simulated_sequences.py;tests/unit/test_vfs_failures.py,Qualified household guards/bindings; B01/B05,SC01
+S04,P0,T-S04,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,STOP bypasses DB/normal queue; min-on cannot delay upper,tests/unit/test_simulator_faults.py;tests/unit/test_vfs_failures.py,Physical OFF and target latency under load,SC01;SC02
+S05,P0,T-S05,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Durable prepare/claim; boot/owner/revision fencing; no blind replay,tests/unit/test_control_store.py;tests/unit/test_crash_matrix.py;tests/unit/test_simulator_faults.py;tests/unit/test_vfs_failures.py,Actual transport/HA restart fencing,SC03
+S06,P0,T-S06,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Durable manual/OFF latches; pending work cancelled; fake evidence gate,tests/unit/test_store_failures.py;tests/unit/test_simulator_faults.py,Verified real authors and physical/manual causation,SC03;SC04
+S07,P0,T-S07,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Separate sent/ACK/echo facts; no physical result synthesized,tests/unit/test_simulator.py;tests/unit/test_store_failures.py,Qualified independent device/power evidence; B05,SC05
+S08,P0,T-S08,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,13 process-kill cut points; new boot clears plan and HEAT readiness,tests/unit/test_crash_matrix.py;tests/unit/test_simulator.py;tests/unit/test_vfs_failures.py,Real adapter/store packaging; power-loss and target qualification,SC04;SC06
+S09,P0,T-S09,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Upper inhibition before DB stall/min-on in simulation,tests/unit/test_simulator_faults.py,Actual raw/proxy/OEM limits; B01/B05,SC02
+S10,P1,T-S10,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC35
+S11,P1,T-S11,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,No compute dependency; valid plan can hold until guards/lease deny,tests/unit/test_simulator_faults.py,Qualified autonomous native/local reserve; no real compute process,SC07
+S12,P0,T-S12,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Restart needs current trusted fake observation and new plan; WP1A stability retained,tests/unit/test_simulator.py;tests/unit/test_simulator_faults.py;tests/unit/test_recovery.py,Real transport flapping and production duration evidence,SC07
+S13,P1,T-S13,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC35
+S14,P0,T-S14,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Atomic consumed marker before attempt; UNKNOWN persists after kill,tests/unit/test_control_store.py;tests/unit/test_crash_matrix.py;tests/properties/test_simulated_sequences.py,Session executor and B08 cap/elapsed decision; no physical exactly-once,SC06
+S15,P0,T-S15,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC33
+D01,P0,T-D01,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Strict versioned/checksummed persisted contracts; corrupt inputs reject,tests/unit/test_store_failures.py,Full source adapters and legacy import,SC36
+D02,P0,T-D02,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Frozen observed-at cannot be renewed by receipt in pipeline,tests/unit/test_simulator_faults.py,Real humidity/thermostat bias adapter,SC08
+D03,P0,T-D03,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC09;SC10
+D04,P0,T-D04,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC09;SC11
+D05,P0,T-D05,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Independent source ages and latest injected boundary clock/snapshot,tests/unit/test_simulator_faults.py;tests/properties/test_simulated_sequences.py,Actual source timestamps/clock synchronization,SC10
+D06,P1,T-D06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC12
+D07,P0,T-D07,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC13
+D08,P0,T-D08,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC09
+D09,P0,T-D09,NOT_IMPLEMENTED,PARTIAL_OFFLINE_TESTS_PASS,Zero production/network/device routes/actions in this agent scope,tests/properties/test_offline_boundary.py,Actual before/after production config diff not performed or authorized,SC38
+D10,P1,T-D10,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC08
+P01,P0,T-P01,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC01
+P02,P0,T-P02,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Durable active-plan state and revision/epoch guard,tests/unit/test_control_store.py;tests/unit/test_simulator_faults.py,Planner worker concurrency/stability implementation,SC16
+P03,P1,T-P03,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC14;SC15
+P04,P1,T-P04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC14
+P05,P1,T-P05,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC13;SC14
+P06,P1,T-P06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC16
+P07,P0,T-P07,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC12
+P08,P1,T-P08,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC17
+P09,P0,T-P09,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC17
+P10,P1,T-P10,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC18
+P11,P1,T-P11,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC18
+P12,P1,T-P12,PARTIAL_PURE_TESTS_PASS,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC15
+M01,P1,T-M01,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC19
+M02,P0,T-M02,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC19
+M03,P1,T-M03,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC36
+M04,P0,T-M04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC20
+M05,P1,T-M05,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC20
+M06,P0,T-M06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC20
+M07,P0,T-M07,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC21
+M08,P1,T-M08,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC22
+M09,P1,T-M09,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC22
+M10,P1,T-M10,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC37
+E01,P0,T-E01,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC11
+E02,P0,T-E02,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC11
+E03,P0,T-E03,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC23
+E04,P1,T-E04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC23
+E05,P0,T-E05,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC24
+E06,P0,T-E06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC25;SC26
+E07,P1,T-E07,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC26
+E08,P1,T-E08,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC25;SC26
+F01,P1,T-F01,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC27
+F02,P1,T-F02,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC27
+F03,P1,T-F03,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC27
+F04,P0,T-F04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC28
+F05,P1,T-F05,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC05
+F06,P0,T-F06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC28
+U01,P1,T-U01,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC34
+U02,P1,T-U02,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC29
+U03,P1,T-U03,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC29
+U04,P0,T-U04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC34
+U05,P1,T-U05,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC25
+U06,P0,T-U06,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC34
+U07,P0,T-U07,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC29
+U08,P1,T-U08,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC34
+U09,P0,T-U09,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC29
+U10,P1,T-U10,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC34
+O01,P0,T-O01,BLOCKED,PARTIAL_OFFLINE_TESTS_PASS,"SQLite WAL/FULL, CAS, checksum/schema gates, process crash/failure tests",tests/unit/test_control_store.py;tests/unit/test_store_failures.py;tests/unit/test_crash_matrix.py;tests/unit/test_vfs_failures.py,Actual target SQLite/FS/power-loss durability; B06,SC02
+O02,P0,T-O02,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC30
+O03,P0,T-O03,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,One pending ordinary desire; bounded deferred audit/critical records,tests/unit/test_simulator_faults.py;tests/unit/test_store_failures.py,Sensor/history wire caps; long-lived retention/flood/memory soak,SC30
+O04,P1,T-O04,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC30
+O05,P0,T-O05,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Fake issuer/event-bound capabilities; raw authorized boolean rejected,tests/unit/test_simulator.py;tests/unit/test_simulator_faults.py;tests/properties/test_offline_boundary.py,Real backend read/control/admin authorization and privacy export,SC31
+O06,P1,T-O06,PARTIAL_PURE_TESTS_PASS,PARTIAL_OFFLINE_TESTS_PASS,Frozen store protocol; synthetic v1-to-v2 migration rollback,tests/unit/test_store_failures.py;tests/unit/test_crash_matrix.py,Real package upgrade/lifecycle/compatibility clients,SC31
+O07,P1,T-O07,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC30
+O08,P1,T-O08,NOT_IMPLEMENTED,NOT_IMPLEMENTED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC37
+O09,P0,T-O09,BLOCKED,PARTIAL_OFFLINE_TESTS_PASS,Actual linked test SQLite gate; pinned source build and readback,tests/unit/test_storage_qualification.py;tests/unit/test_simulator_faults.py;tests/unit/test_vfs_failures.py,B06 actual target patched library and filesystem remain BLOCKED,SC38
+G01,P0,T-G01,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC32
+G02,P0,T-G02,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC24;SC32
+G03,P0,T-G03,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC32
+G04,P0,T-G04,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC32
+G05,P1,T-G05,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC33
+G06,P0,T-G06,BLOCKED,BLOCKED,No new WP1B implementation,,Outside authorized WP1B; canonical acceptance not passed,SC38

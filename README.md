@@ -38,4 +38,20 @@ make benchmark PYTHON=.venv/bin/python
 sha256sum --check docs/wp1a/SHA256SUMS
 ```
 
-The dependency-free tests also run with `python -m unittest discover -v`. The benchmark describes this host only; it cannot accept the future N100 gate. No installation or Home Assistant connection is needed or provided. WP1B is approved **strictly for synthetic offline development**, not for real device access.
+The pure WP1A modules retain their standard-library boundary. The combined test suite now also needs a qualified linked SQLite; use the WP1B environment below when the native library is unqualified. Benchmarks describe their test host only and cannot accept the future N100 gate. No Home Assistant connection is needed or provided.
+
+## WP1B offline proof
+
+`packages/control_store` persists synthetic critical state; `packages/simulator` can only record fake actions in memory. See the [report](docs/wp1b/REPORT.md), [decisions](docs/wp1b/ADR-WP1B.md), [additive requirements](docs/wp1b/requirements-coverage.csv) and [scenarios](docs/wp1b/scenario-coverage.csv). G1/B01–B08 remain BLOCKED; no WP1C or real device transport exists.
+
+Run only in a disposable Linux development/CI environment. The pinned SQLite build downloads official source and creates a test library under `/tmp`; it does not replace system or production libraries:
+
+```sh
+.venv/bin/python -m tests.fixtures.build_sqlite
+mkdir -p /tmp/heating-wp1b-db-tmp
+LD_LIBRARY_PATH=/tmp/heating-wp1b-sqlite-3510300 TMPDIR=/tmp/heating-wp1b-db-tmp make check PYTHON=.venv/bin/python
+LD_LIBRARY_PATH=/tmp/heating-wp1b-sqlite-3510300 TMPDIR=/tmp/heating-wp1b-db-tmp .venv/bin/python -m tests.properties.benchmark_store
+sha256sum --check docs/wp1b/SHA256SUMS
+```
+
+Use a disposable directory on the filesystem being evaluated as `TMPDIR` and record its type; tmpfs does not prove disk durability. The actual linked SQLite/version/source ID must qualify before any simulated HEAT. CI checks 3.12/3.13/3.14 with the pinned library, retains every WP1A test and exercises isolated SIGKILL/fault scenarios. The deliverable remains an unmerged review PR.

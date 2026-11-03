@@ -2,6 +2,7 @@ import sqlite3
 import tempfile
 import time
 import unittest
+from contextlib import closing
 from dataclasses import replace
 from pathlib import Path
 from threading import Event, Thread
@@ -62,7 +63,7 @@ class SimulatorFaultTests(unittest.TestCase):
     def test_stop_never_calls_database_even_under_actual_sqlite_write_lock(self):
         sim, s, c = self.ready()
         stop = self.stop_event(sim, c)
-        with sqlite3.connect(sim.store.path, isolation_level=None) as con:
+        with closing(sqlite3.connect(sim.store.path, isolation_level=None)) as con:
             con.execute("BEGIN IMMEDIATE")
             with patch.object(sim.store, "view", side_effect=AssertionError("STOP used database")):
                 sim.emergency(stop, s, c, proof=sim.authority.attest(stop))
@@ -279,3 +280,29 @@ class SimulatorFaultTests(unittest.TestCase):
         self.addCleanup(sim.close)
         with self.assertRaises(StoreFailure):
             sim.ack(clock(boot_id=sim.state.boot_id))
+
+    def test_upper_during_minimum_on_stops_fake_demand_before_failed_database_audit(self):
+        sim, s, c = self.ready()
+        self.assertTrue(sim.pump(s, c))
+        self.assertEqual(sim.state.changed_at_monotonic, c.monotonic)
+        e = event(boot_id=c.boot_id, owner_epoch=sim.state.owner_epoch, sequence=3, at=106, expires_at=107)
+        hot = replace(s, room=replace(s.room, value=30))
+        with closing(sqlite3.connect(sim.store.path, isolation_level=None)) as con:
+            con.execute("BEGIN IMMEDIATE")
+            sim.apply(e, hot, c)
+            self.assertEqual(sim.actuator.calls[-1].action, Action.STOP)
+            self.assertEqual(sum(call.action is Action.HEAT for call in sim.actuator.calls), 1)
+            con.rollback()
+
+    def test_compute_loss_uses_current_plan_only_and_never_renews_expired_heat(self):
+        sim, s, c = self.ready()
+        offline = replace(s, compute_available=False)
+        e = event(boot_id=c.boot_id, owner_epoch=sim.state.owner_epoch, sequence=3, at=106, expires_at=107)
+        sim.apply(e, offline, c)
+        self.assertEqual(sim.state.mode.value, "auto_hold")
+        self.assertTrue(sim.pump(offline, c))
+        expired = replace(c, utc=111, monotonic=1011)
+        sim.apply(replace(e, sequence=4, at=111, expires_at=112),
+                  fresh(111, boot_id=c.boot_id, owner_epoch=sim.state.owner_epoch, compute_available=False), expired)
+        self.assertEqual(sim.state.desired_action, Action.STOP)
+        self.assertEqual(sim.actuator.calls[-1].action, Action.STOP)

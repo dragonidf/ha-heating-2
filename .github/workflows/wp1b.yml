@@ -36,4 +36,12 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/heating-wp1b-db-tmp"
           echo "TMPDIR=$RUNNER_TEMP/heating-wp1b-db-tmp" >> "$GITHUB_ENV"
+      - name: Observe actual test process and filesystem
+        run: |
+          python -c 'import platform; print(platform.python_version(), platform.system(), platform.release(), platform.machine())'
+          findmnt -T "$TMPDIR" -n -o FSTYPE
       - run: make check
+      - name: Verify reviewed source and evidence integrity
+        run: |
+          sha256sum --check docs/wp1a/SHA256SUMS
+          sha256sum --check docs/wp1b/SHA256SUMS

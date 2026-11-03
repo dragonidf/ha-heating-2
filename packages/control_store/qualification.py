@@ -13,8 +13,10 @@ class SQLiteInfo:
 
 def supported_sqlite(version: str) -> bool:
     # Older patched backports need independently documented provenance, absent here.
-    return bool(re.fullmatch(r"\d+\.\d+\.\d+", version)
-                and tuple(map(int, version.split("."))) >= (3, 51, 3))
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        return False
+    parts = tuple(map(int, version.split(".")))
+    return parts[0] == 3 and parts >= (3, 51, 3)
 
 
 def inspect_sqlite() -> SQLiteInfo:
