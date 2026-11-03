@@ -1,0 +1,68 @@
+WP1C independent-review corrections; synthetic/disposable environment only.
+Reviewed base 79c67084ca211f39890a272914faa4f4ebffcd04
+No production or target qualification.
+
+Python 312 full make check:
+Success: no issues found in 20 source files
+Ran 219 tests in 28.340s
+OK
+TOTAL                                      2407     27    722     29    98%
+
+Name                                      Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------
+packages/__init__.py                          0      0      0      0   100%
+packages/contracts/__init__.py                3      0      0      0   100%
+packages/contracts/codec.py                  90      4     34      2    95%   44-45, 59, 93
+packages/contracts/control.py               274      0     38      1    99%   128->exit
+packages/contracts/models.py                226      0     38      0   100%
+packages/control/__init__.py                  1      0      0      0   100%
+packages/control/kernel.py                  174      2    122      2    99%   95, 128
+packages/control_store/__init__.py            0      0      0      0   100%
+packages/control_store/qualification.py      19      0      2      0   100%
+packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
+packages/fan_policy/__init__.py              77      0     32      0   100%
+packages/learning/__init__.py               223      0     60      0   100%
+packages/planner/__init__.py                360      3     96      3    99%   750, 770, 846
+packages/planner/evidence.py                 44      0     10      0   100%
+packages/planner/policy.py                   60      0     20      0   100%
+packages/planner/sources.py                  90      0     26      0   100%
+packages/simulator/__init__.py                0      0      0      0   100%
+packages/simulator/engine.py                262      5     74      7    96%   86, 92, 222->226, 240->exit, 264->266, 268-269, 271
+packages/thermal/__init__.py                 76      0      6      0   100%
+packages/thermal/wire.py                     80      1     28      1    98%   95
+-------------------------------------------------------------------------------------
+TOTAL                                      2407     27    722     29    98%
+
+Python 313 full make check:
+Success: no issues found in 20 source files
+Ran 219 tests in 27.719s
+OK
+TOTAL                                      2407     27    722     29    98%
+
+Name                                      Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------
+packages/__init__.py                          0      0      0      0   100%
+packages/contracts/__init__.py                3      0      0      0   100%
+packages/contracts/codec.py                  90      4     34      2    95%   44-45, 59, 93
+packages/contracts/control.py               274      0     38      1    99%   128->exit
+packages/contracts/models.py                226      0     38      0   100%
+packages/control/__init__.py                  1      0      0      0   100%
+packages/control/kernel.py                  174      2    122      2    99%   95, 128
+packages/control_store/__init__.py            0      0      0      0   100%
+packages/control_store/qualification.py      19      0      2      0   100%
+packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
+packages/fan_policy/__init__.py              77      0     32      0   100%
+packages/learning/__init__.py               223      0     60      0   100%
+packages/planner/__init__.py                360      3     96      3    99%   750, 770, 846
+packages/planner/evidence.py                 44      0     10      0   100%
+packages/planner/policy.py                   60      0     20      0   100%
+packages/planner/sources.py                  90      0     26      0   100%
+packages/simulator/__init__.py                0      0      0      0   100%
+packages/simulator/engine.py                262      5     74      7    96%   86, 92, 222->226, 240->exit, 264->266, 268-269, 271
+packages/thermal/__init__.py                 76      0      6      0   100%
+packages/thermal/wire.py                     80      1     28      1    98%   95
+-------------------------------------------------------------------------------------
+TOTAL                                      2407     27    722     29    98%
+
+Environment: Python3.12.14 / SQLite3.53.1; Python3.13.5 / linked temporary SQLite3.51.3. TMPDIR disposable overlay filesystem.
+Python3.14 and final-SHA evidence: WP1C exact-head CI matrix; PR13 check records and description link all nine final jobs.

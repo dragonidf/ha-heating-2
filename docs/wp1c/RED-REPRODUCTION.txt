@@ -1,0 +1,53 @@
+Initial reviewed source SHA: 79c67084ca211f39890a272914faa4f4ebffcd04
+Before algorithm edits: python -m unittest tests.unit.test_wp1c_review.IndependentReviewReproductions -v
+Expected failure: all three independent-review reproductions failed.
+
+test_changed_no_heat_plan_must_search_for_new_morning_demand (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_changed_no_heat_plan_must_search_for_new_morning_demand) ... FAIL
+test_coasting_fireplace_reaches_morning_target_without_mandatory_thirty_minutes (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_coasting_fireplace_reaches_morning_target_without_mandatory_thirty_minutes) ... FAIL
+test_forecast_normal_cannot_make_future_unknown_grid_heat_unconditional (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_forecast_normal_cannot_make_future_unknown_grid_heat_unconditional) ... FAIL
+
+======================================================================
+FAIL: test_changed_no_heat_plan_must_search_for_new_morning_demand (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_changed_no_heat_plan_must_search_for_new_morning_demand)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/unit/test_wp1c_review.py", line 24, in test_changed_no_heat_plan_must_search_for_new_morning_demand
+    self.assertTrue(result.segments)
+AssertionError: () is not true
+
+======================================================================
+FAIL: test_coasting_fireplace_reaches_morning_target_without_mandatory_thirty_minutes (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_coasting_fireplace_reaches_morning_target_without_mandatory_thirty_minutes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/unit/test_wp1c_review.py", line 36, in test_coasting_fireplace_reaches_morning_target_without_mandatory_thirty_minutes
+    self.assertNotEqual(result.reason,'morning_shortfall')
+AssertionError: 'morning_shortfall' == 'morning_shortfall'
+
+======================================================================
+FAIL: test_forecast_normal_cannot_make_future_unknown_grid_heat_unconditional (tests.unit.test_wp1c_review.IndependentReviewReproductions.test_forecast_normal_cannot_make_future_unknown_grid_heat_unconditional)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/unit/test_wp1c_review.py", line 42, in test_forecast_normal_cannot_make_future_unknown_grid_heat_unconditional
+    self.assertTrue(all(s.conditional for s in result.segments))
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.018s
+
+FAILED (failures=3)
+
+Additional bridge guard reproduction, before that guard was added:
+test_bridge_rejects_unlabelled_future_heat_even_with_matching_stamp (tests.unit.test_wp1c_review.FutureConditionalReviewTests.test_bridge_rejects_unlabelled_future_heat_even_with_matching_stamp) ... FAIL
+
+======================================================================
+FAIL: test_bridge_rejects_unlabelled_future_heat_even_with_matching_stamp (tests.unit.test_wp1c_review.FutureConditionalReviewTests.test_bridge_rejects_unlabelled_future_heat_even_with_matching_stamp)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/unit/test_wp1c_review.py", line 184, in test_bridge_rejects_unlabelled_future_heat_even_with_matching_stamp
+    with self.assertRaises(ContractError):bridge(unlabelled,req.stamp,req.state.at,req.slots[-1].window.end+1)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ContractError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.008s
+
+FAILED (failures=1)
