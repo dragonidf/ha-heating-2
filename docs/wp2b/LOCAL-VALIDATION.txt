@@ -29,3 +29,5 @@ Command: PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary
 Host validation workaround documented in BROWSER-MATRIX.md; actual WebKit27.2 and Chromium156 run, no test skip/retry.
   56 passed (1.2m)
 Final CI compares checked-in PNGs without update-snapshots, with normal browser installation and no host-precheck override. Full final-head Python3.14 and14-job CI evidence is in PR checks/description. Native HA/owner phone/physical control NOT_TESTED; G1 BLOCKED.
+
+CI0a667616:12/12 Python jobs PASS;111 unit tests PASS in both frontend jobs;54/56 browser cases PASS; mobile height1332px exceeded1300px. Responsive spacing corrected; unchanged tests and limits. Focused local screenshot/layout matrix:4 passed (6.9s). Final full CI required on corrected SHA.

@@ -1429,3 +1429,35 @@ footer {
     padding-bottom: 12px;
   }
 }
+/* Keep the operator viewport compact across system-font metrics, without clipping. */
+@media (max-width: 699px) {
+  .comfort {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    row-gap: 4px;
+  }
+  .action-strip .helper {
+    margin-top: 0;
+  }
+  .home-main .section-title {
+    margin-bottom: 8px;
+  }
+  .session-list > div {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .home-side .budget-note {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+  .home-side .energy-grid {
+    gap: 4px;
+  }
+  .home-side .section-title {
+    margin-bottom: 8px;
+  }
+  .home-side .energy-meter {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+}
