@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e-native",
+  outputDir: "./test-results/native-artifacts",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
@@ -10,7 +11,10 @@ export default defineConfig({
   reporter: [
     ["list"],
     ["json", { outputFile: "test-results/native-results.json" }],
-    ["html", { outputFolder: "playwright-report-native", open: "never" }],
+    [
+      "html",
+      { outputFolder: "playwright-report-native/report", open: "never" },
+    ],
   ],
   use: {
     baseURL: process.env.TEST_HA_BASE_URL ?? "http://127.0.0.1:8123",

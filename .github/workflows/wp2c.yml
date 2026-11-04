@@ -41,7 +41,7 @@ jobs:
           npm run build --prefix frontend
           node tools/wp2c/export-fixtures.mjs --check
           python tools/wp2c/package.py --output /tmp/heating-wp2c-package-ci
-          python -m unittest tools.wp2c.test_package
+          python -m unittest tools.wp2c.test_package tools.wp2c.test_browser_outputs
       - name: Retrieve pinned official dependencies during setup only
         run: |
           python tools/wp2c/sandbox.py build

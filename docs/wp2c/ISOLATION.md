@@ -20,7 +20,7 @@ npm ci --ignore-scripts --prefix frontend
 npm run build --prefix frontend
 node tools/wp2c/export-fixtures.mjs --check
 python tools/wp2c/package.py --output /tmp/heating-wp2c-package-ci
-python -m unittest tools.wp2c.test_package
+python -m unittest tools.wp2c.test_package tools.wp2c.test_browser_outputs
 python tools/wp2c/sandbox.py build
 docker --host=unix:///var/run/docker.sock pull mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
 python tools/wp2c/sandbox.py up --state /tmp/wp2c-sandbox.json --package-dir /tmp/heating-wp2c-package-ci

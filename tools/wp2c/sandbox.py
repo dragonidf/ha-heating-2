@@ -146,7 +146,7 @@ def proof(state_path: Path) -> None:
     assert host["CapDrop"] == ["ALL"]
     assert not host.get("Devices") and not host.get("DeviceRequests")
     assert all(m["Type"] == "volume" and m["Name"] in (state["config_volume"], state["data_volume"]) for m in details["Mounts"])
-    image = json.loads(docker("image", "inspect", state["image"]))[0]
+    image = json.loads(docker("image", "inspect", details["Image"]))[0]
     checks = json.loads(docker("exec", state["name"], "python", "/tmp/native_checks.py", "isolation"))
     report = {
         "qualification": "PASS_ISOLATED", "run": state["name"], "ha_version": HA_VERSION,
@@ -227,9 +227,9 @@ def browser(state_path: Path, project: str, image: str, output: Path) -> None:
         (output / (project + ".log")).write_text(result.replace(credentials["admin_password"], "<synthetic-password-redacted>"))
         with tempfile.TemporaryDirectory(prefix="wp2c-browser-results-") as directory:
             docker("cp", name + ":/work/test-results/.", directory)
-            report = json.loads((Path(directory) / "native-results.json").read_text())
-            stats = report["stats"]
-            complete = (stats["expected"] >= 14 and stats["unexpected"] == 0
+            report_path = Path(directory) / "native-results.json"
+            stats = json.loads(report_path.read_text())["stats"] if report_path.exists() else {}
+            complete = (stats.get("expected", 0) >= 14 and stats["unexpected"] == 0
                         and stats["skipped"] == 0 and stats.get("flaky", 0) == 0)
             for source in Path(directory).rglob("*"):
                 if source.is_file() and source.suffix in (".png", ".json", ".md"):
