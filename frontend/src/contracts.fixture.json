@@ -1,0 +1,507 @@
+{
+  "ack": {
+    "data": {
+      "actual": null,
+      "archive_lost": 0,
+      "archive_pending": 0,
+      "boot_id": "synthetic.ui.boot",
+      "desired": "heat",
+      "mode": "AUTO_PLAN",
+      "owner_epoch": 7,
+      "physical_verified": false,
+      "receipt_stage": "ha_acknowledged",
+      "snapshot_at": 1793750400,
+      "snapshot_id": "synthetic.ui.snapshot",
+      "status_seq": 2
+    },
+    "type": "StatusView",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "budget": {
+    "data": {
+      "actual_until": 1793750400,
+      "cycle_id": "synthetic.morning",
+      "known_remaining_kwh": 10.3,
+      "known_spent_kwh": 8.2,
+      "latest_projected_kwh": 20.6,
+      "projected_overrun_kwh": 2.1,
+      "reference_kwh": 18.5,
+      "scope": {
+        "end": 1793768400,
+        "start": 1793746800
+      },
+      "stream": "synthetic.heat",
+      "unknown_s": 1080,
+      "watermark": 12
+    },
+    "type": "BudgetReceipt",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "failed": {
+    "data": {
+      "persisted_revision": null,
+      "reason": "simulated_io",
+      "request_id": "synthetic.ui.failed",
+      "revision": 1,
+      "status": "unavailable"
+    },
+    "type": "APIReceipt",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "original": {
+    "data": {
+      "curve": {
+        "identity": "synthetic.original.2026-11-03",
+        "input_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "issued": 1793637000,
+        "model_revision": 3,
+        "plan_id": "synthetic.plan.frozen",
+        "points": [
+          [
+            1793682000,
+            {
+              "high": 21.2,
+              "low": 21.2
+            }
+          ],
+          [
+            1793685600,
+            {
+              "high": 21.279468,
+              "low": 21.279468
+            }
+          ],
+          [
+            1793689200,
+            {
+              "high": 21.355767,
+              "low": 21.355767
+            }
+          ],
+          [
+            1793692800,
+            {
+              "high": 21.425857,
+              "low": 21.425857
+            }
+          ],
+          [
+            1793696400,
+            {
+              "high": 21.486942,
+              "low": 21.486942
+            }
+          ],
+          [
+            1793700000,
+            {
+              "high": 21.536588,
+              "low": 21.536588
+            }
+          ],
+          [
+            1793703600,
+            {
+              "high": 21.572816,
+              "low": 21.572816
+            }
+          ],
+          [
+            1793707200,
+            {
+              "high": 21.59418,
+              "low": 21.59418
+            }
+          ],
+          [
+            1793710800,
+            {
+              "high": 21.599829,
+              "low": 21.599829
+            }
+          ],
+          [
+            1793714400,
+            {
+              "high": 21.589539,
+              "low": 21.589539
+            }
+          ],
+          [
+            1793718000,
+            {
+              "high": 21.563719,
+              "low": 21.563719
+            }
+          ],
+          [
+            1793721600,
+            {
+              "high": 21.523399,
+              "low": 21.523399
+            }
+          ],
+          [
+            1793725200,
+            {
+              "high": 21.470185,
+              "low": 21.470185
+            }
+          ],
+          [
+            1793728800,
+            {
+              "high": 21.406201,
+              "low": 21.406201
+            }
+          ],
+          [
+            1793732400,
+            {
+              "high": 21.333995,
+              "low": 21.333995
+            }
+          ],
+          [
+            1793736000,
+            {
+              "high": 21.256448,
+              "low": 21.256448
+            }
+          ],
+          [
+            1793739600,
+            {
+              "high": 21.17665,
+              "low": 21.17665
+            }
+          ],
+          [
+            1793743200,
+            {
+              "high": 21.097784,
+              "low": 21.097784
+            }
+          ],
+          [
+            1793746800,
+            {
+              "high": 21.022992,
+              "low": 21.022992
+            }
+          ],
+          [
+            1793750400,
+            {
+              "high": 20.955257,
+              "low": 20.955257
+            }
+          ],
+          [
+            1793754000,
+            {
+              "high": 20.897279,
+              "low": 20.897279
+            }
+          ],
+          [
+            1793757600,
+            {
+              "high": 20.85137,
+              "low": 20.85137
+            }
+          ],
+          [
+            1793761200,
+            {
+              "high": 20.819359,
+              "low": 20.819359
+            }
+          ],
+          [
+            1793764800,
+            {
+              "high": 20.802524,
+              "low": 20.802524
+            }
+          ],
+          [
+            1793768400,
+            {
+              "high": 20.801534,
+              "low": 20.801534
+            }
+          ]
+        ],
+        "source_issued": [
+          1793636000
+        ]
+      },
+      "cycle_id": "synthetic.cycle",
+      "energy_scope": {
+        "end": 1793768400,
+        "start": 1793682000
+      },
+      "identity": "synthetic.original.record",
+      "planned_kwh": 18.5,
+      "recorded_at": 1793682000,
+      "reference": 1793682000,
+      "role": "original"
+    },
+    "type": "ForecastRecord",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "original_source": {
+    "data": {
+      "curve": {
+        "identity": "synthetic.original.2026-11-03",
+        "input_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "issued": 1793637000,
+        "model_revision": 3,
+        "plan_id": "synthetic.plan.frozen",
+        "points": [
+          [
+            1793682000,
+            {
+              "high": 21.2,
+              "low": 21.2
+            }
+          ],
+          [
+            1793685600,
+            {
+              "high": 21.279468,
+              "low": 21.279468
+            }
+          ],
+          [
+            1793689200,
+            {
+              "high": 21.355767,
+              "low": 21.355767
+            }
+          ],
+          [
+            1793692800,
+            {
+              "high": 21.425857,
+              "low": 21.425857
+            }
+          ],
+          [
+            1793696400,
+            {
+              "high": 21.486942,
+              "low": 21.486942
+            }
+          ],
+          [
+            1793700000,
+            {
+              "high": 21.536588,
+              "low": 21.536588
+            }
+          ],
+          [
+            1793703600,
+            {
+              "high": 21.572816,
+              "low": 21.572816
+            }
+          ],
+          [
+            1793707200,
+            {
+              "high": 21.59418,
+              "low": 21.59418
+            }
+          ],
+          [
+            1793710800,
+            {
+              "high": 21.599829,
+              "low": 21.599829
+            }
+          ],
+          [
+            1793714400,
+            {
+              "high": 21.589539,
+              "low": 21.589539
+            }
+          ],
+          [
+            1793718000,
+            {
+              "high": 21.563719,
+              "low": 21.563719
+            }
+          ],
+          [
+            1793721600,
+            {
+              "high": 21.523399,
+              "low": 21.523399
+            }
+          ],
+          [
+            1793725200,
+            {
+              "high": 21.470185,
+              "low": 21.470185
+            }
+          ],
+          [
+            1793728800,
+            {
+              "high": 21.406201,
+              "low": 21.406201
+            }
+          ],
+          [
+            1793732400,
+            {
+              "high": 21.333995,
+              "low": 21.333995
+            }
+          ],
+          [
+            1793736000,
+            {
+              "high": 21.256448,
+              "low": 21.256448
+            }
+          ],
+          [
+            1793739600,
+            {
+              "high": 21.17665,
+              "low": 21.17665
+            }
+          ],
+          [
+            1793743200,
+            {
+              "high": 21.097784,
+              "low": 21.097784
+            }
+          ],
+          [
+            1793746800,
+            {
+              "high": 21.022992,
+              "low": 21.022992
+            }
+          ],
+          [
+            1793750400,
+            {
+              "high": 20.955257,
+              "low": 20.955257
+            }
+          ],
+          [
+            1793754000,
+            {
+              "high": 20.897279,
+              "low": 20.897279
+            }
+          ],
+          [
+            1793757600,
+            {
+              "high": 20.85137,
+              "low": 20.85137
+            }
+          ],
+          [
+            1793761200,
+            {
+              "high": 20.819359,
+              "low": 20.819359
+            }
+          ],
+          [
+            1793764800,
+            {
+              "high": 20.802524,
+              "low": 20.802524
+            }
+          ],
+          [
+            1793768400,
+            {
+              "high": 20.801534,
+              "low": 20.801534
+            }
+          ]
+        ],
+        "source_issued": [
+          1793636000
+        ]
+      },
+      "cycle_id": "synthetic.cycle",
+      "energy_scope": {
+        "end": 1793768400,
+        "start": 1793682000
+      },
+      "identity": "synthetic.original.source",
+      "planned_kwh": 18.5,
+      "recorded_at": 1793638000,
+      "reference": 1793682000,
+      "role": "latest"
+    },
+    "type": "ForecastRecord",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "saved": {
+    "data": {
+      "persisted_revision": 2,
+      "reason": "simulated_readback",
+      "request_id": "synthetic.ui.save",
+      "revision": 2,
+      "status": "saved"
+    },
+    "type": "APIReceipt",
+    "version": [
+      2,
+      0
+    ]
+  },
+  "status": {
+    "data": {
+      "actual": null,
+      "archive_lost": 0,
+      "archive_pending": 0,
+      "boot_id": "synthetic.ui.boot",
+      "desired": "stop_demand",
+      "mode": "AUTO_HOLD",
+      "owner_epoch": 7,
+      "physical_verified": false,
+      "receipt_stage": null,
+      "snapshot_at": 1793750400,
+      "snapshot_id": "synthetic.ui.snapshot",
+      "status_seq": 1
+    },
+    "type": "StatusView",
+    "version": [
+      2,
+      0
+    ]
+  }
+}

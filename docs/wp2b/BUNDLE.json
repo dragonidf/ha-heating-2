@@ -1,0 +1,18 @@
+{
+  "scope": "synthetic build only; no target-host claim",
+  "node": "v24.19.0",
+  "files": [
+    {
+      "name": "index-1Nmrr6CY.js",
+      "bytes": 291974,
+      "gzip_bytes": 88954,
+      "sha256": "a36d427e353d821b6c50eb7c239f2b0bc3fa9ac7c64d37747f8d9dd3f4f9d3e6"
+    },
+    {
+      "name": "index-DHSdPaus.css",
+      "bytes": 18723,
+      "gzip_bytes": 4649,
+      "sha256": "226133b3b14d3dc0cd41923c3d7ef347cf13adc1042ccd92a0d5c012869f5798"
+    }
+  ]
+}

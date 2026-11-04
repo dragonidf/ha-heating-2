@@ -1,0 +1,32 @@
+Synthetic test-first evidence; before implementation of the named behavior. Base approved main e428b9a.
+
+Foundation
+ FAIL  tests/domain.test.ts [ tests/domain.test.ts ]
+Error: Failed to resolve import "../src/fixtures" from "tests/domain.test.ts". Does the file exist?
+ Test Files  1 failed (1)
+      Tests  no tests
+
+Mock CAS
+ FAIL  tests/mock.test.ts [ tests/mock.test.ts ]
+Error: Failed to resolve import "../src/mock" from "tests/mock.test.ts". Does the file exist?
+ Test Files  1 failed | 1 passed (2)
+      Tests  12 passed (12)
+
+Save ACK regressions
+     × a wrong request receipt cannot leave an infinite saving state 1115ms
+     × failed client readback after a receipt preserves draft without success 1108ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/components.test.tsx > late or unverifiable save acknowledgements > a wrong request receipt cannot leave an infinite saving state
+ FAIL  tests/components.test.tsx > late or unverifiable save acknowledgements > failed client readback after a receipt preserves draft without success
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+The last test to run before this error was "failed client readback after a receipt preserves draft without success". This means either:
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+     Errors  1 error
+
+Calendar31day bound
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/domain.test.ts > custom range cap counts calendar days rather than assuming every day is24h
+AssertionError: expected [Function] to throw an error
+ Test Files  1 failed (1)
+      Tests  1 failed | 35 passed (36)

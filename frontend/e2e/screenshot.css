@@ -1,0 +1,4 @@
+/* Baseline-only font normalization; the shipped UI uses the system stack. */
+* {
+  font-family: "DejaVu Sans", sans-serif !important;
+}

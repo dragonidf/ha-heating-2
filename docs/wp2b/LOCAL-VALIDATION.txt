@@ -1,0 +1,31 @@
+WP2B isolated self-test evidence. Base main e428b9ad3e7c0c4b91b253276fd118243d33439c.
+No production/legacy access; synthetic fixtures and temporary stores only.
+
+Python3.12.14 / linked qualified SQLite3.53.1
+Success: no issues found in 32 source files
+Ran 351 tests in 40.898s
+OK
+TOTAL                                      4057     67   1198     66    97%
+
+Python3.13.5 / temporary linked qualified SQLite3.51.3
+Success: no issues found in 32 source files
+Ran 351 tests in 40.077s
+OK
+TOTAL                                      4057     67   1198     66    97%
+
+Node v24.19.0; npm11.9.0. npm run test:coverage:
+ Test Files  6 passed (6)
+      Tests  111 passed (111)
+File            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+All files       |   97.39 |    94.01 |    96.1 |   98.29 |
+ useSettings.ts |   98.63 |    85.18 |     100 |   98.59 | 79
+Statements   : 97.39% ( 374/384 )
+Branches     : 94.01% ( 377/401 )
+Functions    : 96.1% ( 74/77 )
+Lines        : 98.29% ( 345/351 )
+
+Real browser local build-frozen matrix:
+Command: PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary extracted libs> PLAYWRIGHT_BROWSERS_PATH=<temporary downloaded browsers> npm run test:browser -- --update-snapshots
+Host validation workaround documented in BROWSER-MATRIX.md; actual WebKit27.2 and Chromium156 run, no test skip/retry.
+  56 passed (1.2m)
+Final CI compares checked-in PNGs without update-snapshots, with normal browser installation and no host-precheck override. Full final-head Python3.14 and14-job CI evidence is in PR checks/description. Native HA/owner phone/physical control NOT_TESTED; G1 BLOCKED.
