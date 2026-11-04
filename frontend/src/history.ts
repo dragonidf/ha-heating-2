@@ -2,12 +2,17 @@ import type { HistoryCursor, HistoryPage, Point, Window } from "./types";
 export const HISTORY_LIMIT = 4096;
 export const RAW_LIMIT = 100_000;
 const BINS = 800; // first / last / min / max / explicit-null per UTC bin.
+export function measuredValue(p: Point): number | null {
+  // Missing quality is the legacy Point contract; explicit invalid quality fails closed.
+  return (p.quality === undefined || p.quality === "valid") &&
+    Number.isFinite(p.value)
+    ? p.value
+    : null;
+}
 export function connected(previous: Point, next: Point): boolean {
   return (
-    previous.value !== null &&
-    next.value !== null &&
-    (!previous.quality || previous.quality === "valid") &&
-    (!next.quality || next.quality === "valid") &&
+    measuredValue(previous) !== null &&
+    measuredValue(next) !== null &&
     !!previous.coverage?.source &&
     previous.coverage.source === next.coverage?.source &&
     Number.isFinite(next.coverage.from) &&
@@ -21,8 +26,7 @@ export function qualifyCadence(
 ): Point[] {
   return points.map((p, i) => {
     const previous = points[i - 1];
-    const valid = (v: Point) =>
-      v.value !== null && (!v.quality || v.quality === "valid");
+    const valid = (v: Point) => measuredValue(v) !== null;
     const from =
       previous &&
       valid(previous) &&
@@ -59,6 +63,8 @@ export function readHistory(
   let cursor: HistoryCursor | null = null,
     watermark: number | undefined;
   let count = 0,
+    quarantinedCount = 0,
+    lastAt: number | undefined,
     previous: Point | undefined,
     runStart = 0;
   let coveredS = 0,
@@ -109,12 +115,16 @@ export function readHistory(
         !Number.isFinite(raw.at) ||
         raw.at < scope.start ||
         raw.at >= scope.end ||
-        (previous && raw.at <= previous.at) ||
+        (lastAt !== undefined && raw.at <= lastAt) ||
         (raw.value !== null && !Number.isFinite(raw.value))
       )
         throw Error("Некоректний або завеликий архів");
-      const observation: Point =
-        raw.quality && raw.quality !== "valid" ? { ...raw, value: null } : raw;
+      lastAt = raw.at;
+      if (raw.at > now) {
+        quarantinedCount++;
+        continue; // No clock-skew allowance without qualified source evidence.
+      }
+      const observation: Point = { ...raw, value: measuredValue(raw) };
       let p: Point = { ...observation };
       if (previous && connected(previous, raw)) {
         coveredS += Math.max(
@@ -160,6 +170,7 @@ export function readHistory(
   return {
     rows,
     rawCount: count,
+    quarantinedCount,
     watermark,
     unknownS: Math.max(0, until - scope.start - coveredS),
     gapCount,

@@ -14,6 +14,7 @@ import {
   denseActual,
   intervals,
   boundaryIntervals,
+  futureActual,
 } from "./fixtures";
 import { readReceipt } from "./contracts";
 import { validateSettings, withDeadline } from "./domain";
@@ -310,7 +311,14 @@ export class DemoAPI {
       !Number.isFinite(range.end)
     )
       throw Error("Некоректний запит історії");
-    const source = this.scenario === "dense-history" ? denseActual : actual;
+    if (this.scenario === "temperature-error")
+      throw Error("Синтетична помилка температурного архіву");
+    const source =
+      this.scenario === "dense-history"
+        ? denseActual
+        : this.scenario === "future-history"
+          ? futureActual
+          : actual;
     const watermark = source.length;
     const scope = `${range.start}:${range.end}`;
     if (
@@ -338,6 +346,8 @@ export class DemoAPI {
     };
   }
   energyHistory() {
+    if (this.scenario === "energy-error")
+      return [...boundaryIntervals, ...boundaryIntervals];
     return this.scenario === "dense-history" ? boundaryIntervals : intervals;
   }
 }

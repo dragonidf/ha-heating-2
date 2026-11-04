@@ -1,6 +1,6 @@
 # WP2B browser and accessibility matrix
 
-All values/screenshots are synthetic. Commands in frontend/README.md; exact lockfile/browser versions are part of SHA evidence.68 cases =17 operator flows (including all14 original flows) ×4 projects; no retry/skip/xfail. Four checked-in Home golden images are generated with real Chromium/WebKit, not image generation.
+All values/screenshots are synthetic. Commands in frontend/README.md; exact lockfile/browser versions are part of SHA evidence.80 cases =20 operator flows (including all17 preceding flows) ×4 projects; no retry/skip/xfail. Four checked-in Home golden images are generated with real Chromium/WebKit, not image generation.
 
 | Check | Chromium390×844 | Chromium1440×1000 | WebKit390×844 | WebKit1440×1000 |
 |---|---|---|---|---|
@@ -10,6 +10,9 @@ All values/screenshots are synthetic. Commands in frontend/README.md; exact lock
 | Full-range dense history (>8000), endpoints/gaps, date invalidation and empty state | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
 | Midnight counter split, changing tariffs, separate estimated costs | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
 | Disjoint merge, all12 comparison, explicit collision choice and dirty quick-save protection | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
+| Independent temperature/energy faults, metric switches and source recovery | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
+| Future/unqualified actuals excluded at now; zero, table/cursor and reconnect preserved | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
+| Named energy scroll region supports keyboard access and axe | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
 | Offline/in-flight/reconnect, readback failure/draft, denied/revoked | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
 | Missing original/actual-only, scoped energy/cost, Kyiv23/25h dates | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
 | Safety>manual>quality>comfort>budget; fake ACK/heat/STOP/zero/unknown | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE | PASS_OFFLINE |
@@ -24,3 +27,5 @@ Screenshots normalize font during capture only to installed DejaVu Sans, with a 
 Local managed host lacks some browser system libraries. They were downloaded/extracted only under /tmp; WebKit's temporary downloaded sys/lib directory links those files. Actual ctypes/ELF loading and WebKit27.2 navigation were verified. The local `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` bypasses only Playwright's system ldconfig-cache precheck, which cannot see temporary libraries; it does not skip a browser test or substitute jsdom. CI uses supported Ubuntu test-host dependency installation and leaves that flag unset. No production system was read/installed/changed.
 
 Review corrections keep all four existing golden PNGs unchanged; the final matrix compares them without regeneration. All56 original browser cases remain, with stronger explicit same-field conflict resolution.
+
+Follow-up6625889290 adds12 cases (three flows × four projects); all68 preceding cases remain. Initial expanded axe coverage found scrollable-region-focusable on the mobile energy table; the region was made named and keyboard-focusable without suppressing the rule. Final results refer to the successful frozen-build matrix and exact-head CI linked in PR19.

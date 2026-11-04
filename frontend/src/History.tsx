@@ -24,12 +24,12 @@ export function History({
   const [first, setFirst] = useState("2026-10-29"),
     [last, setLast] = useState("2026-11-04"),
     [metric, setMetric] = useState("temperature");
-  let error = "",
+  let rangeError = "",
     range = { start: NOW - 7 * 86400, end: NOW };
   try {
     range = kyivRange(first, last);
   } catch (e) {
-    error = e instanceof Error ? e.message : "Некоректний період";
+    rangeError = e instanceof Error ? e.message : "Некоректний період";
   }
   const history = useMemo(() => {
     try {
@@ -41,14 +41,14 @@ export function History({
       return {
         rows: [],
         rawCount: 0,
+        quarantinedCount: 0,
         unknownS: 0,
         gapCount: 0,
         error: `Історію не вдалося прочитати. ${e instanceof Error ? e.message : "Помилка джерела"}. Повторіть запит або скоротіть період.`,
       };
     }
-  }, [api, api.scenario, range.start, range.end, state.now]);
+  }, [api, api.scenario, range.start, range.end, state.now, state.generation]);
   const { rows } = history;
-  if (history.error) error = history.error;
   const source =
     api.scenario === "missing-original"
       ? { ...original, received: original.reference - 3600 }
@@ -58,14 +58,25 @@ export function History({
     eligible &&
     source.coverage.start < range.end &&
     source.coverage.end >= range.start;
-  let energy;
-  try {
-    energy = scopedEnergy(api.energyHistory(), range, state.now);
-  } catch {
-    error = "Інтервали енергії або тарифи суперечливі. Підсумок недоступний.";
-    energy = scopedEnergy([], range, state.now);
-  }
-  const { entries, known, estimated, unknownS, costKnown: priced } = energy;
+  const energyResult = useMemo(() => {
+    try {
+      return {
+        data: scopedEnergy(api.energyHistory(), range, state.now),
+        error: "",
+      };
+    } catch {
+      return {
+        data: null,
+        error:
+          "Архів енергії або тарифи недоступні чи суперечливі. Підсумок і покриття невідомі.",
+      };
+    }
+  }, [api, api.scenario, range.start, range.end, state.now, state.generation]);
+  const energy = energyResult.data;
+  const error =
+    rangeError ||
+    (metric === "temperature" ? history.error : energyResult.error);
+  const entries = energy?.entries ?? [];
   const energyPoints = entries.map((i) => ({
     at: i.start,
     value:
@@ -186,6 +197,13 @@ export function History({
               покриття: {fmt(history.unknownS / 60, 0)} хв · розривів:{" "}
               {history.gapCount}. Розриви не заповнюються.
             </p>
+            {history.quarantinedCount > 0 && (
+              <p className="warning-text" role="status">
+                Відхилено майбутніх вимірів: {history.quarantinedCount}. Після
+                «Зараз» показуємо лише умовні прогнози; майбутній факт
+                невідомий.
+              </p>
+            )}
             <details>
               <summary>Докази завчасного прогнозу</summary>
               <dl className="diagnostic-list">
@@ -220,114 +238,130 @@ export function History({
             </details>
           </>
         ) : (
-          <>
-            <div className="energy-grid">
-              <div>
-                <span>Відомий факт</span>
-                <strong>
-                  {fmt(metric === "cost" ? priced : known)}
-                  <small>{metric === "cost" ? "грн" : "кВт·год"}</small>
-                </strong>
+          energy && (
+            <>
+              <div className="energy-grid">
+                <div>
+                  <span>Відомий факт</span>
+                  <strong>
+                    {fmt(metric === "cost" ? energy.costKnown : energy.known)}
+                    <small>{metric === "cost" ? "грн" : "кВт·год"}</small>
+                  </strong>
+                </div>
+                <div>
+                  <span>Оцінки окремо</span>
+                  <strong>
+                    {fmt(
+                      metric === "cost"
+                        ? energy.costEstimated
+                        : energy.estimated,
+                    )}
+                    <small>{metric === "cost" ? "грн" : "кВт·год"}</small>
+                  </strong>
+                </div>
+                <div>
+                  <span>Невідоме покриття</span>
+                  <strong>
+                    {fmt(
+                      (metric === "cost"
+                        ? energy.costUnknownS
+                        : energy.unknownS) / 60,
+                      0,
+                    )}
+                    <small>хв</small>
+                  </strong>
+                </div>
               </div>
-              <div>
-                <span>Оцінки окремо</span>
-                <strong>
-                  {fmt(metric === "cost" ? energy.costEstimated : estimated)}
-                  <small>{metric === "cost" ? "грн" : "кВт·год"}</small>
-                </strong>
-              </div>
-              <div>
-                <span>Невідоме покриття</span>
-                <strong>
-                  {fmt(
-                    (metric === "cost" ? energy.costUnknownS : unknownS) / 60,
-                    0,
-                  )}
-                  <small>хв</small>
-                </strong>
-              </div>
-            </div>
-            {metric === "cost" && (
+              {metric === "cost" && (
+                <p className="helper">
+                  Вартість часткова за наявності пропусків тарифу. Енергія без
+                  тарифу: {fmt(energy.unpricedKwh, 3)} кВт·год. Відновлені та
+                  пропорційно розподілені суми — оцінки.
+                </p>
+              )}
+              <Chart
+                actual={energyPoints}
+                forecast={estimatedPoints}
+                scope={range}
+                now={state.now}
+                unit={metric === "cost" ? "грн" : "кВт·год"}
+                forecastLabel="Оцінки"
+                label={
+                  metric === "cost" ? "Історія вартості" : "Історія енергії"
+                }
+                comfort={false}
+                tracks={false}
+              />
               <p className="helper">
-                Вартість часткова за наявності пропусків тарифу. Енергія без
-                тарифу: {fmt(energy.unpricedKwh, 3)} кВт·год. Відновлені та
-                пропорційно розподілені суми — оцінки.
+                Денний/7-денний облік не порівнюється з нічним циклом.
+                Початковий цикловий бюджет доступний на вкладці «Дім» у власному
+                періоді.
               </p>
-            )}
-            <Chart
-              actual={energyPoints}
-              forecast={estimatedPoints}
-              scope={range}
-              now={state.now}
-              unit={metric === "cost" ? "грн" : "кВт·год"}
-              forecastLabel="Оцінки"
-              label={metric === "cost" ? "Історія вартості" : "Історія енергії"}
-              comfort={false}
-              tracks={false}
-            />
-            <p className="helper">
-              Денний/7-денний облік не порівнюється з нічним циклом. Початковий
-              цикловий бюджет доступний на вкладці «Дім» у власному періоді.
-            </p>
-            <div className="table-scroll">
-              <table>
-                <caption>
-                  Якість інтервалів · синтетичні тарифи за часом
-                </caption>
-                <thead>
-                  <tr>
-                    <th>Початок</th>
-                    <th>Енергія</th>
-                    <th>Якість</th>
-                    <th>грн/кВт·год</th>
-                    <th>Метод / межа інтервалу</th>
-                    <th>Вартість: факт / оцінка</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.slice(0, 48).map((i) => (
-                    <tr key={i.start}>
-                      <th scope="row">{dateTime(i.start)}</th>
-                      <td>{fmt(i.kwh, 3)}</td>
-                      <td>
-                        {
-                          {
-                            confirmed: "Підтверджено",
-                            derived: "Розраховано",
-                            estimated: "Оцінка",
-                            recovered: "Відновлено за доказом",
-                            unknown: "Невідомо",
-                          }[i.category]
-                        }
-                      </td>
-                      <td>
-                        {i.tariffs
-                          ? "За датованими інтервалами"
-                          : fmt(i.price, 2)}
-                      </td>
-                      <td>
-                        {i.method
-                          ? {
-                              counter_difference: "Різниця лічильника",
-                              integrated_power: "Інтегрування потужності",
-                              prorated_estimate: "Пропорційна оцінка",
-                            }[i.method]
-                          : "Сукупний інтервал"}{" "}
-                        · до {dateTime(i.end)}
-                      </td>
-                      <td>
-                        {fmt(i.costKnown)} / {fmt(i.costEstimated)} грн
-                      </td>
+              <div
+                className="table-scroll"
+                role="region"
+                aria-label="Таблиця енергії та вартості"
+                tabIndex={0}
+              >
+                <table>
+                  <caption>
+                    Якість інтервалів · синтетичні тарифи за часом
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>Початок</th>
+                      <th>Енергія</th>
+                      <th>Якість</th>
+                      <th>грн/кВт·год</th>
+                      <th>Метод / межа інтервалу</th>
+                      <th>Вартість: факт / оцінка</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p>
-              Немає тарифу — немає підтвердженої вартості. Прогалини та оцінки
-              не перетворюються на заощадження.
-            </p>
-          </>
+                  </thead>
+                  <tbody>
+                    {entries.slice(0, 48).map((i) => (
+                      <tr key={i.start}>
+                        <th scope="row">{dateTime(i.start)}</th>
+                        <td>{fmt(i.kwh, 3)}</td>
+                        <td>
+                          {
+                            {
+                              confirmed: "Підтверджено",
+                              derived: "Розраховано",
+                              estimated: "Оцінка",
+                              recovered: "Відновлено за доказом",
+                              unknown: "Невідомо",
+                            }[i.category]
+                          }
+                        </td>
+                        <td>
+                          {i.tariffs
+                            ? "За датованими інтервалами"
+                            : fmt(i.price, 2)}
+                        </td>
+                        <td>
+                          {i.method
+                            ? {
+                                counter_difference: "Різниця лічильника",
+                                integrated_power: "Інтегрування потужності",
+                                prorated_estimate: "Пропорційна оцінка",
+                              }[i.method]
+                            : "Сукупний інтервал"}{" "}
+                          · до {dateTime(i.end)}
+                        </td>
+                        <td>
+                          {fmt(i.costKnown)} / {fmt(i.costEstimated)} грн
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                Немає тарифу — немає підтвердженої вартості. Прогалини та оцінки
+                не перетворюються на заощадження.
+              </p>
+            </>
+          )
         )}
       </Card>
       <Card

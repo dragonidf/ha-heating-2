@@ -533,3 +533,146 @@ test("counter crossing Kyiv midnight is estimated once with honest changing-tari
   await expect(page.locator(".energy-grid strong").nth(0)).toHaveText("0,0грн");
   await expect(page.locator(".energy-grid strong").nth(1)).toHaveText("5,0грн");
 });
+
+test("temperature and original remain available through an independent energy archive failure", async ({
+  page,
+}) => {
+  await page
+    .getByText("Сценарії демо · синтетичні дані", { exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("energy-error");
+  await page.getByRole("button", { name: "Історія", exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: /Історія температури/ }),
+  ).toBeVisible();
+  expect(
+    await page.locator('path[data-series="original"]').count(),
+  ).toBeGreaterThan(0);
+  expect(
+    await page.locator('path[data-series="actual"]').count(),
+  ).toBeGreaterThan(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  for (const metric of ["energy", "cost"]) {
+    await page.getByLabel("Показник", { exact: true }).selectOption(metric);
+    await expect(page.getByRole("alert")).toContainText(
+      "Підсумок і покриття невідомі",
+    );
+    await expect(page.locator(".energy-grid")).toHaveCount(0);
+  }
+  await page
+    .getByLabel("Показник", { exact: true })
+    .selectOption("temperature");
+  await page.getByRole("button", { name: "24 год", exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: /Історія температури/ }),
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await page.getByLabel("Сценарій", { exact: true }).selectOption("normal");
+  await page.getByLabel("Показник", { exact: true }).selectOption("energy");
+  await expect(
+    page.getByRole("img", { name: /Історія енергії/ }),
+  ).toBeVisible();
+});
+
+test("energy and cost remain available through an independent temperature cursor failure", async ({
+  page,
+}) => {
+  await page
+    .getByText("Сценарії демо · синтетичні дані", { exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("temperature-error");
+  await page.getByRole("button", { name: "Історія", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Історію не вдалося прочитати",
+  );
+  for (const metric of ["energy", "cost"]) {
+    await page.getByLabel("Показник", { exact: true }).selectOption(metric);
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(
+      page.getByRole("img", {
+        name: metric === "energy" ? /Історія енергії/ : /Історія вартості/,
+      }),
+    ).toBeVisible();
+    const known = await page
+      .locator(".energy-grid strong")
+      .first()
+      .textContent();
+    expect(known).not.toMatch(/^0,0/);
+  }
+  const audit = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(audit.violations).toEqual([]);
+  await page.getByLabel("Сценарій", { exact: true }).selectOption("normal");
+  await page
+    .getByLabel("Показник", { exact: true })
+    .selectOption("temperature");
+  await expect(
+    page.getByRole("img", { name: /Історія температури/ }),
+  ).toBeVisible();
+});
+
+test("future and unqualified observations never cross the now divider as actuals after reconnect", async ({
+  page,
+}) => {
+  await page
+    .getByText("Сценарії демо · синтетичні дані", { exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("future-history");
+  await page.getByRole("button", { name: "Історія", exact: true }).click();
+  const check = async () => {
+    await expect(
+      page.getByText(/Відхилено майбутніх вимірів: 2/),
+    ).toBeVisible();
+    const nowX = Number(await page.locator(".now-line").getAttribute("x1"));
+    const coordinates = await page
+      .locator('path[data-series="actual"]')
+      .evaluateAll((elements) =>
+        elements.flatMap((el) =>
+          [...(el.getAttribute("d") ?? "").matchAll(/[ML]([\d.]+),/g)].map(
+            (m) => Number(m[1]),
+          ),
+        ),
+      );
+    expect(coordinates.length).toBeGreaterThan(0);
+    expect(Math.max(...coordinates)).toBeLessThanOrEqual(nowX + 0.01);
+    await page
+      .getByRole("slider", { name: "Час: Історія температури" })
+      .focus();
+    await page.keyboard.press("End");
+    await expect(page.locator(".chart-readout")).toContainText("Факт — °C");
+  };
+  await page.getByRole("button", { name: "24 год", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Поточний прогноз", exact: true })
+    .click();
+  await check();
+  await page
+    .getByText("Таблиця значень · без кольору", { exact: true })
+    .click();
+  await expect(
+    page.getByRole("cell", { name: "99,0", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("cell", { name: "88,0", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("cell", { name: "77,0", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("cell", { name: "0,0", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Новий повний стан", exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("future-history");
+  await check();
+});

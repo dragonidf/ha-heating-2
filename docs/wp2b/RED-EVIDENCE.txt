@@ -168,3 +168,29 @@ AssertionError: expected  to have a length of 1 but got +0
 Late reread (focused -t selection, before fix):
  FAIL  tests/settings-merge.test.ts > a late reread cannot roll back a newer persisted save and clear its values
 AssertionError: expected 1 to be 2 // Object.is equality
+
+Follow-up review6625889290; baselinecabfafce42b81bc83a24c487178eba6fc25ec5e8
+Command: npm run test -- tests/history-followup.test.tsx
+Eight actual assertion failures before implementation (test syntax/typecheck already passed).
+ FAIL  tests/history-followup.test.tsx > healthy temperature and original survive energy read failure
+ FAIL  tests/history-followup.test.tsx > healthy temperature and original survive energy tariff failure
+TestingLibraryElementError: Unable to find an accessible element with the role "img" and name `/Історія температури/`
+ FAIL  tests/history-followup.test.tsx > healthy energy survives a failed temperature cursor
+ FAIL  tests/history-followup.test.tsx > healthy cost survives a failed temperature cursor
+AssertionError: expected <p role="alert"></p> to be null
+ FAIL  tests/history-followup.test.tsx > quarantines future provider observations while preserving legitimate past data
+AssertionError: expected [ { at: +0, value: 20 }, …(1) ] to deeply equal [ { at: +0, value: 20 } ]
+ FAIL  tests/history-followup.test.tsx > a future actual cannot affect the curve, axis, table or forecast cursor fact
+AssertionError: expected 648 to be less than or equal to 448
+ FAIL  tests/history-followup.test.tsx > invalid quality "" cannot become a confirmed actual
+ FAIL  tests/history-followup.test.tsx > invalid quality null cannot become a confirmed actual
+AssertionError: expected 77 to be null
+      Tests  8 failed (8)
+
+Additional pre-fix reconnect regressions (focused -t selection, not a final skipped suite):
+ FAIL  tests/history-followup.test.tsx > reconnect refreshes an unchanged-scope temperature archive after recovery
+AssertionError: expected <p role="alert"></p> to be null
+ FAIL  tests/history-followup.test.tsx > reconnect refreshes an unchanged-scope energy archive after recovery
+AssertionError: expected <p role="alert"></p> to be null
+
+Expanded real-browser axe regression before the keyboard fix: scrollable-region-focusable, serious, WCAG2A, energy .table-scroll on chromium-mobile. Named focusable region fixed; no rule/threshold removed.

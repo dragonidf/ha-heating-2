@@ -1,35 +1,29 @@
-WP2B independent-review correction batch; baseline68ef7b15d6b21af214189566aa69ffbfcbf0c304.
-Implementation/self-test only; independent ChatGPT acceptance pending.
-Synthetic fixtures, local loopback preview and temporary stores; no production/legacy access.
+WP2B focused follow-up6625889290; baselinecabfafce42b81bc83a24c487178eba6fc25ec5e8.
+Implementation/self-test only; independent acceptance pending. Synthetic fixtures, local loopback preview and temporary stores; no production/legacy access.
 
-Test-first: original7/7 regressions failed before implementation and against an isolated git archive of the exact baseline. Additional quick-intent, recovered-quality, zero-cost and late-reread regressions failed before their fixes. RED-EVIDENCE.txt retains the mismatches.
+Test-first: eight regressions failed before implementation of independent error domains, future quarantine and explicit invalid-quality rejection. Two focused reconnect cases then exposed stale cached archive errors before the generation-refresh fix. Full final suites use no skips/retries/xfails. RED-EVIDENCE.txt records the failures.
 
-Python3.12.14 / qualified disposable SQLite3.53.1
+Python3.12.14 / disposable qualified SQLite3.53.1
 Success: no issues found in 32 source files
-Ran 351 tests in 54.095s
+Ran 351 tests in 41.256s
 OK
 TOTAL                                      4057     67   1198     66    97%
 
-Python3.13.5 / qualified disposable SQLite3.51.3
-Success: no issues found in 32 source files
-Ran 351 tests in 51.482s
-OK
-TOTAL                                      4057     67   1198     66    97%
+Node24.19.0/npm11.9.0; strict TypeScript, prettier and production build PASS.
+ Test Files  11 passed (11)
+      Tests  202 passed (202)
+Statements   : 97.98% ( 584/596 )
+Branches     : 95.34% ( 614/644 )
+Functions    : 97.61% ( 123/126 )
+Lines        : 98.89% ( 537/543 )
 
-Node24.19.0 / npm11.9.0; strict TypeScript, prettier and production build PASS.
-Coverage includes domain, wire contracts, mock, storage, settings hook, recursive merge, history and scoped-energy logic.
- Test Files  10 passed (10)
-      Tests  177 passed (177)
-Statements   : 97.95% ( 574/586 )
-Branches     : 95.32% ( 612/642 )
-Functions    : 97.6% ( 122/125 )
-Lines        : 98.87% ( 528/534 )
+All177 preceding frontend tests retained;25 new tests cover archive read/tariff failures, temporal cutoff, explicit invalid quality, pagination/immutability, midnight/Kyiv23/25h days and reconnect. No Python package/test or inherited contract changed; all101 accepted source/test hashes and188 preceding manifest entries verify.
 
-Real-browser final frozen-build command:
-PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary extracted libs> PLAYWRIGHT_BROWSERS_PATH=<temporary downloaded browsers> npm run test:browser
-The override bypasses only the host ldconfig precheck; actual Chromium156 and WebKit27.2 run. CI installs supported dependencies without this override. No tests/retries/xfails are hidden. Golden PNGs and all quality gates are unchanged.
-Final result:68 passed across Chromium/WebKit mobile/desktop; zero skipped/unexpected (see final run output and CI artifacts). All56 old cases retained; same-field conflict flow strengthened to require explicit choice. New disjoint/dense/energy flows are included.
+Browser frozen-build command:
+PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary extracted libraries> PLAYWRIGHT_BROWSERS_PATH=<temporary downloaded browsers> npm run test:browser
+This bypasses only host ldconfig validation; actual Chromium156 and WebKit27.2 run. CI installs normal supported dependencies without the workaround. Four golden PNGs unchanged.
+Initial expanded run:78 passed/2 failed. New energy-table axe checks on both mobile browsers reported scrollable-region-focusable. A named keyboard-focusable scroll region fixed the defect without suppressing the rule.
+Final result:80 passed (all68 preceding cases plus12 new), zero skipped/unexpected. Final-head CI artifacts and PR19 record the exact run evidence and14-job matrix; no later untested documentation commit is required.
 
-Canonical WP2A codec export:PASS. All188 inherited phase-manifest entries and101 accepted regression-source hashes unchanged. 86 requirement rows and38 scenario rows retained with corrected evidence links.
-Python3.14 is verified by final-head CI, not claimed locally. Exact final SHA,14-job CI runs and job evidence are in PR checks/description; no follow-up untested commit is needed to record their results.
-G1/B01–B08 BLOCKED. No WP2C, merge, actual HA/native transport, private data or physical validation.
+Canonical WP2A fixture export and86/38 coverage inventories PASS. SHA256SUMS is updated including the new regression file. Python3.13/3.14 verification is by final-head CI, not a claim of new local runs. 90/85% frontend coverage,95% Python coverage,44px targets,1300px Home height, visual1.5% and accessibility gates remain unchanged.
+G1/B01–B08 BLOCKED; no WP2C, merge, actual HA/native transport, private data or physical validation.

@@ -44,6 +44,9 @@ export const scenarios: Record<Scenario, string> = {
   fire: "Камін і нічна циркуляція",
   empty: "Порожня історія",
   "dense-history": "Щільна історія та межі обліку",
+  "energy-error": "Помилка лише архіву енергії",
+  "temperature-error": "Помилка лише температурної історії",
+  "future-history": "Майбутні та некваліфіковані виміри",
   revoked: "Доступ відкликано",
   recovering: "Відновлення стану",
   "long-copy": "Довгий український текст",
@@ -271,6 +274,23 @@ export const boundaryIntervals: readonly EnergyInterval[] = Object.freeze([
     ]),
   }),
 ]);
+export const futureActual: readonly Point[] = Object.freeze(
+  qualifyCadence(
+    [
+      { at: NOW - 3600, value: 20, quality: "valid" },
+      { at: NOW - 1800, value: 77, quality: "estimated" },
+      { at: NOW, value: 0, quality: "valid" },
+      { at: NOW + 1, value: 88, quality: "valid" },
+      { at: NOW + 3600, value: 99, quality: "valid" },
+    ],
+    { source: "synthetic.future-clock", cadenceS: 3600, qualified: true },
+  ).map((p) =>
+    Object.freeze({
+      ...p,
+      ...(p.coverage ? { coverage: Object.freeze(p.coverage) } : {}),
+    }),
+  ),
+);
 const frozenForecast = readForecast(
   wireFixtures.original,
   wireFixtures.original_source,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Point, Window, Track } from "./types";
 import { decimate, segments, time, fmt, dateTime } from "./domain";
+import { measuredValue } from "./history";
 export interface ChartProps {
   actual: readonly Point[];
   forecast?: readonly Point[];
@@ -29,9 +30,9 @@ export function Chart({
   initialLatest = true,
   forecastLabel = "Поточний прогноз",
 }: ChartProps) {
-  const actual = inputActual.map((p) =>
-    p.quality && p.quality !== "valid" ? { ...p, value: null } : p,
-  );
+  const actual = inputActual
+    .filter((p) => Number.isFinite(p.at) && p.at <= now)
+    .map((p) => ({ ...p, value: measuredValue(p) }));
   const [cursor, setCursor] = useState<number | null>(null);
   const [showLatest, setLatest] = useState(initialLatest);
   const [showTracks, setTracks] = useState(tracks);

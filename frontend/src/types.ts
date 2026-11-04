@@ -118,6 +118,9 @@ export type Scenario =
   | "fire"
   | "empty"
   | "dense-history"
+  | "energy-error"
+  | "temperature-error"
+  | "future-history"
   | "revoked"
   | "recovering"
   | "long-copy";
