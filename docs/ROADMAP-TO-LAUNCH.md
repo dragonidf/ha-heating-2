@@ -13,7 +13,8 @@ This is a **sequence and parallelization plan, not permission to skip gates**, a
 | WP1B | ACCEPTED, OFFLINE ONLY | PR #9, merged main `1d3a920` / Issue #7 closed |
 | WP1C | ACCEPTED, OFFLINE ONLY | PR #13, merged main `9525e46`, Issue #11 closed; 219 tests / CI 9/9 |
 | WP2A | ACCEPTED, OFFLINE ONLY | PR #16, merged main `6ba17e0`, Issue #14 closed; 351 tests / CI 12/12 |
-| WP2B | APPROVED **OFFLINE ONLY** | `docs/wp2b/APPROVAL-2026-11-04.md`, `docs/wp2b/WP2B-TASK.md`, Issue #17 |
+| WP2B | ACCEPTED, OFFLINE ONLY | PR #19 merged main `33d8ba57`, Issue #17 closed; 351 Python +202 frontend +80 browser, CI 14/14 |
+| WP2C | APPROVED **ISOLATED TEST HA ONLY** | `docs/wp2c/APPROVAL-2026-11-04.md`, `docs/wp2c/WP2C-TASK.md`, Issue #20; disposable separate HA Core with synthetic data only |
 | Live deployment, actual actuation, cutover | NOT AUTHORIZED | Gates G2–G9 remain future |
 
 ## Parallel lanes
@@ -23,10 +24,11 @@ This is a **sequence and parallelization plan, not permission to skip gates**, a
 1. **WP1B COMPLETE:** offline SQLite durable store, boot/owner/one-shot persistence, fake gateway, prioritized STOP, 13 crash checkpoints and CI; PR #9 accepted. No real device writers.
 2. **WP1C COMPLETE:** pure thermal model, bounded blackout-aware planner and immutable 12h reference, champion/challenger and fireplace/night fan policy; PR #13 accepted, code and tests in main.
 3. **WP2A COMPLETE:** fake HA-facing contracts/client, offline event-to-reducer seam, isolated SQLite energy/evidence ledger and synthetic migration rehearsal; PR #16 accepted. No live HA/device transport.
-4. **WP2B NOW — APPROVED OFFLINE ONLY:** full separate operator UI with three primary tabs, evidence-backed original12h vs actual chart, scoped energy/quality, mock durable settings receipts, dark/light responsive design and synthetic browser/accessibility QA. Issue #17 and `docs/wp2b/WP2B-TASK.md`. No native HA integration or real data.
-5. **Future staged integration (requires new approval and actual gate evidence):** an isolated test Home Assistant instance and SDK/FS compatibility verification (not a second writer); then specifically authorized read-only zero-write shadow in real HA only after prerequisites. Physical device activation much later.
-6. **Future user-facing migration and parity:** private import only with qualified owner-controlled evidence, continuity, frozen forecast and original history, with a reversible dry-run; preserve all requirement/scenario IDs.
-7. **Future release preparation:** G3 software target tests, G4 import dry-run, G5 ≥7-day/3-cycle zero-write shadow; G6 OEM tests, G7 one-writer cutover, G8 probation, G9 quantified quality; each has explicit owner permission and evidence.
+4. **WP2B COMPLETE:** standalone operator UI, original12h vs actual, evidence-aware kWh/cost and settings, responsive Chromium/WebKit QA; PR #19 accepted, 351 Python /202 frontend /80 browser tests.
+5. **WP2C NOW — OWNER APPROVED ISOLATED TEST ONLY:** provision a NEW disposable HA Core **in Codex sandbox/ephemeral CI** with fake identities/data, and test disabled-by-default integration packaging, config/options, HA auth/panel lifecycle, persistence/rollback, browser and isolated network; Issue #20 and `docs/wp2c/WP2C-TASK.md`. **No contact with owner's existing HA/N100/LAN, legacy or real devices**, no real writer.
+6. **Future WP2D and staged integration (NOT AUTHORIZED):** separately authorized validation and eventual zero-write shadow in actual HA only after G1 evidence and independent gate qualification. No second writer or physical device control.
+7. **Future user-facing migration and parity:** private import only with qualified owner-controlled evidence, continuity, frozen forecast and original history, with a reversible dry-run; preserve all requirement/scenario IDs.
+8. **Future release preparation:** G3 software target tests, G4 import dry-run, G5 ≥7-day/3-cycle zero-write shadow; G6 OEM tests, G7 one-writer cutover, G8 probation, G9 quantified quality; each has explicit owner permission and evidence.
 
 ### Lane B — G1 evidence/owner decisions (in parallel to Lane A)
 
@@ -49,4 +51,4 @@ This is a **sequence and parallelization plan, not permission to skip gates**, a
 
 ## Next owner-visible checkpoint
 
-Codex produces a **reviewable, unmerged WP2B implementation PR** with full offline operator UI, synthetic browser E2E/accessibility evidence, prior 351 regressions and CI. G1/B01–B08 remain tracked in Issue #3. WP2C, isolated real test-HA, home shadow, live production integration and cutover each need a new authorization and verified gates.
+Codex produces **one reviewable, unmerged WP2C implementation PR** with verified disposable test Home Assistant startup/integration/panel/browser/rollback and network-isolation evidence, while preserving accepted 351 Python/202 frontend/80 browser suites and CI. If isolated HA cannot be safely created, native proof remains BLOCKED; do not use production. **G1/B01–B08 remain BLOCKED** in Issue #3. WP2D, owner-device tests, home shadow, real migration, activation/cutover all require another approval and verified gates.
