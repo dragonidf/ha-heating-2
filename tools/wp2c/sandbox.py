@@ -201,6 +201,9 @@ config.write_text(text)
 def browser(state_path: Path, project: str, image: str, output: Path) -> None:
     state = load(state_path)
     name = state["name"] + "-browser-" + project
+    # Mountpoints must exist before /work becomes read-only (fresh CI checkout).
+    for directory in ("test-results", "playwright-report-native"):
+        (ROOT / "frontend" / directory).mkdir(exist_ok=True)
     # Read disposable credentials into memory; never place them in argv, environment selectors or reports.
     credentials = json.loads(docker("exec", state["name"], "python", "-c", "from pathlib import Path;print(Path('/config/.wp2c-secrets.json').read_text())"))
     payload = json.dumps({"user": credentials["admin_user"], "password": credentials["admin_password"], "project": project})
