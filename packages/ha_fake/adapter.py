@@ -68,6 +68,15 @@ class SourceAdapter:
         self._latest[event.entity] = event
         return True
 
+    def current_assertion(
+        self, event: SourceEvent, clock: Clock, max_age: float
+    ) -> bool:
+        return (
+            self._latest.get(event.entity) == event
+            and not self._clock_bad
+            and 0 <= clock.utc - event.received_at <= max_age
+        )
+
     def current_event(self, event: SourceEvent) -> bool:
         return self._latest.get(event.entity) == event and event.reading is not None
 

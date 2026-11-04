@@ -12,6 +12,7 @@ from packages.contracts import (
     OneShot,
     Action,
     ReceiptStage,
+    QualityStatus,
 )
 from packages.contracts.models import (
     text,
@@ -472,6 +473,46 @@ class Cursor:
         number(self.last_at)
         digest(self.query_hash)
         require(self.last_seq <= self.watermark, "Invalid cursor frontier")
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryProof:
+    """Content-addressed claim checked against two immutable direct meter readings."""
+
+    stream: str
+    continuity: str
+    unknown_ids: tuple[str, ...]
+    window: TimeWindow
+    source_id: str
+    physical_id: str
+    left_id: str
+    right_id: str
+    kwh: float
+    quality: QualityStatus
+    method: Literal["counter_difference"] = "counter_difference"
+
+    def __post_init__(self) -> None:
+        for value in (
+            self.stream,
+            self.continuity,
+            self.source_id,
+            self.physical_id,
+            self.left_id,
+            self.right_id,
+        ):
+            text(value)
+        identifiers(self.unknown_ids)
+        require(
+            bool(self.unknown_ids) and self.left_id != self.right_id,
+            "Missing recovery evidence",
+        )
+        require(
+            isinstance(self.window, TimeWindow)
+            and isinstance(self.quality, QualityStatus)
+            and self.method == "counter_difference",
+            "Invalid recovery proof",
+        )
+        number(self.kwh, nonnegative=True)
 
 
 @dataclass(frozen=True, slots=True)

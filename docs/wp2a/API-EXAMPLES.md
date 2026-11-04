@@ -34,7 +34,12 @@ preview = runtime.recovery(request, "synthetic.heat", backup_root,
                            admin_session, dry_run=True)
 result = runtime.recovery(request, "synthetic.heat", backup_root,
                           admin_session, dry_run=False)
-# Apply checks current total/head, exact disposable backup, hash and unknown claims.
+# Before taking that disposable backup, archive two independent/direct VALID KWH
+# Readings and a RecoveryProof binding their IDs, gap IDs, exact window and delta.
+# request.evidence_hash = checksum(encode(proof)); archive proof under that digest.
+# Apply/preview independently check proof and raw counter arithmetic, plus current
+# total/head, exact disposable backup, admin authority and unique unknown claims.
+# Missing/unqualified proof is rejected; approval cannot supply missing metrology.
 
 manifest = dry_run(synthetic_legacy_bundle)  # no writes
 receipt = stage(manifest, empty_disposable_evidence)
@@ -43,3 +48,5 @@ assert not rollback.bundle.policy.armed  # history/consumed intents carried forw
 ```
 
 Registry/config revision, model/topology and owner/boot/grid fencing are separate from cursor/watermark and energy continuity. All timestamps are injected UTC seconds; calendar policy receives an explicit timezone. Dated tariff and source/coverage metadata remain part of data, never inferred from a current price or current reading. UI, native HA services and production transport are outside WP2A.
+
+A queued forecast receives a verified energy_scope only for a reference inside the complete simulated horizon with qualified request-stage power. Its amount integrates segment overlap from reference onward; it excludes earlier plan energy. Outside/absent coverage has planned_kwh=None and energy_scope=None. Existing unscoped archived amounts remain unverified. A fresh thermostat author assertion can establish an ownership-uncertain pause without any Reading; its observed_action and author fields never authenticate a physical action. Healthy readings alone do not clear that pause.

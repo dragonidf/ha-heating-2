@@ -131,22 +131,16 @@ class OfflineIntegration:
         if (
             binding.role == "thermostat"
             and event.author != "sensor"
-            and self.adapter.current_event(event)
-            and event.reading is not None
-            and 0 <= clock.utc - event.reading.observed_at <= binding.max_age_s
-            and event.received_at <= clock.utc
+            and self.adapter.current_assertion(event, clock, binding.max_age_s)
         ):
-            # A source's self-labelled echo is not proof of our own command.
-            kind = (
-                EventKind.MANUAL_CHANGE
-                if event.author == "manual"
-                else EventKind.UNKNOWN_CHANGE
-            )
+            # Source labels can revoke ownership, never authenticate a physical action.
+            # Missing/unqualified state has no observed action, including a claimed echo.
+            kind = EventKind.UNKNOWN_CHANGE
             observation = self.simulator.actuator.feedback(
-                event.observed_action,
+                None,
                 clock,
-                manual=event.author == "manual",
-                writers_known=event.author != "unknown",
+                manual=False,
+                writers_known=False,
             )
         return self.simulator.apply(
             self._event(kind, clock), snapshot, clock, observation=observation
@@ -237,6 +231,45 @@ class OfflineIntegration:
             identity,
             (request.weather.issue,),
         )
+        scope = None
+        energy = None
+        horizon = request.slots[-1].window.end
+        covered = (
+            request.state.at == request.slots[0].window.start
+            and all(
+                a.window.end == b.window.start
+                for a, b in zip(request.slots, request.slots[1:])
+            )
+            and tuple(s.at for s in proposal.trajectory)
+            == tuple(s.window.end for s in request.slots)
+        )
+        require(
+            all(
+                request.state.at <= s.start < s.end <= horizon
+                for s in proposal.segments
+            )
+            and all(
+                a.end <= b.start
+                for a, b in zip(proposal.segments, proposal.segments[1:])
+            ),
+            "Invalid forecast energy segments",
+        )
+        if (
+            covered
+            and request.state.at <= reference < horizon
+            and request.limits_qualified
+            and proposal.power_kw in request.stages_kw
+            and proposal.power_kw is not None
+        ):
+            scope = TimeWindow(start=reference, end=horizon)
+            energy = (
+                sum(
+                    max(0, min(s.end, scope.end) - max(s.start, scope.start))
+                    for s in proposal.segments
+                )
+                * proposal.power_kw
+                / 3600
+            )
         forecast = ForecastRecord(
             sha256(repr((identity, cycle, role, reference)).encode()).hexdigest(),
             cycle,
@@ -244,7 +277,8 @@ class OfflineIntegration:
             reference,
             curve,
             request.state.at,
-            proposal.energy_kwh,
+            energy,
+            scope,
         )
         self._archive(record(identity, proposal, request.state.at, cycle))
         self._archive(record(forecast.identity, forecast, forecast.recorded_at, cycle))

@@ -1,13 +1,15 @@
-WP2A isolated local validation; synthetic data and disposable files only.
-Base c3eceecee5d8538f6426ee60ecb93563f14d8805
-219 inherited +96 WP2A tests =315. Native HA/target hardware NOT_TESTED.
+WP2A PR16 review correction validation; synthetic/disposable only.
+Reviewed source 97bb0dd7c681a2e45ceeeb029fec98312021381d.
+315 earlier test methods preserved;25 review regressions;340 total.
+All219 accepted WP1A/B/C assets match REGRESSION-BASELINE.sha256.
+Strict mypy and existing95% branch coverage threshold unchanged.
 
-Python 312 full make check:
+Python3.12.14; linked qualified SQLite3.53.1
+Command: make check PYTHON=<isolated interpreter>; TMPDIR disposable overlay.
 Success: no issues found in 32 source files
-Ran 315 tests in 37.861s
+Ran 340 tests in 38.485s
 OK
-TOTAL                                      3993     67   1180     65    97%
-
+TOTAL                                      4057     67   1198     66    97%
 Name                                      Stmts   Miss Branch BrPart  Cover   Missing
 -------------------------------------------------------------------------------------
 packages/__init__.py                          0      0      0      0   100%
@@ -22,18 +24,18 @@ packages/control_store/qualification.py      19      0      2      0   100%
 packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
 packages/evidence/__init__.py                 0      0      0      0   100%
 packages/evidence/energy.py                 146      2     62      3    98%   68, 78, 318->320
-packages/evidence/store.py                  468     26    188     23    92%   85, 143-146, 148->150, 174, 247, 250, 263, 276, 282, 338, 393, 453, 458, 556, 593, 653, 735, 742, 780, 791, 794, 805, 852, 863
+packages/evidence/store.py                  502     28    202     25    92%   86, 144-147, 149->151, 175, 248, 251, 264, 277, 283, 339, 394, 454, 459, 557, 594, 663, 726, 753, 808, 815, 853, 864, 867, 878, 926, 937
 packages/fan_policy/__init__.py              77      0     32      0   100%
 packages/ha_fake/__init__.py                  0      0      0      0   100%
-packages/ha_fake/adapter.py                  67      0     24      0   100%
-packages/ha_fake/client.py                  112      0     34      2    99%   68->74, 165->160
-packages/ha_fake/runtime.py                 179      7     28      3    95%   122, 185-186, 335, 350, 475-476
+packages/ha_fake/adapter.py                  69      0     24      0   100%
+packages/ha_fake/client.py                  112      0     34      1    99%   165->160
+packages/ha_fake/runtime.py                 187      5     30      3    96%   122, 369, 384, 509-510
 packages/learning/__init__.py               223      0     60      0   100%
 packages/migration/__init__.py                0      0      0      0   100%
 packages/migration/rehearsal.py              87      4     40      4    94%   95, 166, 175, 179
 packages/offline/__init__.py                  0      0      0      0   100%
-packages/offline/codec.py                    26      2      0      0    92%   91-92
-packages/offline/contracts.py               501      0     82      2    99%   178->182, 877->884
+packages/offline/codec.py                    26      2      0      0    92%   93-94
+packages/offline/contracts.py               521      0     84      2    99%   179->183, 918->925
 packages/planner/__init__.py                360      2     96      2    99%   750, 770
 packages/planner/evidence.py                 44      0     10      0   100%
 packages/planner/policy.py                   60      0     20      0   100%
@@ -43,14 +45,14 @@ packages/simulator/engine.py                262      5     74      7    96%   86
 packages/thermal/__init__.py                 76      0      6      0   100%
 packages/thermal/wire.py                     80      1     28      1    98%   95
 -------------------------------------------------------------------------------------
-TOTAL                                      3993     67   1180     65    97%
+TOTAL                                      4057     67   1198     66    97%
 
-Python 313 full make check:
+Python3.13.5; temporary linked qualified SQLite3.51.3
+Command: make check PYTHON=<isolated interpreter>; TMPDIR disposable overlay.
 Success: no issues found in 32 source files
-Ran 315 tests in 37.290s
+Ran 340 tests in 36.582s
 OK
-TOTAL                                      3993     67   1180     65    97%
-
+TOTAL                                      4057     67   1198     66    97%
 Name                                      Stmts   Miss Branch BrPart  Cover   Missing
 -------------------------------------------------------------------------------------
 packages/__init__.py                          0      0      0      0   100%
@@ -65,18 +67,18 @@ packages/control_store/qualification.py      19      0      2      0   100%
 packages/control_store/store.py             348     12    136     13    95%   82, 84, 93, 103, 118, 156, 164, 178->exit, 234, 247, 283, 300, 308
 packages/evidence/__init__.py                 0      0      0      0   100%
 packages/evidence/energy.py                 146      2     62      3    98%   68, 78, 318->320
-packages/evidence/store.py                  468     26    188     23    92%   85, 143-146, 148->150, 174, 247, 250, 263, 276, 282, 338, 393, 453, 458, 556, 593, 653, 735, 742, 780, 791, 794, 805, 852, 863
+packages/evidence/store.py                  502     28    202     25    92%   86, 144-147, 149->151, 175, 248, 251, 264, 277, 283, 339, 394, 454, 459, 557, 594, 663, 726, 753, 808, 815, 853, 864, 867, 878, 926, 937
 packages/fan_policy/__init__.py              77      0     32      0   100%
 packages/ha_fake/__init__.py                  0      0      0      0   100%
-packages/ha_fake/adapter.py                  67      0     24      0   100%
-packages/ha_fake/client.py                  112      0     34      2    99%   68->74, 165->160
-packages/ha_fake/runtime.py                 179      7     28      3    95%   122, 185-186, 335, 350, 475-476
+packages/ha_fake/adapter.py                  69      0     24      0   100%
+packages/ha_fake/client.py                  112      0     34      1    99%   165->160
+packages/ha_fake/runtime.py                 187      5     30      3    96%   122, 369, 384, 509-510
 packages/learning/__init__.py               223      0     60      0   100%
 packages/migration/__init__.py                0      0      0      0   100%
 packages/migration/rehearsal.py              87      4     40      4    94%   95, 166, 175, 179
 packages/offline/__init__.py                  0      0      0      0   100%
-packages/offline/codec.py                    26      2      0      0    92%   91-92
-packages/offline/contracts.py               501      0     82      2    99%   178->182, 877->884
+packages/offline/codec.py                    26      2      0      0    92%   93-94
+packages/offline/contracts.py               521      0     84      2    99%   179->183, 918->925
 packages/planner/__init__.py                360      2     96      2    99%   750, 770
 packages/planner/evidence.py                 44      0     10      0   100%
 packages/planner/policy.py                   60      0     20      0   100%
@@ -86,7 +88,6 @@ packages/simulator/engine.py                262      5     74      7    96%   86
 packages/thermal/__init__.py                 76      0      6      0   100%
 packages/thermal/wire.py                     80      1     28      1    98%   95
 -------------------------------------------------------------------------------------
-TOTAL                                      3993     67   1180     65    97%
+TOTAL                                      4057     67   1198     66    97%
 
-Environment: Python3.12.14/linked SQLite3.53.1; Python3.13.5/temporary linked SQLite3.51.3. TMPDIR disposable overlay.
-Final-SHA Python3.14 and all twelve CI jobs: consult PR checks/description and exact-SHA final evidence step of WP2A workflow.
+All WP1A/B/C and WP2A baseline manifests PASS. Full final-head Python3.12/3.13/3.14 CI, exact checked-out SHA, and340-test inventory: PR16 checks/description and WP2A final workflow step. No local3.14 claim.

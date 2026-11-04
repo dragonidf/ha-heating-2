@@ -14,7 +14,16 @@ from packages.planner.sources import (
 )
 from packages.thermal import Interval
 from packages.offline.codec import encode, decode
-from tests.wp2a.helpers import harness, planned, registry, binding, event, load, temp
+from tests.wp2a.helpers import (
+    harness,
+    planned,
+    registry,
+    binding,
+    event,
+    load,
+    temp,
+    recovery_proof,
+)
 from packages.evidence.store import EvidenceStore, EvidenceConflict
 from packages.offline.contracts import Origin
 from tests.wp2a.test_energy import point
@@ -261,6 +270,7 @@ class ExtendedIntegrationTests(unittest.TestCase):
         runtime.evidence.origin(Origin("s", "c", 100, 0))
         slices = runtime.evidence.finalize("s", 200, as_of=200)
         backup = temp(self)
+        evidence = recovery_proof(runtime.evidence, slices, 0.1)
         digest = runtime.evidence.backup(backup)
         request = RecoveryRequest(
             "synthetic.admin-recovery",
@@ -268,7 +278,7 @@ class ExtendedIntegrationTests(unittest.TestCase):
             0.1,
             0,
             digest,
-            "a" * 64,
+            evidence,
         )
         reader = runtime.client.grant(Principal("synthetic.reader", ("read",), 1))
         with self.assertRaises(ContractError):
@@ -291,7 +301,15 @@ class ExtendedIntegrationTests(unittest.TestCase):
             proposal, request, "synthetic.cycle", clock.utc + 300, role="initial"
         )
         self.assertEqual(forecast.curve.source_issued, (request.weather.issue,))
-        self.assertEqual(forecast.planned_kwh, proposal.energy_kwh)
+        self.assertEqual(forecast.energy_scope.start, clock.utc + 300)
+        expected = (
+            sum(
+                max(0, s.end - max(s.start, clock.utc + 300)) for s in proposal.segments
+            )
+            * proposal.power_kw
+            / 3600
+        )
+        self.assertAlmostEqual(forecast.planned_kwh, expected)
         self.assertEqual(forecast.curve.model_revision, request.model.revision)
         runtime.flush_evidence()
         self.assertEqual(

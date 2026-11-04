@@ -21,6 +21,7 @@ from packages.offline.contracts import (
     CounterPoint,
     ForecastRecord,
     RecoveryRequest,
+    RecoveryProof,
     RecoveryReceipt,
     BudgetReceipt,
 )
@@ -591,6 +592,7 @@ class EvidenceStore:
             recovery = decode(cls._read(row).payload)
             if not isinstance(recovery, RecoveryRequest):
                 raise EvidenceFailure("Invalid recovery")
+            cls._recovery_proof(con, recovery, stream)
             sums["recovered"] += recovery.kwh
         return EnergySummary(
             stream,
@@ -625,6 +627,76 @@ class EvidenceStore:
         self.point("backup_after")
         return sha256(target.read_bytes()).hexdigest()
 
+    @classmethod
+    def _recovery_proof(
+        cls, con: sqlite3.Connection, request: RecoveryRequest, stream: str
+    ) -> None:
+        def get(identity: str) -> ArchiveRecord:
+            try:
+                return cls._get(con, identity)
+            except EvidenceFailure as exc:
+                raise EvidenceConflict("Missing or invalid recovery evidence") from exc
+
+        archived = get(request.evidence_hash)
+        proof = decode(archived.payload)
+        origin = cls._origin(con, stream)
+        if (
+            not isinstance(proof, RecoveryProof)
+            or checksum(archived.payload) != request.evidence_hash
+            or archived.stream != stream
+            or proof.stream != stream
+            or proof.continuity != origin.continuity
+            or proof.unknown_ids != request.unknown_ids
+            or proof.quality is not QualityStatus.VALID
+            or proof.kwh != request.kwh
+        ):
+            raise EvidenceConflict("Unqualified recovery proof")
+        spans = []
+        for identity in proof.unknown_ids:
+            span = decode(get(identity).payload)
+            if (
+                not isinstance(span, EnergySlice)
+                or span.stream != stream
+                or span.continuity != proof.continuity
+                or span.category != "unknown"
+            ):
+                raise EvidenceConflict("Recovery gap mismatch")
+            spans.append(span)
+        spans.sort(key=lambda s: s.start)
+        if (
+            spans[0].start != proof.window.start
+            or spans[-1].end != proof.window.end
+            or any(a.end != b.start for a, b in zip(spans, spans[1:]))
+        ):
+            raise EvidenceConflict("Recovery time coverage mismatch")
+        readings = []
+        for identity, at in (
+            (proof.left_id, proof.window.start),
+            (proof.right_id, proof.window.end),
+        ):
+            raw = get(identity)
+            value = decode(raw.payload)
+            if (
+                not isinstance(value, Reading)
+                or raw.stream != stream
+                or raw.at != at
+                or value.unit is not Unit.KWH
+                or value.value is None
+                or value.quality.status is not QualityStatus.VALID
+                or value.provenance.kind is not SourceKind.DIRECT
+                or not value.provenance.independent
+                or (value.source_id, value.physical_id)
+                != (proof.source_id, proof.physical_id)
+                or value.observed_at != at
+                or not at <= value.received_at <= archived.at
+            ):
+                raise EvidenceConflict("Recovery meter source/time/quality mismatch")
+            readings.append(float(value.value))
+        # Only arithmetic rounding is tolerated; approval cannot choose the amount.
+        delta = readings[1] - readings[0]
+        if delta < 0 or abs(delta - proof.kwh) > 1e-9:
+            raise EvidenceConflict("Recovery amount is not supported by meter delta")
+
     def recover(
         self,
         request: RecoveryRequest,
@@ -643,6 +715,7 @@ class EvidenceStore:
         if sha256(backup.path.read_bytes()).hexdigest() != request.backup_hash:
             raise EvidenceConflict("Recovery backup checksum mismatch")
         with self.transaction() as con:
+            self._recovery_proof(con, request, stream)
             old = con.execute(
                 "SELECT seq FROM archive WHERE id=?", (request.identity,)
             ).fetchone()
@@ -803,6 +876,7 @@ class EvidenceStore:
                 recovery = decode(self._read(recovery_row).payload)
                 if not isinstance(recovery, RecoveryRequest):
                     raise EvidenceFailure("Invalid recovery")
+                self._recovery_proof(con, recovery, stream)
                 spans = [
                     decode(self._get(con, i).payload) for i in recovery.unknown_ids
                 ]

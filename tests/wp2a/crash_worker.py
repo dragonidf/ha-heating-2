@@ -38,6 +38,17 @@ elif operation == "schema":
     store.migrate()
 elif operation == "migration":
     stage(dry_run(legacy()), store)
+elif operation == "recovery":
+    from packages.offline.contracts import RecoveryRequest
+    from packages.offline.codec import decode
+
+    proof = decode(store.get(sys.argv[5]).payload)
+    request = RecoveryRequest(
+        "synthetic.claim", proof.unknown_ids, 0.5, 20, sys.argv[6], sys.argv[5]
+    )
+    store.recover(
+        request, "synthetic.heat", Path(sys.argv[4]), dry_run=False, approved=True
+    )
 elif operation == "checkpoint":
     store.checkpoint()
 else:

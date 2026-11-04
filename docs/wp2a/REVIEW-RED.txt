@@ -1,0 +1,37 @@
+Reviewed source: 97bb0dd7c681a2e45ceeeb029fec98312021381d; before source edits.
+Python3.12.14; synthetic disposable stores only.
+Command: TMPDIR=/workspace/wp1b-test-tmp /tmp/wp1a-venv/bin/python -m unittest tests.wp2a.test_review -v
+
+test_current_missing_manual_reading_persists_ownership_fence (tests.wp2a.test_review.ReviewReproductions.test_current_missing_manual_reading_persists_ownership_fence) ... FAIL
+test_queue_forecast_initial_produces_scoped_budget_end_to_end (tests.wp2a.test_review.ReviewReproductions.test_queue_forecast_initial_produces_scoped_budget_end_to_end) ... FAIL
+test_recovery_random_evidence_hash_cannot_qualify_actual_energy (tests.wp2a.test_review.ReviewReproductions.test_recovery_random_evidence_hash_cannot_qualify_actual_energy) ... FAIL
+
+======================================================================
+FAIL: test_current_missing_manual_reading_persists_ownership_fence (tests.wp2a.test_review.ReviewReproductions.test_current_missing_manual_reading_persists_ownership_fence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/wp2a/test_review.py", line 33, in test_current_missing_manual_reading_persists_ownership_fence
+    self.assertTrue(runtime.simulator.state.manual_paused)
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_queue_forecast_initial_produces_scoped_budget_end_to_end (tests.wp2a.test_review.ReviewReproductions.test_queue_forecast_initial_produces_scoped_budget_end_to_end)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/wp2a/test_review.py", line 45, in test_queue_forecast_initial_produces_scoped_budget_end_to_end
+    self.assertEqual(forecast.energy_scope, scope)
+AssertionError: None != TimeWindow(start=206, end=7306.0)
+
+======================================================================
+FAIL: test_recovery_random_evidence_hash_cannot_qualify_actual_energy (tests.wp2a.test_review.ReviewReproductions.test_recovery_random_evidence_hash_cannot_qualify_actual_energy)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/wp2a/test_review.py", line 19, in test_recovery_random_evidence_hash_cannot_qualify_actual_energy
+    with self.assertRaises(EvidenceConflict):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: EvidenceConflict not raised
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.114s
+
+FAILED (failures=3)

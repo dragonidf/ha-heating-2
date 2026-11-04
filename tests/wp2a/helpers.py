@@ -1,7 +1,7 @@
 from pathlib import Path
 import tempfile
 from dataclasses import replace
-from packages.contracts import Unit, Clock, TimeWindow, Action
+from packages.contracts import Unit, Clock, TimeWindow, Action, QualityStatus
 from packages.offline.contracts import Binding, Registry, Principal, SourceEvent
 from packages.ha_fake.client import FakeHAClient
 from packages.ha_fake.runtime import OfflineIntegration
@@ -152,3 +152,40 @@ def planned(runtime, with_request=False):
     p = runtime.plan(req)
     runtime.accept(p, c)
     return (c, p, req) if with_request else (c, p)
+
+
+def recovery_proof(store, slices, amount, **changes):
+    """Independent synthetic counter endpoints, never a production metrology claim."""
+    from packages.offline.contracts import RecoveryProof
+    from packages.offline.codec import encode
+    from packages.evidence.store import record, checksum
+
+    with store.read_snapshot() as con:
+        origin = store._origin(con, slices[0].stream)
+    start, end = min(s.start for s in slices), max(s.end for s in slices)
+    left_id, right_id = "synthetic.proof.left", "synthetic.proof.right"
+    for identity, at, sample_kwh in ((left_id, start, 0), (right_id, end, amount)):
+        store.append(
+            record(
+                identity,
+                reading(sample_kwh, Unit.KWH, observed_at=at, received_at=at),
+                at,
+                origin.stream,
+            )
+        )
+    proof = RecoveryProof(
+        origin.stream,
+        origin.continuity,
+        tuple(s.identity for s in slices),
+        TimeWindow(start=start, end=end),
+        "synthetic.local",
+        "synthetic.meter",
+        left_id,
+        right_id,
+        amount,
+        QualityStatus.VALID,
+    )
+    proof = replace(proof, **changes)
+    digest = checksum(encode(proof))
+    store.append(record(digest, proof, end, origin.stream))
+    return digest

@@ -28,7 +28,7 @@ from packages.offline.codec import encode, decode
 from packages.planner import Curve
 from packages.thermal import Interval
 from tests.fixtures.synthetic import reading
-from tests.wp2a.helpers import temp
+from tests.wp2a.helpers import temp, recovery_proof
 from tests.wp2a.test_energy import point
 
 
@@ -297,6 +297,7 @@ class RecoveryTests(unittest.TestCase):
         self.store.origin(Origin("synthetic.heat", "synthetic.continuity", 100, 20))
         self.slices = self.store.finalize("synthetic.heat", 400, as_of=400)
         self.backup = temp(self)
+        evidence = recovery_proof(self.store, self.slices, 0.5)
         digest = self.store.backup(self.backup)
         self.request = RecoveryRequest(
             "synthetic.recover",
@@ -304,7 +305,7 @@ class RecoveryTests(unittest.TestCase):
             0.5,
             20,
             digest,
-            "a" * 64,
+            evidence,
         )
 
     def test_preview_does_not_write_apply_is_approved_and_idempotent(self):
@@ -569,6 +570,7 @@ class BudgetTests(unittest.TestCase):
     ):
         slices = self.store.finalize("s", 400, as_of=400)
         backup = temp(self)
+        evidence = recovery_proof(self.store, slices, 0.5)
         digest = self.store.backup(backup)
         request = RecoveryRequest(
             "synthetic.recover.scope",
@@ -576,7 +578,7 @@ class BudgetTests(unittest.TestCase):
             0.5,
             1000,
             digest,
-            "a" * 64,
+            evidence,
         )
         self.store.recover(request, "s", backup, dry_run=False, approved=True)
         full = self.store.budget("cycle", "s", 400, 6)
