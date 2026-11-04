@@ -72,6 +72,7 @@ def build() -> None:
              "-o", str(path / "libsqlite3.so.0"), str(path / "sqlite3.c"), "-lm"], check=True,
         )
         shutil.copyfile(HERE / "Dockerfile.ha", path / "Dockerfile")
+        shutil.copyfile(HERE / "requirements-ha-ui.txt", path / "requirements-ha-ui.txt")
         docker("pull", BASE_IMAGE, capture=False)
         docker("build", "--secret", "id=proxy_ca,src=/etc/ssl/certs/ca-certificates.crt", "--tag", IMAGE, str(path), capture=False)
 
@@ -213,6 +214,8 @@ def browser(state_path: Path, project: str, image: str, output: Path) -> None:
            "--mount", f"type=bind,src={ROOT / 'frontend'},dst=/work,readonly",
            "--tmpfs", "/work/test-results:rw,mode=1777", "--tmpfs", "/work/playwright-report-native:rw,mode=1777",
            "--workdir", "/work", "-e", "CI=1", "-e", "TEST_HA_BASE_URL=http://127.0.0.1:8123",
+           "-e", "GIO_USE_PROXY_RESOLVER=dummy",
+           "-e", "NO_PROXY=127.0.0.1,localhost", "-e", "no_proxy=127.0.0.1,localhost",
            *[arg for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy") for arg in ("-e", key + "=")],
            "--entrypoint", "node", image, "-e", "setInterval(()=>{},1000)")
     try:

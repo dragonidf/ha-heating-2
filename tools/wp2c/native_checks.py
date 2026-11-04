@@ -115,6 +115,7 @@ async def bootstrap() -> dict:
             save_secrets(secrets)
         config = await ws.ok("get_config")
         assert isinstance(config, dict) and config["version"] == "2026.10.4"
+        assert isinstance(await ws.ok("get_services"), dict), "Actual frontend service bootstrap must work"
         status, _ = await http(session, "GET", "/api/config")
         assert status == 401, "Anonymous API must not authenticate"
         async with session.ws_connect(BASE + "/api/websocket") as unauth:
@@ -122,7 +123,7 @@ async def bootstrap() -> dict:
             await unauth.send_json({"type": "auth", "access_token": "synthetic-invalid"})
             assert (await unauth.receive_json())["type"] == "auth_invalid"
         await ws.connection.close()
-    return {"qualification": "PASS_ISOLATED", "checks": ["actual_ha_startup", "native_owner_onboarding", "native_authorization_code_exchange", "native_read_only_identity", "native_login_flow", "anonymous_api_denied", "invalid_ws_auth_denied"], "count": 7}
+    return {"qualification": "PASS_ISOLATED", "checks": ["actual_ha_startup", "native_owner_onboarding", "native_authorization_code_exchange", "native_read_only_identity", "native_login_flow", "anonymous_api_denied", "invalid_ws_auth_denied", "native_frontend_services_bootstrap_available"], "count": 8}
 
 
 async def isolation() -> dict:
@@ -480,6 +481,8 @@ async def migration() -> dict:
         completed.extend(["actual_new_synthetic_recorder_schema_created", "actual_recorder_persists_fake_zero_state"])
         assert str(path) != str(Path("/tmp") / ("heating-wp2c-" + secrets["entry_id"]) / "critical.sqlite3")
         completed.append("critical_and_evidence_stores_separate_from_synthetic_recorder")
+        assert isinstance(await admin.ok("get_services"), dict)
+        completed.append("native_frontend_services_survive_synthetic_migration")
         latencies = []
         for _ in range(50):
             started = perf_counter()

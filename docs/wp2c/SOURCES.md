@@ -17,4 +17,6 @@ All data fixtures are deterministic synthetic repository examples. No household 
 | Accepted UI fixtures | frontend/src/fixtures.ts; export via tools/wp2c/export-fixtures.mjs; `--check` verifies exact generated native fixture bytes |
 | Accepted core and tests | docs/wp2b/REGRESSION-BASELINE.sha256; all101 accepted files and351 cases retained |
 
+The test image additionally installs the exact official generic-component import requirements in `tools/wp2c/requirements-ha-ui.txt`: real HA get_services imports these classes even when no corresponding physical integration is configured. Two source-only Assist extensions build against the identical pinned bookworm/Python3.14.2 ABI in a setup-only compiler stage. The running HA uses --skip-pip, no compiler and no outbound route. This is test-host dependency provisioning, not installation on any owner system.
+
 `BUILD-MANIFEST.json` in each generated package records source and artifact SHA256 for every SDK/core/JSON/asset file. Accepted core algorithms are copied without behavioral changes. Only `from packages.` import prefixes become package-local `from custom_components.heating_ai.core.`. Browser bundles include local chunks/styles; no CDN resources. Final CI runs and exact tested SHA belong in the PR checks/description, avoiding an untested trailing report commit.

@@ -1,0 +1,20 @@
+# Official homeassistant==2026.10.4 wheel (SHA256 71843060980a763187d856a8ff170640f1e287a7b741334cd838c81404f1f452).
+# helpers/service.py::_base_components imports these domain classes while answering
+# the real frontend's get_services request, even with no physical integrations.
+# components/conversation/manifest.json
+gazetteer-matcher==1.1.0
+hassil==3.12.1
+home-assistant-intents==2026.10.6
+# components/camera/manifest.json and components/stream/manifest.json
+PyTurboJPEG==1.8.3
+av==19.0.0
+numpy==2.3.2
+# components/ffmpeg/manifest.json and components/tts/manifest.json
+ha-ffmpeg==3.2.2
+mutagen==1.48.1
+# components/assist_pipeline/manifest.json; imported by assist_satellite classes.
+pymicro-vad==1.0.1
+pyspeex-noise==1.0.2
+# Resolved public transitive requirements of hassil and ha-ffmpeg.
+unicode-rbnf==2.4.1
+async-timeout==5.0.1
