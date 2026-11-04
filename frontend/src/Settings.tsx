@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, Badge } from "./components";
-import { validateSettings, fmt } from "./domain";
+import { validateSettings } from "./domain";
 import type { DemoAPI } from "./mock";
 import type { SettingsController } from "./useSettings";
 import type { Settings as Values } from "./types";
@@ -155,19 +155,63 @@ export function Settings({
                 {c.conflict.revision}, ваша{c.saved?.revision}. Після порівняння
                 повторне збереження має бути явним.
               </p>
-              <dl>
-                <dt>Денна ціль: збережено / чернетка</dt>
-                <dd>
-                  {fmt(c.conflict.values.day)} / {fmt(s.day)}°C
-                </dd>
-                <dt>Бюджет: збережено / чернетка</dt>
-                <dd>
-                  {fmt(c.conflict.values.budget)} / {fmt(s.budget)}
-                </dd>
-              </dl>
+              <div className="table-scroll">
+                <table>
+                  <caption>
+                    Усі параметри: основа, ваша чернетка та нова версія
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>Параметр</th>
+                      <th>Основа</th>
+                      <th>Чернетка</th>
+                      <th>Нова версія</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {c.differences.map((f) => (
+                      <tr key={JSON.stringify(f.path)}>
+                        <th scope="row">{fieldLabel(f.path)}</th>
+                        <td>{display(f.base)}</td>
+                        <td>{display(f.local)}</td>
+                        <td>
+                          {display(f.remote)}
+                          {f.collision ? " · потрібен вибір" : ""}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <button type="button" onClick={c.rebase}>
                 Взяти нову версію за основу, зберегти чернетку
               </button>
+            </div>
+          )}
+          {c.collisions.length > 0 && (
+            <div className="conflict" role="alert">
+              <h3>Оберіть значення кожного спільного редагування</h3>
+              {c.collisions.map((f) => (
+                <fieldset key={JSON.stringify(f.path)} disabled={c.pending}>
+                  <legend>{fieldLabel(f.path)}</legend>
+                  <p>
+                    Основа: {display(f.base)} · ваша чернетка:{" "}
+                    {display(f.local)} · нова версія: {display(f.remote)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => c.resolve(f.path, "local")}
+                  >
+                    Залишити моє: {fieldLabel(f.path)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => c.resolve(f.path, "remote")}
+                  >
+                    Прийняти нове: {fieldLabel(f.path)}
+                  </button>
+                </fieldset>
+              ))}
             </div>
           )}
           <div className="save-bar">
@@ -186,7 +230,11 @@ export function Settings({
               <button
                 className="primary"
                 disabled={
-                  locked || errors.length > 0 || !changed || !!c.conflict
+                  locked ||
+                  errors.length > 0 ||
+                  !changed ||
+                  !!c.conflict ||
+                  c.collisions.length > 0
                 }
                 type="submit"
               >
@@ -279,4 +327,28 @@ export function Settings({
       </Card>
     </>
   );
+}
+function display(value: unknown): string {
+  return value === undefined
+    ? "Відсутнє"
+    : typeof value === "string"
+      ? value
+      : JSON.stringify(value);
+}
+function fieldLabel(path: string[]): string {
+  const labels: Record<string, string> = {
+    day: "Денна ціль",
+    night: "Ціль сну",
+    budget: "Бюджет",
+    windowStart: "Початок вікна",
+    windowEnd: "Кінець вікна",
+    strategy: "Стратегія",
+    mode: "Режим",
+    circulation: "Циркуляція",
+    fan: "Запит вентилятора",
+    scenario: "Сценарій потужності",
+    freshness: "Давність даних",
+    aiAdvice: "Пояснення AI",
+  };
+  return path.length === 1 ? (labels[path[0]!] ?? path[0]!) : path.join(" / ");
 }

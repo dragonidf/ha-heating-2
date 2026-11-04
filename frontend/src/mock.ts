@@ -8,7 +8,13 @@ import type {
   Window,
 } from "./types";
 import type { SettingsStore } from "./storage";
-import { snapshot, actual } from "./fixtures";
+import {
+  snapshot,
+  actual,
+  denseActual,
+  intervals,
+  boundaryIntervals,
+} from "./fixtures";
 import { readReceipt } from "./contracts";
 import { validateSettings, withDeadline } from "./domain";
 export class SnapshotFeed {
@@ -304,7 +310,8 @@ export class DemoAPI {
       !Number.isFinite(range.end)
     )
       throw Error("Некоректний запит історії");
-    const watermark = actual.length;
+    const source = this.scenario === "dense-history" ? denseActual : actual;
+    const watermark = source.length;
     const scope = `${range.start}:${range.end}`;
     if (
       cursor &&
@@ -317,7 +324,7 @@ export class DemoAPI {
     const rows =
       this.scenario === "empty"
         ? []
-        : actual.filter((p) => p.at >= range.start && p.at < range.end);
+        : source.filter((p) => p.at >= range.start && p.at < range.end);
     const start = cursor?.offset ?? 0;
     if (start > rows.length) throw Error("Курсор поза архівом");
     const page = rows.slice(start, start + limit);
@@ -329,5 +336,8 @@ export class DemoAPI {
           : null,
       watermark,
     };
+  }
+  energyHistory() {
+    return this.scenario === "dense-history" ? boundaryIntervals : intervals;
   }
 }

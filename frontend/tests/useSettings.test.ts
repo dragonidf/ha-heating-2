@@ -33,6 +33,10 @@ it("explicit conflict rebase preserves draft then saves new revision", async () 
   expect(result.current.conflict?.revision).toBe(2);
   act(() => result.current.rebase());
   expect(result.current.draft.day).toBe(22);
+  // Same-field edits require a choice, even after adopting the remote revision.
+  await act(() => result.current.save());
+  expect(result.current.saved?.revision).toBe(2);
+  act(() => result.current.resolve(["day"], "local"));
   await act(() => result.current.save());
   expect(result.current.saved?.revision).toBe(3);
   expect(result.current.message).toContain("Збережено");

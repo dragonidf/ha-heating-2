@@ -11,3 +11,11 @@ Status: implementation for independent review under Issue17. Base main e428b9ad3
 7. Real Chromium/WebKit tests run both390×844 and1440×1000, plus320/700/1100, real root text enlargement, light/dark, axe, keyboard/focus/touch and fault flows. Golden screenshots pin only the capture font to installed DejaVu Sans; runtime system font is tested otherwise. Pixel difference ceiling1.5% was defined before CI for rasterization variance; no lowered existing threshold. JS critical-rule coverage gates90% lines/statements/functions and85% branches; Python95% branch floor and351 accepted tests remain unchanged.
 
 No native HA auth/theme/SDK/WebSocket compatibility, physical safety/metrology, N100 timing/durability, real import/shadow, owner-device usability or launch gate follows from these tests. WP2C is not started and this PR must remain open/unmerged for independent ChatGPT review.
+
+
+Review correction decisions (baseline68ef7b1)
+
+- Derived dirty paths and recursive three-way merge avoid duplicate mutable form state and prevent disjoint remote loss. Same-field choices are explicit; rebase never grants overwrite authority. Save retries continue to use the durable expected revision and readback fences.
+- A bounded full-stream overview replaces the inert32-page truncation. Fixed UTC bins preserve actual extrema/endpoints; representative null annotations and per-point continuity proof prevent interpolation across omitted gaps. Capacity100000 raw/query is an explicit offline limit. Histogram-style aggregation is not a claim that4096 points retain every raw reading; query count, overview count and unknown-duration summary disclose the distinction.
+- Historical continuity is a source qualification premise, separate from operational freshness. No proof means separate observations. Unqualified/recovered estimates are not plotted or read out as measured actuals; null gap annotations expose missing intervals without forging samples.
+- Scoped energy/cost follows the accepted Python clip/dated-cost quality rules without modifying the Python ledger: partial counter/recovered allocation is estimated, qualified integrated-power clipping may remain derived, counter tariff allocation is estimated, and missing price coverage remains explicit. This is an offline UI projection, not an additional metering authority.

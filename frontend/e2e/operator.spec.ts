@@ -159,6 +159,12 @@ test("two browser clients conflict without losing draft and explicitly rebase", 
       name: "Взяти нову версію за основу, зберегти чернетку",
     })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Зберегти симуляцію", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", { name: "Залишити моє: Денна ціль", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Зберегти симуляцію", exact: true })
     .click();
@@ -380,4 +386,150 @@ test("known zero, synthetic heating and STOP never claim physical success", asyn
       page.getByText("Фізичний стан котла — невідомий", { exact: true }),
     ).toBeVisible();
   }
+});
+
+test("disjoint two-window settings edits survive merge, reload and full-field comparison", async ({
+  page,
+  context,
+}) => {
+  const other = await context.newPage();
+  await other.goto("/");
+  await expect(
+    other.getByRole("button", { name: /Збільшити ціль/ }),
+  ).toBeEnabled();
+  for (const p of [page, other])
+    await p.getByRole("button", { name: "Налаштування", exact: true }).click();
+  await page.getByRole("spinbutton", { name: /Температура вдень/ }).fill("22");
+  await other.getByRole("spinbutton", { name: /М’який бюджет/ }).fill("800");
+  await page.getByRole("button", { name: "Дім", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: /Збільшити ціль/ }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText("Спочатку збережіть або скасуйте чернетку в налаштуваннях", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Налаштування", exact: true }).click();
+  await expect(
+    page.getByRole("spinbutton", { name: /Температура вдень/ }),
+  ).toHaveValue("22");
+  await other
+    .getByRole("button", { name: "Зберегти симуляцію", exact: true })
+    .click();
+  await expect(
+    other.getByText("Збережено лише в симуляції", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Зберегти симуляцію", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Налаштування змінилися в іншому вікні",
+    }),
+  ).toBeVisible();
+  const comparison = page.getByRole("table", {
+    name: "Усі параметри: основа, ваша чернетка та нова версія",
+  });
+  await expect(comparison.locator("tbody tr")).toHaveCount(12);
+  await page
+    .getByRole("button", {
+      name: "Взяти нову версію за основу, зберегти чернетку",
+    })
+    .click();
+  await expect(
+    page.getByRole("spinbutton", { name: /М’який бюджет/ }),
+  ).toHaveValue("800");
+  await page
+    .getByRole("button", { name: "Зберегти симуляцію", exact: true })
+    .click();
+  await expect(
+    page.getByText("Збережено лише в симуляції", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Налаштування", exact: true }).click();
+  await expect(
+    page.getByRole("spinbutton", { name: /Температура вдень/ }),
+  ).toHaveValue("22");
+  await expect(
+    page.getByRole("spinbutton", { name: /М’який бюджет/ }),
+  ).toHaveValue("800");
+  await other.close();
+});
+
+test("dense full-range history preserves newest facts, gaps and scoped cached navigation", async ({
+  page,
+}) => {
+  await page
+    .getByText("Сценарії демо · синтетичні дані", { exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("dense-history");
+  await page.getByRole("button", { name: "Історія", exact: true }).click();
+  await page.getByRole("button", { name: "30 днів", exact: true }).click();
+  const overview = page.getByText(/Увесь період:/);
+  await expect(overview).toContainText(/8\d{3} вихідних вимірів/);
+  const paths = page.locator('path[data-series="actual"]');
+  expect(await paths.count()).toBeGreaterThan(1);
+  const maximumX = await paths.evaluateAll((elements) =>
+    Math.max(
+      ...elements.flatMap((el) =>
+        [...(el.getAttribute("d") ?? "").matchAll(/[ML]([\d.]+),/g)].map((m) =>
+          Number(m[1]),
+        ),
+      ),
+    ),
+  );
+  expect(maximumX).toBeGreaterThan(820);
+  await page
+    .getByText("Таблиця значень · без кольору", { exact: true })
+    .click();
+  await expect(page.getByRole("table").first()).toBeVisible();
+  await page.getByRole("button", { name: "24 год", exact: true }).click();
+  await expect(overview).toContainText("25 вихідних вимірів");
+  await page.getByLabel("Сценарій", { exact: true }).selectOption("empty");
+  await expect(
+    page.getByRole("heading", { name: "За ці дати немає збережених вимірів" }),
+  ).toBeVisible();
+});
+
+test("counter crossing Kyiv midnight is estimated once with honest changing-tariff cost", async ({
+  page,
+}) => {
+  await page
+    .getByText("Сценарії демо · синтетичні дані", { exact: true })
+    .click();
+  await page
+    .getByLabel("Сценарій", { exact: true })
+    .selectOption("dense-history");
+  await page.getByRole("button", { name: "Історія", exact: true }).click();
+  for (const [date, cost] of [
+    ["2026-11-03", "2,0грн"],
+    ["2026-11-04", "3,0грн"],
+  ]) {
+    await page.getByLabel("Від", { exact: true }).fill(date!);
+    await page.getByLabel("До", { exact: true }).fill(date!);
+    await page.getByLabel("Показник", { exact: true }).selectOption("energy");
+    await expect(page.locator(".energy-grid strong").nth(0)).toHaveText(
+      "0,0кВт·год",
+    );
+    await expect(page.locator(".energy-grid strong").nth(1)).toHaveText(
+      "0,5кВт·год",
+    );
+    await page.getByLabel("Показник", { exact: true }).selectOption("cost");
+    await expect(page.locator(".energy-grid strong").nth(0)).toHaveText(
+      "0,0грн",
+    );
+    await expect(page.locator(".energy-grid strong").nth(1)).toHaveText(cost!);
+    await expect(page.getByText(/Вартість часткова/)).toBeVisible();
+  }
+  await page.getByRole("button", { name: "7 днів", exact: true }).click();
+  await page.getByLabel("Показник", { exact: true }).selectOption("energy");
+  await expect(page.locator(".energy-grid strong").nth(0)).toHaveText(
+    "1,0кВт·год",
+  );
+  await page.getByLabel("Показник", { exact: true }).selectOption("cost");
+  await expect(page.locator(".energy-grid strong").nth(0)).toHaveText("0,0грн");
+  await expect(page.locator(".energy-grid strong").nth(1)).toHaveText("5,0грн");
 });

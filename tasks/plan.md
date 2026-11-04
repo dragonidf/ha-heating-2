@@ -14,4 +14,6 @@ Implementation order and checkpoints (tasks tracked as this local index under Is
 
 Risks: real HA/native authentication/physical state unavailable by design; fake receipt is not actuation. Browser storage can fail and must never show false saved. Original history never recomputed/backfilled. Test-host timings do not qualify target host. No unresolved product decisions require expanding existing approval.
 
-Implementation checkpoints1–5 completed:111 unit/component/hook tests,56 actual browser cases and all351 inherited Python tests. Checkpoint6 source/manifests/report complete; final-head CI and independent review tracked by the single PR checks/description. No deployment/merge/next phase is part of this plan.
+Implementation checkpoints1–5 completed:177 unit/component/hook tests,68 actual browser cases and all351 inherited Python tests. Checkpoint6 source/manifests/report complete; final-head CI and independent review tracked by the single PR checks/description. No deployment/merge/next phase is part of this plan.
+
+Review correction batch6624485241: reproduce four findings before fixes; retain disjoint settings edits with explicit collisions; aggregate the complete dense history; require qualified historical continuity; clip energy/cost with honest estimated quality. All seven original red reproductions plus adjacent quick-intent/late-reread/quality/zero regressions pass. Source, docs,86/38 traceability and manifests are prepared for final-head CI. CI result and independent ChatGPT re-review remain recorded by PR19; no self-acceptance or merge.

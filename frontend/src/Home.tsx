@@ -25,6 +25,10 @@ export function Home({
   };
   const sum = energySummary(budget);
   const permitted = api.canChange() && !settings.pending && !!settings.saved;
+  const hasDraft =
+    settings.dirtyPaths.length > 0 ||
+    !!settings.conflict ||
+    settings.collisions.length > 0;
   const room = state.room.quality === "valid" ? state.room.value : null;
   const intent = (kind: "pause" | "resume" | "arm" | "cancel") =>
     setControlMessage(api.control(kind, api.session).reason);
@@ -53,7 +57,9 @@ export function Home({
           <div className="stepper">
             <button
               aria-label="Зменшити ціль на0,5 °C у симуляції"
-              disabled={!permitted || !current || current.night <= 16}
+              disabled={
+                !permitted || hasDraft || !current || current.night <= 16
+              }
               onClick={() =>
                 current &&
                 void settings.save({ ...current, night: current.night - 0.5 })
@@ -67,7 +73,12 @@ export function Home({
             </strong>
             <button
               aria-label="Збільшити ціль на0,5 °C у симуляції"
-              disabled={!permitted || !current || current.night >= current.day}
+              disabled={
+                !permitted ||
+                hasDraft ||
+                !current ||
+                current.night >= current.day
+              }
               onClick={() =>
                 current &&
                 void settings.save({ ...current, night: current.night + 0.5 })
@@ -76,7 +87,11 @@ export function Home({
               +
             </button>
           </div>
-          <span className="helper">Зміна лише в симуляції</span>
+          <span className="helper">
+            {hasDraft
+              ? "Спочатку збережіть або скасуйте чернетку в налаштуваннях"
+              : "Зміна лише в симуляції"}
+          </span>
         </div>
         <div className="action-strip">
           <div>

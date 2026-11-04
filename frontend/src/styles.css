@@ -1461,3 +1461,13 @@ footer {
     margin-bottom: 8px;
   }
 }
+
+.sample.actual {
+  fill: var(--text);
+}
+.sample.original {
+  fill: var(--text);
+}
+.sample.latest {
+  fill: var(--text);
+}

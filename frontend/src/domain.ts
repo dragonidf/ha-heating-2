@@ -6,6 +6,7 @@ import type {
   Settings,
   Window,
 } from "./types";
+import { connected } from "./history";
 export const TZ = "Europe/Kyiv";
 export const fmt = (v: number | null, digits = 1) =>
   v === null
@@ -113,14 +114,23 @@ export function kyivRange(first: string, last: string): Window {
     throw Error("Оберіть період до 31 календарного дня");
   return { start, end };
 }
-export function segments(points: readonly Point[]): Point[][] {
+export function segments(
+  points: readonly Point[],
+  requireCoverage = false,
+): Point[][] {
   const result: Point[][] = [];
   let run: Point[] = [];
   for (const p of points) {
     if (p.value === null) {
       if (run.length) result.push(run);
       run = [];
-    } else run.push(p);
+    } else {
+      if (requireCoverage && run.length && !connected(run.at(-1)!, p)) {
+        result.push(run);
+        run = [];
+      }
+      run.push(p);
+    }
   }
   if (run.length) result.push(run);
   return result;

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, Chart, Badge } from "./components";
-import { original, latest, intervals, NOW, timeline } from "./fixtures";
+import { original, latest, NOW, timeline } from "./fixtures";
 import {
   kyivRange,
   shiftDate,
@@ -9,7 +9,9 @@ import {
   dateTime,
 } from "./domain";
 import type { DemoAPI } from "./mock";
-import type { Snapshot, Point, HistoryCursor } from "./types";
+import type { Snapshot } from "./types";
+import { readHistory } from "./history";
+import { scopedEnergy } from "./historyEnergy";
 export function History({
   api,
   state,
@@ -21,8 +23,7 @@ export function History({
 }) {
   const [first, setFirst] = useState("2026-10-29"),
     [last, setLast] = useState("2026-11-04"),
-    [metric, setMetric] = useState("temperature"),
-    [pageCount, setPageCount] = useState(32);
+    [metric, setMetric] = useState("temperature");
   let error = "",
     range = { start: NOW - 7 * 86400, end: NOW };
   try {
@@ -30,19 +31,24 @@ export function History({
   } catch (e) {
     error = e instanceof Error ? e.message : "Некоректний період";
   }
-  let rows: readonly Point[] = [],
-    cursor: HistoryCursor | null = null;
-  try {
-    if (!error)
-      for (let i = 0; i < pageCount; i++) {
-        const page = api.history(range, cursor, 128);
-        rows = [...rows, ...page.rows];
-        cursor = page.cursor;
-        if (!cursor) break;
-      }
-  } catch {
-    error = "Історію не вдалося прочитати. Повторіть запит.";
-  }
+  const history = useMemo(() => {
+    try {
+      return {
+        ...readHistory(api.history.bind(api), range, state.now),
+        error: "",
+      };
+    } catch (e) {
+      return {
+        rows: [],
+        rawCount: 0,
+        unknownS: 0,
+        gapCount: 0,
+        error: `Історію не вдалося прочитати. ${e instanceof Error ? e.message : "Помилка джерела"}. Повторіть запит або скоротіть період.`,
+      };
+    }
+  }, [api, api.scenario, range.start, range.end, state.now]);
+  const { rows } = history;
+  if (history.error) error = history.error;
   const source =
     api.scenario === "missing-original"
       ? { ...original, received: original.reference - 3600 }
@@ -52,56 +58,39 @@ export function History({
     eligible &&
     source.coverage.start < range.end &&
     source.coverage.end >= range.start;
-  const entries = intervals.filter(
-    (i) => i.end > range.start && i.start < Math.min(range.end, state.now),
-  );
-  const known = entries
-    .filter((i) => ["confirmed", "derived", "recovered"].includes(i.category))
-    .reduce((n, i) => n + (i.kwh ?? 0), 0);
-  const estimated = entries
-    .filter((i) => i.category === "estimated")
-    .reduce((n, i) => n + (i.kwh ?? 0), 0);
-  const observedS = entries
-    .filter((i) => i.kwh !== null && i.category !== "estimated")
-    .reduce(
-      (n, i) => n + Math.min(i.end, range.end) - Math.max(i.start, range.start),
-      0,
-    );
-  const unknownS = Math.max(
-    0,
-    Math.min(range.end, state.now) - range.start - observedS,
-  );
-  const priced = entries
-    .filter(
-      (i) => i.kwh !== null && i.price !== null && i.category !== "estimated",
-    )
-    .reduce((n, i) => n + (i.kwh ?? 0) * (i.price ?? 0), 0);
+  let energy;
+  try {
+    energy = scopedEnergy(api.energyHistory(), range, state.now);
+  } catch {
+    error = "Інтервали енергії або тарифи суперечливі. Підсумок недоступний.";
+    energy = scopedEnergy([], range, state.now);
+  }
+  const { entries, known, estimated, unknownS, costKnown: priced } = energy;
   const energyPoints = entries.map((i) => ({
     at: i.start,
     value:
-      i.category === "estimated"
-        ? null
-        : metric === "cost"
-          ? i.price === null || i.kwh === null
-            ? null
-            : i.kwh * i.price
+      metric === "cost"
+        ? i.costKnownS > 0
+          ? i.costKnown
+          : null
+        : i.category === "estimated"
+          ? null
           : i.kwh,
   }));
   const estimatedPoints = entries.map((i) => ({
     at: i.start,
     value:
-      i.category === "estimated"
-        ? metric === "cost"
-          ? i.price === null || i.kwh === null
-            ? null
-            : i.price * i.kwh
-          : i.kwh
-        : null,
+      metric === "cost"
+        ? i.costEstimatedS > 0
+          ? i.costEstimated
+          : null
+        : i.category === "estimated"
+          ? i.kwh
+          : null,
   }));
   const preset = (days: number) => {
     setFirst(shiftDate("2026-11-04", 1 - days));
     setLast("2026-11-04");
-    setPageCount(32);
   };
   return (
     <>
@@ -129,7 +118,6 @@ export function History({
               value={first}
               onChange={(e) => {
                 setFirst(e.target.value);
-                setPageCount(32);
               }}
             />
           </label>
@@ -140,7 +128,6 @@ export function History({
               value={last}
               onChange={(e) => {
                 setLast(e.target.value);
-                setPageCount(32);
               }}
             />
           </label>
@@ -193,14 +180,11 @@ export function History({
                 events={timeline}
               />
             )}
-            {cursor && (
-              <button onClick={() => setPageCount((v) => Math.min(32, v + 1))}>
-                Завантажити наступні128 вимірів
-              </button>
-            )}
             <p className="helper">
-              Показано {rows.length}вимірів · сторінка до 128 · максимум4096
-              точок. Розриви не заповнюються.
+              Увесь період: {history.rawCount} вихідних вимірів, {rows.length}{" "}
+              точок огляду · сторінка до 128 · максимум4096 точок. Невідоме
+              покриття: {fmt(history.unknownS / 60, 0)} хв · розривів:{" "}
+              {history.gapCount}. Розриви не заповнюються.
             </p>
             <details>
               <summary>Докази завчасного прогнозу</summary>
@@ -248,18 +232,28 @@ export function History({
               <div>
                 <span>Оцінки окремо</span>
                 <strong>
-                  {fmt(estimated)}
-                  <small>кВт·год</small>
+                  {fmt(metric === "cost" ? energy.costEstimated : estimated)}
+                  <small>{metric === "cost" ? "грн" : "кВт·год"}</small>
                 </strong>
               </div>
               <div>
                 <span>Невідоме покриття</span>
                 <strong>
-                  {fmt(unknownS / 60, 0)}
+                  {fmt(
+                    (metric === "cost" ? energy.costUnknownS : unknownS) / 60,
+                    0,
+                  )}
                   <small>хв</small>
                 </strong>
               </div>
             </div>
+            {metric === "cost" && (
+              <p className="helper">
+                Вартість часткова за наявності пропусків тарифу. Енергія без
+                тарифу: {fmt(energy.unpricedKwh, 3)} кВт·год. Відновлені та
+                пропорційно розподілені суми — оцінки.
+              </p>
+            )}
             <Chart
               actual={energyPoints}
               forecast={estimatedPoints}
@@ -286,6 +280,8 @@ export function History({
                     <th>Енергія</th>
                     <th>Якість</th>
                     <th>грн/кВт·год</th>
+                    <th>Метод / межа інтервалу</th>
+                    <th>Вартість: факт / оцінка</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -304,7 +300,24 @@ export function History({
                           }[i.category]
                         }
                       </td>
-                      <td>{fmt(i.price, 2)}</td>
+                      <td>
+                        {i.tariffs
+                          ? "За датованими інтервалами"
+                          : fmt(i.price, 2)}
+                      </td>
+                      <td>
+                        {i.method
+                          ? {
+                              counter_difference: "Різниця лічильника",
+                              integrated_power: "Інтегрування потужності",
+                              prorated_estimate: "Пропорційна оцінка",
+                            }[i.method]
+                          : "Сукупний інтервал"}{" "}
+                        · до {dateTime(i.end)}
+                      </td>
+                      <td>
+                        {fmt(i.costKnown)} / {fmt(i.costEstimated)} грн
+                      </td>
                     </tr>
                   ))}
                 </tbody>

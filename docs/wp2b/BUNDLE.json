@@ -3,16 +3,16 @@
   "node": "v24.19.0",
   "files": [
     {
-      "name": "index-DUxrgEMq.js",
-      "bytes": 291974,
-      "gzip_bytes": 88954,
-      "sha256": "a36d427e353d821b6c50eb7c239f2b0bc3fa9ac7c64d37747f8d9dd3f4f9d3e6"
+      "name": "index-BG0cMKdH.js",
+      "bytes": 302716,
+      "gzip_bytes": 92504,
+      "sha256": "8285c59f8283d78de06db6bc0bfdaf6e5f0fb23c4860b08ca0fa2081cd1bb45a"
     },
     {
-      "name": "index-_RC2Bv0g.css",
-      "bytes": 19046,
-      "gzip_bytes": 4687,
-      "sha256": "1ee2803bf523cd64049bcb3da371c8e4b4fbb549bad559c31990f8ac0e0ad5ec"
+      "name": "index-zXt-b1Hu.css",
+      "bytes": 19110,
+      "gzip_bytes": 4709,
+      "sha256": "f46c423d4c1c31ceb0b13235564d5bf8c63f95cb54fd1541a37062a140a39f74"
     }
   ]
 }

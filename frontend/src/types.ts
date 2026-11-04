@@ -56,6 +56,10 @@ export interface Persisted {
 export interface Point {
   at: number;
   value: number | null;
+  quality?: Quality;
+  // Qualified historical coverage, not the operational freshness threshold.
+  coverage?: { source: string; from: number };
+  gap?: { start: number; end: number; seconds: number; count: number };
 }
 export interface ForecastProof {
   reference: number;
@@ -88,6 +92,8 @@ export interface EnergyInterval {
   kwh: number | null;
   category: "confirmed" | "derived" | "estimated" | "recovered" | "unknown";
   price: number | null;
+  method?: "counter_difference" | "integrated_power" | "prorated_estimate";
+  tariffs?: readonly { start: number; end: number; price: number }[];
 }
 export type Priority = "safety" | "manual" | "quality" | "comfort" | "budget";
 export interface Notice {
@@ -111,6 +117,7 @@ export type Scenario =
   | "anomaly"
   | "fire"
   | "empty"
+  | "dense-history"
   | "revoked"
   | "recovering"
   | "long-copy";

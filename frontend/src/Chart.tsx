@@ -16,7 +16,7 @@ export interface ChartProps {
   forecastLabel?: string;
 }
 export function Chart({
-  actual,
+  actual: inputActual,
   forecast = [],
   original = [],
   scope,
@@ -29,6 +29,9 @@ export function Chart({
   initialLatest = true,
   forecastLabel = "Поточний прогноз",
 }: ChartProps) {
+  const actual = inputActual.map((p) =>
+    p.quality && p.quality !== "valid" ? { ...p, value: null } : p,
+  );
   const [cursor, setCursor] = useState<number | null>(null);
   const [showLatest, setLatest] = useState(initialLatest);
   const [showTracks, setTracks] = useState(tracks);
@@ -61,18 +64,28 @@ export function Chart({
   const curves = (series: readonly Point[], name: string) =>
     segments(
       decimate(series.filter((p) => p.at >= scope.start && p.at <= scope.end)),
+      name === "actual",
     ).map((run, i) => (
-      <path
-        key={`${name}-${i}`}
-        className={`curve ${name}`}
-        d={run
-          .map(
-            (p, j) =>
-              `${j ? "L" : "M"}${x(p.at).toFixed(2)},${y(p.value ?? 0).toFixed(2)}`,
-          )
-          .join(" ")}
-        data-series={name}
-      />
+      <g key={`${name}-${i}`}>
+        <path
+          className={`curve ${name}`}
+          d={run
+            .map(
+              (p, j) =>
+                `${j ? "L" : "M"}${x(p.at).toFixed(2)},${y(p.value ?? 0).toFixed(2)}`,
+            )
+            .join(" ")}
+          data-series={name}
+        />
+        {run.length === 1 && (
+          <circle
+            cx={x(run[0]!.at)}
+            cy={y(run[0]!.value!)}
+            r="2.5"
+            className={`sample ${name}`}
+          />
+        )}
+      </g>
     ));
   return (
     <div className="chart-wrap">
@@ -228,7 +241,7 @@ export function Chart({
       )}
       <p className="chart-readout" aria-live="polite">
         {selected
-          ? `${dateTime(selected.at)} · Факт ${fmt(selected.value)} ${unit} · Завчасний ${fmt(original.find((p) => p.at === selected.at)?.value ?? null)} · ${forecastLabel} ${showLatest ? fmt(forecast.find((p) => p.at === selected.at)?.value ?? null) : "приховано"}`
+          ? `${dateTime(selected.at)} · Факт ${fmt(selected.value)} ${unit}${gapText(points.find((p) => p.at === selected.at))} · Завчасний ${fmt(original.find((p) => p.at === selected.at)?.value ?? null)} · ${forecastLabel} ${showLatest ? fmt(forecast.find((p) => p.at === selected.at)?.value ?? null) : "приховано"}`
           : `${unit} · Факт із прогалинами · план умовний`}
       </p>
       <details className="chart-table">
@@ -261,6 +274,7 @@ export function Chart({
                     <th scope="row">{dateTime(at)}</th>
                     <td>
                       {fmt(points.find((p) => p.at === at)?.value ?? null)}
+                      {gapText(points.find((p) => p.at === at))}
                     </td>
                     <td>
                       {fmt(original.find((p) => p.at === at)?.value ?? null)}
@@ -298,4 +312,10 @@ export function Chart({
       </details>
     </div>
   );
+}
+
+function gapText(point?: Point): string {
+  return point?.gap
+    ? ` · немає доказів покриття ${dateTime(point.gap.start)}–${dateTime(point.gap.end)} (${fmt(point.gap.seconds / 60, 0)} хв)`
+    : "";
 }

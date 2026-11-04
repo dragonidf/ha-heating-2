@@ -1,33 +1,35 @@
-WP2B isolated self-test evidence. Base main e428b9ad3e7c0c4b91b253276fd118243d33439c.
-No production/legacy access; synthetic fixtures and temporary stores only.
+WP2B independent-review correction batch; baseline68ef7b15d6b21af214189566aa69ffbfcbf0c304.
+Implementation/self-test only; independent ChatGPT acceptance pending.
+Synthetic fixtures, local loopback preview and temporary stores; no production/legacy access.
 
-Python3.12.14 / linked qualified SQLite3.53.1
+Test-first: original7/7 regressions failed before implementation and against an isolated git archive of the exact baseline. Additional quick-intent, recovered-quality, zero-cost and late-reread regressions failed before their fixes. RED-EVIDENCE.txt retains the mismatches.
+
+Python3.12.14 / qualified disposable SQLite3.53.1
 Success: no issues found in 32 source files
-Ran 351 tests in 40.898s
+Ran 351 tests in 54.095s
 OK
 TOTAL                                      4057     67   1198     66    97%
 
-Python3.13.5 / temporary linked qualified SQLite3.51.3
+Python3.13.5 / qualified disposable SQLite3.51.3
 Success: no issues found in 32 source files
-Ran 351 tests in 40.077s
+Ran 351 tests in 51.482s
 OK
 TOTAL                                      4057     67   1198     66    97%
 
-Node v24.19.0; npm11.9.0. npm run test:coverage:
- Test Files  6 passed (6)
-      Tests  111 passed (111)
-File            | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
-All files       |   97.39 |    94.01 |    96.1 |   98.29 |
- useSettings.ts |   98.63 |    85.18 |     100 |   98.59 | 79
-Statements   : 97.39% ( 374/384 )
-Branches     : 94.01% ( 377/401 )
-Functions    : 96.1% ( 74/77 )
-Lines        : 98.29% ( 345/351 )
+Node24.19.0 / npm11.9.0; strict TypeScript, prettier and production build PASS.
+Coverage includes domain, wire contracts, mock, storage, settings hook, recursive merge, history and scoped-energy logic.
+ Test Files  10 passed (10)
+      Tests  177 passed (177)
+Statements   : 97.95% ( 574/586 )
+Branches     : 95.32% ( 612/642 )
+Functions    : 97.6% ( 122/125 )
+Lines        : 98.87% ( 528/534 )
 
-Real browser local build-frozen matrix:
-Command: PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary extracted libs> PLAYWRIGHT_BROWSERS_PATH=<temporary downloaded browsers> npm run test:browser -- --update-snapshots
-Host validation workaround documented in BROWSER-MATRIX.md; actual WebKit27.2 and Chromium156 run, no test skip/retry.
-  56 passed (1.2m)
-Final CI compares checked-in PNGs without update-snapshots, with normal browser installation and no host-precheck override. Full final-head Python3.14 and14-job CI evidence is in PR checks/description. Native HA/owner phone/physical control NOT_TESTED; G1 BLOCKED.
+Real-browser final frozen-build command:
+PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1 LD_LIBRARY_PATH=<temporary extracted libs> PLAYWRIGHT_BROWSERS_PATH=<temporary downloaded browsers> npm run test:browser
+The override bypasses only the host ldconfig precheck; actual Chromium156 and WebKit27.2 run. CI installs supported dependencies without this override. No tests/retries/xfails are hidden. Golden PNGs and all quality gates are unchanged.
+Final result:68 passed across Chromium/WebKit mobile/desktop; zero skipped/unexpected (see final run output and CI artifacts). All56 old cases retained; same-field conflict flow strengthened to require explicit choice. New disjoint/dense/energy flows are included.
 
-CI0a667616:12/12 Python jobs PASS;111 unit tests PASS in both frontend jobs;54/56 browser cases PASS; mobile height1332px exceeded1300px. Responsive spacing corrected; unchanged tests and limits. Focused local screenshot/layout matrix:4 passed (6.9s). Final full CI required on corrected SHA.
+Canonical WP2A codec export:PASS. All188 inherited phase-manifest entries and101 accepted regression-source hashes unchanged. 86 requirement rows and38 scenario rows retained with corrected evidence links.
+Python3.14 is verified by final-head CI, not claimed locally. Exact final SHA,14-job CI runs and job evidence are in PR checks/description; no follow-up untested commit is needed to record their results.
+G1/B01–B08 BLOCKED. No WP2C, merge, actual HA/native transport, private data or physical validation.

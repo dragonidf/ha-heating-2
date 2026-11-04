@@ -1,5 +1,6 @@
 import wireFixtures from "./contracts.fixture.json";
 import { readForecast, readBudget, readStatus } from "./contracts";
+import { qualifyCadence } from "./history";
 import type {
   Settings,
   Snapshot,
@@ -42,6 +43,7 @@ export const scenarios: Record<Scenario, string> = {
   anomaly: "Конфлікт лічильника",
   fire: "Камін і нічна циркуляція",
   empty: "Порожня історія",
+  "dense-history": "Щільна історія та межі обліку",
   revoked: "Доступ відкликано",
   recovering: "Відновлення стану",
   "long-copy": "Довгий український текст",
@@ -206,15 +208,23 @@ export function snapshot(
   return s;
 }
 export const actual: readonly Point[] = Object.freeze(
-  Array.from({ length: 745 }, (_, i) =>
+  qualifyCadence(
+    Array.from({ length: 745 }, (_, i) =>
+      Object.freeze({
+        at: NOW - (744 - i) * 3600,
+        value:
+          i % 103 === 0 || i % 103 === 1
+            ? null
+            : Math.round(
+                (21.1 + 0.7 * Math.sin(i / 7) + 0.2 * Math.cos(i / 3)) * 10,
+              ) / 10,
+      }),
+    ),
+    { source: "synthetic.hourly.v1", cadenceS: 3600, qualified: true },
+  ).map((p) =>
     Object.freeze({
-      at: NOW - (744 - i) * 3600,
-      value:
-        i % 103 === 0 || i % 103 === 1
-          ? null
-          : Math.round(
-              (21.1 + 0.7 * Math.sin(i / 7) + 0.2 * Math.cos(i / 3)) * 10,
-            ) / 10,
+      ...p,
+      ...(p.coverage ? { coverage: Object.freeze(p.coverage) } : {}),
     }),
   ),
 );
@@ -226,6 +236,41 @@ export const latest: readonly Point[] = Object.freeze(
     }),
   ),
 );
+export const denseActual: readonly Point[] = Object.freeze(
+  qualifyCadence(
+    Array.from({ length: 31 * 288 + 1 }, (_, i) => ({
+      at: NOW - 31 * 86400 + i * 300,
+      value:
+        i >= 4200 && i <= 4224
+          ? null
+          : i === 5001
+            ? 26
+            : i === 5002
+              ? 16
+              : 21 + Math.sin(i / 30),
+    })),
+    { source: "synthetic.five-minute.v1", cadenceS: 300, qualified: true },
+  ).map((p) =>
+    Object.freeze({
+      ...p,
+      ...(p.coverage ? { coverage: Object.freeze(p.coverage) } : {}),
+    }),
+  ),
+);
+export const boundaryIntervals: readonly EnergyInterval[] = Object.freeze([
+  Object.freeze({
+    start: NOW - 7800,
+    end: NOW - 6600,
+    kwh: 1,
+    category: "confirmed",
+    method: "counter_difference",
+    price: null,
+    tariffs: Object.freeze([
+      Object.freeze({ start: NOW - 7800, end: NOW - 7200, price: 4 }),
+      Object.freeze({ start: NOW - 7200, end: NOW - 6600, price: 6 }),
+    ]),
+  }),
+]);
 const frozenForecast = readForecast(
   wireFixtures.original,
   wireFixtures.original_source,
