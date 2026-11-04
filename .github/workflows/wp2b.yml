@@ -1,0 +1,75 @@
+name: WP2B offline frontend and browser QA
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  frontend:
+    name: WP2B ${{ matrix.browser }} unit and real browser checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Immutable accepted source and contract evidence
+        run: |
+          python -m tools.wp2b.export_contracts --check
+          sha256sum --check docs/wp1a/SHA256SUMS
+          sha256sum --check docs/wp1b/SHA256SUMS
+          sha256sum --check docs/wp1c/SHA256SUMS
+          sha256sum --check docs/wp2a/SHA256SUMS
+          sha256sum --check docs/wp2b/REGRESSION-BASELINE.sha256
+          sha256sum --check docs/wp2b/SHA256SUMS
+      - name: Reproducible isolated frontend tooling
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: Strict types, style and meaningful unit/component tests
+        working-directory: frontend
+        run: |
+          npm run typecheck
+          npm run format:check
+          npm run test:coverage -- --reporter=default --reporter=json --outputFile=coverage/unit-results.json
+          npm run build
+      - name: Install actual browsers and test-host dependencies only
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps ${{ matrix.browser }}
+          sudo apt-get install -y fonts-dejavu-core
+      - name: Browser, accessibility, visual and failure matrix
+        working-directory: frontend
+        run: npm run test:browser -- --project='${{ matrix.browser }}-*'
+      - name: Record exact head, counts and bundle integrity
+        run: |
+          node tools/wp2b/bundle_report.mjs
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          const unit=JSON.parse(readFileSync('frontend/coverage/unit-results.json'));
+          const e2e=JSON.parse(readFileSync('frontend/test-results/results.json'));
+          console.log(JSON.stringify({sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),node:process.version,unit:unit.numPassedTests,browser:e2e.stats.expected,unexpected:e2e.stats.unexpected,skipped:e2e.stats.skipped,scope:'synthetic offline only; G1 BLOCKED'}));
+          if(e2e.stats.unexpected||e2e.stats.skipped)process.exit(1);
+          JS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: wp2b-${{ matrix.browser }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            frontend/coverage/
+          retention-days: 14

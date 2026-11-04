@@ -1,0 +1,196 @@
+Synthetic test-first evidence; before implementation of the named behavior. Base approved main e428b9a.
+
+Foundation
+ FAIL  tests/domain.test.ts [ tests/domain.test.ts ]
+Error: Failed to resolve import "../src/fixtures" from "tests/domain.test.ts". Does the file exist?
+ Test Files  1 failed (1)
+      Tests  no tests
+
+Mock CAS
+ FAIL  tests/mock.test.ts [ tests/mock.test.ts ]
+Error: Failed to resolve import "../src/mock" from "tests/mock.test.ts". Does the file exist?
+ Test Files  1 failed | 1 passed (2)
+      Tests  12 passed (12)
+
+Save ACK regressions
+     × a wrong request receipt cannot leave an infinite saving state 1115ms
+     × failed client readback after a receipt preserves draft without success 1108ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/components.test.tsx > late or unverifiable save acknowledgements > a wrong request receipt cannot leave an infinite saving state
+ FAIL  tests/components.test.tsx > late or unverifiable save acknowledgements > failed client readback after a receipt preserves draft without success
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+The last test to run before this error was "failed client readback after a receipt preserves draft without success". This means either:
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+     Errors  1 error
+
+Calendar31day bound
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/domain.test.ts > custom range cap counts calendar days rather than assuming every day is24h
+AssertionError: expected [Function] to throw an error
+ Test Files  1 failed (1)
+      Tests  1 failed | 35 passed (36)
+
+Independent review6624485241; baseline68ef7b15d6b21af214189566aa69ffbfcbf0c304
+First seven regressions failed before implementation. Repeat against a separate git archive of the exact baseline produced the same7/7 failures. No quality gate or expected value was relaxed.
+
+
+> heating-ai-offline-ui@0.1.0 test
+> vitest run tests/review-red.test.tsx
+
+
+ RUN  v5.1.0 /tmp/wp2b-review-baseline/frontend
+
+ ❯ tests/review-red.test.tsx (7 tests | 7 failed) 591ms
+   × conflict rebase preserves a different client's disjoint settings edit 80ms
+   × 30-day history includes the newest observation beyond 8640 raw readings 293ms
+   × actual timestamps three hours apart do not imply continuous measured coverage 8ms
+   × partial counter interval is not a whole measured daily total for 2026-11-03 energy 72ms
+   × partial counter interval is not a whole measured daily total for 2026-11-04 energy 44ms
+   × partial counter interval is not a whole measured daily total for 2026-11-03 cost 53ms
+   × partial counter interval is not a whole measured daily total for 2026-11-04 cost 40ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/review-red.test.tsx > conflict rebase preserves a different client's disjoint settings edit
+AssertionError: expected 42 to be 70 // Object.is equality
+
+- Expected
++ Received
+
+- 70
++ 42
+
+ ❯ tests/review-red.test.tsx:75:32
+     73|   expect(persisted.revision).toBe(3);
+     74|   expect(persisted.values.day).toBe(22);
+     75|   expect(persisted.values.fan).toBe(70);
+       |                                ^
+     76| });
+     77|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/review-red.test.tsx > 30-day history includes the newest observation beyond 8640 raw readings
+AssertionError: expected 426.64 to be greater than or equal to 847.887535829866
+ ❯ tests/review-red.test.tsx:132:37
+    130|     48 + ((newest.at - range.start) / (range.end - range.start)) * 800;
+    131|   // A bounded chart may aggregate, but must cover the selected range …
+    132|   expect(Math.max(...xCoordinates)).toBeGreaterThanOrEqual(newestX - 0…
+       |                                     ^
+    133| });
+    134|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/review-red.test.tsx > actual timestamps three hours apart do not imply continuous measured coverage
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/review-red.test.tsx:150:72
+    148|   expect(paths.length).toBeGreaterThan(0);
+    149|   // No explicit null is necessary: absent continuity evidence cannot …
+    150|   expect(paths.some((path) => /L/.test(path.getAttribute("d") ?? "")))…
+       |                                                                        ^
+    151|     false,
+    152|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/review-red.test.tsx > partial counter interval is not a whole measured daily total for 2026-11-03 energy
+ FAIL  tests/review-red.test.tsx > partial counter interval is not a whole measured daily total for 2026-11-04 energy
+AssertionError: expected '1,0кВт·год' to be '0,0кВт·год' // Object.is equality
+
+Expected: "0,0кВт·год"
+Received: "1,0кВт·год"
+
+ ❯ tests/review-red.test.tsx:179:32
+    177|     // A counter difference has no evidence assigning either partial d…
+    178|     // An allocation may be disclosed as estimated; neither day may cl…
+    179|     expect(known?.textContent).toBe(
+       |                                ^
+    180|       metric === "cost" ? "0,0грн" : "0,0кВт·год",
+    181|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/review-red.test.tsx > partial counter interval is not a whole measured daily total for 2026-11-03 cost
+ FAIL  tests/review-red.test.tsx > partial counter interval is not a whole measured daily total for 2026-11-04 cost
+AssertionError: expected '4,0грн' to be '0,0грн' // Object.is equality
+
+Expected: "0,0грн"
+Received: "4,0грн"
+
+ ❯ tests/review-red.test.tsx:179:32
+    177|     // A counter difference has no evidence assigning either partial d…
+    178|     // An allocation may be disclosed as estimated; neither day may cl…
+    179|     expect(known?.textContent).toBe(
+       |                                ^
+    180|       metric === "cost" ? "0,0грн" : "0,0кВт·год",
+    181|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  07:46:58
+   Duration  1.54s (tests 42%, environment 36%, transform 13%, import 8%)
+
+
+Additional adjacent red evidence before each fix:
+
+settings
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/settings-merge.test.ts > a quick-save cannot discard an existing unsaved settings draft
+AssertionError: expected 21.5 to be 22 // Object.is equality
+ FAIL  tests/settings-merge.test.ts > a quick-save conflict retains the intended quick change for explicit merge
+AssertionError: expected 20.5 to be 21 // Object.is equality
+      Tests  2 failed | 17 passed (19)
+
+quality
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/review-red.test.tsx > recovered estimates remain unknown in the actual chart and readout
+AssertionError: expected <circle cx="48" …(3)></circle>
+      Tests  1 failed | 7 passed (8)
+
+zero
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/review-red.test.tsx > known zero cost retains estimated quality and is visible as zero rather than missing
+AssertionError: expected  to have a length of 1 but got +0
+      Tests  1 failed | 9 passed (10)
+
+Late reread (focused -t selection, before fix):
+ FAIL  tests/settings-merge.test.ts > a late reread cannot roll back a newer persisted save and clear its values
+AssertionError: expected 1 to be 2 // Object.is equality
+
+Follow-up review6625889290; baselinecabfafce42b81bc83a24c487178eba6fc25ec5e8
+Command: npm run test -- tests/history-followup.test.tsx
+Eight actual assertion failures before implementation (test syntax/typecheck already passed).
+ FAIL  tests/history-followup.test.tsx > healthy temperature and original survive energy read failure
+ FAIL  tests/history-followup.test.tsx > healthy temperature and original survive energy tariff failure
+TestingLibraryElementError: Unable to find an accessible element with the role "img" and name `/Історія температури/`
+ FAIL  tests/history-followup.test.tsx > healthy energy survives a failed temperature cursor
+ FAIL  tests/history-followup.test.tsx > healthy cost survives a failed temperature cursor
+AssertionError: expected <p role="alert"></p> to be null
+ FAIL  tests/history-followup.test.tsx > quarantines future provider observations while preserving legitimate past data
+AssertionError: expected [ { at: +0, value: 20 }, …(1) ] to deeply equal [ { at: +0, value: 20 } ]
+ FAIL  tests/history-followup.test.tsx > a future actual cannot affect the curve, axis, table or forecast cursor fact
+AssertionError: expected 648 to be less than or equal to 448
+ FAIL  tests/history-followup.test.tsx > invalid quality "" cannot become a confirmed actual
+ FAIL  tests/history-followup.test.tsx > invalid quality null cannot become a confirmed actual
+AssertionError: expected 77 to be null
+      Tests  8 failed (8)
+
+Additional pre-fix reconnect regressions (focused -t selection, not a final skipped suite):
+ FAIL  tests/history-followup.test.tsx > reconnect refreshes an unchanged-scope temperature archive after recovery
+AssertionError: expected <p role="alert"></p> to be null
+ FAIL  tests/history-followup.test.tsx > reconnect refreshes an unchanged-scope energy archive after recovery
+AssertionError: expected <p role="alert"></p> to be null
+
+Expanded real-browser axe regression before the keyboard fix: scrollable-region-focusable, serious, WCAG2A, energy .table-scroll on chromium-mobile. Named focusable region fixed; no rule/threshold removed.

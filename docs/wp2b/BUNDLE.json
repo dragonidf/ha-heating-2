@@ -1,0 +1,18 @@
+{
+  "scope": "synthetic build only; no target-host claim",
+  "node": "v24.19.0",
+  "files": [
+    {
+      "name": "index-Dn3si1EB.js",
+      "bytes": 304141,
+      "gzip_bytes": 92878,
+      "sha256": "61ebdbe6c15679c7926aa20882532d07286eb423e40a8375dd3ec57a253247cd"
+    },
+    {
+      "name": "index-zXt-b1Hu.css",
+      "bytes": 19110,
+      "gzip_bytes": 4709,
+      "sha256": "f46c423d4c1c31ceb0b13235564d5bf8c63f95cb54fd1541a37062a140a39f74"
+    }
+  ]
+}
