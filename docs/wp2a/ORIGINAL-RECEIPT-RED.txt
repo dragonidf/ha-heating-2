@@ -1,0 +1,17 @@
+Reviewed source: 4aef25e20f1d0a19640442d6d992f627a95e45d8; before source edits.
+Command: TMPDIR=/workspace/wp1b-test-tmp /tmp/wp1a-venv/bin/python -m unittest tests.wp2a.test_original_receipt -v
+
+test_late_first_freeze_rejects_early_issue_received_after_cutoff (tests.wp2a.test_original_receipt.OriginalReceiptTests.test_late_first_freeze_rejects_early_issue_received_after_cutoff) ... FAIL
+
+======================================================================
+FAIL: test_late_first_freeze_rejects_early_issue_received_after_cutoff (tests.wp2a.test_original_receipt.OriginalReceiptTests.test_late_first_freeze_rejects_early_issue_received_after_cutoff)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ha-heating-2/tests/wp2a/test_original_receipt.py", line 25, in test_late_first_freeze_rejects_early_issue_received_after_cutoff
+    self.assertIsNone(original.curve)
+AssertionError: Curve(identity='synthetic.late', issued=56000, points=((56000, Interval(low=18, high=19)), (100001, Interval(low=20, high=21))), input_hash='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', model_revision=7, plan_id='synthetic.plan', source_issued=(55900,)) is not None
+
+----------------------------------------------------------------------
+Ran 1 test in 0.013s
+
+FAILED (failures=1)

@@ -802,7 +802,8 @@ class EvidenceStore:
                 return existing
             rows = con.execute(
                 "SELECT a.seq,a.payload,a.checksum,a.previous,a.chain FROM forecasts f JOIN archive a ON a.seq=f.seq WHERE cycle=? AND role='latest' AND issued<=? AND recorded<=? ORDER BY issued DESC,a.seq DESC LIMIT 1001",
-                (cycle, reference - 43200, as_of),
+                # Source issue lead does not prove availability before the cutoff.
+                (cycle, reference - 43200, min(as_of, reference - 43200)),
             ).fetchall()
             if len(rows) > 1000:
                 raise EvidenceFailure("Forecast selection bound exceeded")
@@ -815,6 +816,8 @@ class EvidenceStore:
                     raise EvidenceFailure("Invalid curve row")
                 if (
                     candidate.curve
+                    and candidate.curve.issued <= reference - 43200
+                    and candidate.recorded_at <= min(as_of, reference - 43200)
                     and candidate.curve.points[0][0]
                     <= reference
                     <= candidate.curve.points[-1][0]
