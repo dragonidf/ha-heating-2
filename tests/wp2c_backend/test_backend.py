@@ -41,6 +41,11 @@ def observe(backend):
 
 
 class BackendTests(unittest.TestCase):
+    def test_overview_uses_the_agreed_blocked_gate_identifiers(self):
+        overview = self.backend.dispatch('overview', {'entry_id': 'synthetic-entry', 'version': [2, 0]}, True)
+        self.assertEqual(overview['gates'], [f'B0{i}' for i in range(1, 9)])
+        self.assertFalse(overview['physical_authority'])
+
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix='heating-wp2c-'))
         self.backend = NativeBackend(self.root, fixture(), enabled=True)

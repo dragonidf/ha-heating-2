@@ -22,6 +22,7 @@ async function login(page: Page) {
   await expect(
     page.getByRole("heading", { name: "Дім", exact: true }),
   ).toBeAttached();
+  await expect(page.locator("dialog-http-pending-config")).toHaveCount(0);
 }
 async function setSimulation(page: Page, enabled: boolean) {
   const select = async (value: boolean) => {
@@ -111,7 +112,9 @@ test("native authenticated registration, disabled simulation and shadow isolatio
 }, info) => {
   await setSimulation(page, false);
   const panel = page.locator("heating-ai-panel");
-  await expect(panel.getByText(/Лише читання/)).toBeVisible();
+  await expect(
+    panel.getByRole("status").filter({ hasText: /^Лише читання\. Симуляція/ }),
+  ).toBeVisible();
   await expect(
     panel.getByRole("button", { name: "Збільшити ціль на0,5 °C у симуляції" }),
   ).toBeDisabled();

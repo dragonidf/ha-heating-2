@@ -515,7 +515,8 @@ class NativeBackend:
 
     @staticmethod
     def _gates() -> list[JSON]:
-        return [f'B0{i}:BLOCKED' for i in range(1, 9)]
+        # The protocol lists blocked gate IDs; it never lists completed gates.
+        return [f'B0{i}' for i in range(1, 9)]
 
     @staticmethod
     def _history(body: dict[str, JSON], fixture: dict[str, JSON]) -> JSON:

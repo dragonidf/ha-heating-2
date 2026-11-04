@@ -107,6 +107,18 @@ async def bootstrap() -> dict:
             secrets["admin_token"] = (await token_exchange(session, result["auth_code"]))["access_token"]
             save_secrets(secrets)
         ws = await WS.connect(session, secrets["admin_token"])
+        # New Core treats first YAML HTTP settings as a five-minute trial.
+        # Confirm only this disposable instance's already-reachable loopback listener.
+        network = await ws.ok("http/config")
+        assert isinstance(network, dict)
+        active = network["pending"] if network["active_config_type"] == "pending" else network["stable"]
+        assert isinstance(active, dict) and active["server_host"] == ["127.0.0.1"] and active["server_port"] == 8123
+        assert not active.get("trusted_proxies") and not active.get("use_x_forwarded_for")
+        if network["pending"] is not None:
+            assert network["pending"]["error"] is None
+            await ws.ok("http/config/promote")
+        network = await ws.ok("http/config")
+        assert network["pending"] is None and network["revert_at"] is None
         if "reader_token" not in secrets:
             user = await ws.ok("config/auth/create", name="Synthetic Read Only", group_ids=["system-read-only"], local_only=True)
             assert isinstance(user, dict)
@@ -123,7 +135,7 @@ async def bootstrap() -> dict:
             await unauth.send_json({"type": "auth", "access_token": "synthetic-invalid"})
             assert (await unauth.receive_json())["type"] == "auth_invalid"
         await ws.connection.close()
-    return {"qualification": "PASS_ISOLATED", "checks": ["actual_ha_startup", "native_owner_onboarding", "native_authorization_code_exchange", "native_read_only_identity", "native_login_flow", "anonymous_api_denied", "invalid_ws_auth_denied", "native_frontend_services_bootstrap_available"], "count": 8}
+    return {"qualification": "PASS_ISOLATED", "checks": ["actual_ha_startup", "native_owner_onboarding", "native_authorization_code_exchange", "native_read_only_identity", "native_login_flow", "anonymous_api_denied", "invalid_ws_auth_denied", "native_frontend_services_bootstrap_available", "native_exact_loopback_http_trial_confirmed"], "count": 9}
 
 
 async def isolation() -> dict:
@@ -245,7 +257,7 @@ async def integration(restart: bool = False) -> dict:
         assert code == 200 and isinstance(duplicate, dict) and duplicate["type"] == "abort"
         completed.append("native_duplicate_config_entry_cannot_create_second_owner")
         overview = await read("overview")
-        assert overview["physical_authority"] is False and len(overview["gates"]) == 8
+        assert overview["physical_authority"] is False and overview["gates"] == [f"B0{i}" for i in range(1, 9)]
         completed.append("g1_gates_and_physical_authority_stay_blocked")
         for bad in ({"version": [99, 0]}, {"entry_id": "synthetic-foreign"}, {"admin": True}, {"service": "arbitrary"}):
             response = await admin.request("heating_ai/status", **(common | bad))

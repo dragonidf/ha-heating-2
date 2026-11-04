@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import io
 import json
@@ -26,6 +27,29 @@ BROWSER_IMAGE = "mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509
 SQLITE_URL = "https://www.sqlite.org/2026/sqlite-amalgamation-3510300.zip"
 SQLITE_SHA = "acb1e6f5d832484bf6d32b681e858c38add8b2acdfd42ac5df24b8afb46552b4"
 LABEL = "org.heating-ai.wp2c.run"
+BROWSER_EXPORT_JS = """const fs=require('node:fs'),path=require('node:path');
+const root=process.argv[1],files=[];let total=0;
+function scan(dir){for(const name of fs.readdirSync(dir)){const p=path.join(dir,name),s=fs.lstatSync(p);
+if(s.isSymbolicLink())throw Error('Linked result forbidden');
+if(s.isDirectory())scan(p);else if(s.isFile()&&['.png','.json','.md'].includes(path.extname(p))){
+total+=s.size;if(total>67108864)throw Error('Result budget exceeded');
+files.push({name:path.relative(root,p),data:fs.readFileSync(p).toString('base64')});}}}
+scan(root);process.stdout.write(JSON.stringify(files));"""
+
+
+def write_browser_artifacts(records: list[dict], output: Path, password: str) -> None:
+    """Write only bounded test evidence, never a browser profile or auth trace."""
+    for record in records:
+        relative = Path(record["name"])
+        if relative.is_absolute() or ".." in relative.parts or relative.suffix not in (".png", ".json", ".md"):
+            raise ValueError("Invalid browser result path")
+        target = output / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        data = base64.b64decode(record["data"], validate=True)
+        if relative.suffix == ".png":
+            target.write_bytes(data)
+        else:
+            target.write_text(data.decode().replace(password, "<synthetic-password-redacted>"))
 
 
 def docker(*args: str, data: str | None = None, capture: bool = True) -> str:
@@ -228,20 +252,13 @@ def browser(state_path: Path, project: str, image: str, output: Path) -> None:
         result = docker("exec", "-i", name, "node", "-e", runner, data=payload)
         output.mkdir(parents=True, exist_ok=True)
         (output / (project + ".log")).write_text(result.replace(credentials["admin_password"], "<synthetic-password-redacted>"))
-        with tempfile.TemporaryDirectory(prefix="wp2c-browser-results-") as directory:
-            docker("cp", name + ":/work/test-results/.", directory)
-            report_path = Path(directory) / "native-results.json"
-            stats = json.loads(report_path.read_text())["stats"] if report_path.exists() else {}
-            complete = (stats.get("expected", 0) >= 14 and stats["unexpected"] == 0
-                        and stats["skipped"] == 0 and stats.get("flaky", 0) == 0)
-            for source in Path(directory).rglob("*"):
-                if source.is_file() and source.suffix in (".png", ".json", ".md"):
-                    target = output / project / source.relative_to(directory)
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    if source.suffix == ".png":
-                        shutil.copyfile(source, target)
-                    else:
-                        target.write_text(source.read_text().replace(credentials["admin_password"], "<synthetic-password-redacted>"))
+        # Read through the running process namespace: Docker archive copy omits tmpfs contents.
+        records = json.loads(docker("exec", name, "node", "-e", BROWSER_EXPORT_JS, "/work/test-results"))
+        write_browser_artifacts(records, output / project, credentials["admin_password"])
+        report_path = output / project / "native-results.json"
+        stats = json.loads(report_path.read_text())["stats"] if report_path.exists() else {}
+        complete = (stats.get("expected", 0) >= 14 and stats["unexpected"] == 0
+                    and stats["skipped"] == 0 and stats.get("flaky", 0) == 0)
         image_details = json.loads(docker("image", "inspect", image))[0]
         save(output / (project + "-isolation.json"), {"qualification": "PASS_ISOLATED" if "WP2C_BROWSER_EXIT=0" in result and complete else "FAILED_ISOLATED", "browser_image": image, "browser_image_id": details["Image"], "browser_repo_digests": image_details.get("RepoDigests", []), "network_mode": details["HostConfig"]["NetworkMode"], "port_bindings": details["HostConfig"]["PortBindings"], "privileged": False, "traces": "disabled", "credentials": "ephemeral synthetic, excluded", "browser_stats": stats})
         print(result, end="")

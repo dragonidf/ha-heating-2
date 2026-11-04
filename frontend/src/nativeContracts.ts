@@ -156,26 +156,32 @@ export function readOverview(
   value: unknown,
 ): OperatorView & { model: ReturnType<typeof readModel>; enabled: boolean } {
   const o = object(bounded(value)),
-    f = object(o.original),
-    e = object(o.cycleEnergy),
-    coverage = object(f.coverage);
+    f = o.original === null ? null : object(o.original),
+    e = object(o.cycleEnergy);
   const scope = (v: unknown) => {
     const w = object(v);
     return finite(w.start) && finite(w.end) && w.start < w.end;
   };
+  if (f !== null) {
+    const coverage = object(f.coverage);
+    if (
+      ![f.id, f.plan, f.source].every(text) ||
+      ![f.reference, f.issued, f.received, coverage.start, coverage.end].every(
+        finite,
+      ) ||
+      typeof f.frozen !== "boolean" ||
+      !integer(f.model) ||
+      !(f.energy === null || finite(f.energy)) ||
+      !(f.scope === null || scope(f.scope))
+    )
+      throw Error("Некоректний огляд");
+    readPoints(f.points, 865);
+  }
   if (
     o.physical_authority !== false ||
     typeof o.enabled !== "boolean" ||
     !Array.isArray(o.gates) ||
     o.gates.join() !== "B01,B02,B03,B04,B05,B06,B07,B08" ||
-    ![f.id, f.plan, f.source].every(text) ||
-    ![f.reference, f.issued, f.received, coverage.start, coverage.end].every(
-      finite,
-    ) ||
-    typeof f.frozen !== "boolean" ||
-    !integer(f.model) ||
-    !(f.energy === null || finite(f.energy)) ||
-    !(f.scope === null || scope(f.scope)) ||
     ![e.reference, e.estimated, e.projected].every(
       (v) => v === null || finite(v),
     ) ||
@@ -208,7 +214,6 @@ export function readOverview(
     })
   )
     throw Error("Некоректний огляд");
-  readPoints(f.points, 865);
   readPoints(o.latest, 4096);
   return structuredClone({
     ...o,

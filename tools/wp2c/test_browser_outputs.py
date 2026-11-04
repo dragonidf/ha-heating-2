@@ -10,6 +10,27 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class BrowserOutputTests(unittest.TestCase):
+    def test_process_namespace_export_preserves_bytes_and_redacts_text(self):
+        from tools.wp2c.sandbox import BROWSER_EXPORT_JS, write_browser_artifacts
+        with tempfile.TemporaryDirectory(prefix="wp2c-export-") as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            binary = b'\x89PNG\r\n\x1a\nsynthetic\x00\xff'
+            (source / "screen.png").write_bytes(binary)
+            (source / "result.json").write_text('{"synthetic":"test-password"}')
+            (source / "auth-trace.zip").write_bytes(b'not exportable')
+            result = subprocess.run(["node", "-e", BROWSER_EXPORT_JS, str(source)],
+                                    capture_output=True, text=True, check=True)
+            write_browser_artifacts(json.loads(result.stdout), root / "output", "test-password")
+            self.assertEqual((root / "output/screen.png").read_bytes(), binary)
+            self.assertNotIn("test-password", (root / "output/result.json").read_text())
+            self.assertFalse((root / "output/auth-trace.zip").exists())
+            (source / "linked.json").symlink_to(source / "result.json")
+            rejected = subprocess.run(["node", "-e", BROWSER_EXPORT_JS, str(source)],
+                                      capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+
     def test_reporters_preserve_mountpoint_directories_under_read_only_source(self):
         self.assertNotEqual(os.geteuid(), 0, "Run filesystem qualification as the unprivileged runner")
         with tempfile.TemporaryDirectory(prefix="wp2c-outputs-") as temporary:

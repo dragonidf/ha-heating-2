@@ -619,3 +619,58 @@ it("refreshes independent STOP eligibility from the current injected HA user", a
   await expect(s.api.control("pause", s.api.session)).rejects.toThrow();
   s.api.close();
 });
+
+describe("native missing original forecast", () => {
+  const overview = {
+    original,
+    latest,
+    cycleEnergy,
+    timeline,
+    metrics,
+    model: { revision: 3, candidate: false, frozen: false },
+    enabled: true,
+    gates: ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08"],
+    physical_authority: false,
+  };
+  it("keeps healthy overview data when the authoritative original is MISSING", () => {
+    const view = readOverview({ ...overview, original: null });
+    expect(view.original).toBeNull();
+    expect(view.latest).toEqual(latest);
+    expect(view.cycleEnergy).toEqual(cycleEnergy);
+    expect(view.metrics).toEqual(metrics);
+    expect(view.timeline).toEqual(timeline);
+    expect(view.model).toEqual(overview.model);
+    expect(view.actual).toEqual([]);
+  });
+  it("retains actual-only history and healthy model/energy data after native bootstrap", async () => {
+    const s = server(),
+      call = s.hass.callWS.bind(s.hass);
+    s.hass.callWS = async <T>(message: Record<string, unknown>) =>
+      message.type === "heating_ai/overview"
+        ? ({ ...overview, original: null } as T)
+        : call<T>(message);
+    await s.api.start();
+    expect(s.api.dataErrors).toEqual([]);
+    expect(s.api.view?.original).toBeNull();
+    expect(s.api.view?.latest).toEqual(latest);
+    expect(s.api.view?.cycleEnergy).toEqual(cycleEnergy);
+    expect(s.api.model).toEqual(overview.model);
+    expect(
+      s.api.history({ start: NOW - 86400, end: NOW }).rows.length,
+    ).toBeGreaterThan(0);
+    expect(s.api.view?.actual.length).toBeGreaterThan(0);
+    s.api.close();
+  });
+  it("still rejects omitted, malformed and non-finite non-null forecast evidence", () => {
+    for (const invalid of [
+      undefined,
+      false,
+      [],
+      {},
+      { ...original, coverage: { start: NaN, end: NOW } },
+      { ...original, issued: NaN },
+      { ...original, points: [{ at: NOW, value: Infinity }] },
+    ])
+      expect(() => readOverview({ ...overview, original: invalid })).toThrow();
+  });
+});

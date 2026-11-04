@@ -1,10 +1,10 @@
 {
   "qualification": "MOCK_ONLY",
-  "unit_tests": 243,
+  "unit_tests": 246,
   "preserved_unit_baseline": 202,
   "strict_types": "PASS",
   "format": "PASS",
-  "coverage_percent": {"statements": 95.40, "branches": 92.71, "functions": 95.60, "lines": 97.17},
+  "coverage_percent": {"statements": 95.53, "branches": 92.85, "functions": 95.60, "lines": 97.30},
   "native_browser_cases_defined": 28,
   "native_browser_execution": "REQUIRES_ACTUAL_FINAL_HEAD_CI",
   "local_native_browser_blocker": "Docker inode budget; no mock substituted",
