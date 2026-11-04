@@ -2,15 +2,15 @@
 
 Replacement heating controller for Home Assistant.
 
-## Project status (2026-11-04)
+## Project status (2026-11-03)
 
-- **G0 / WP0:** architecture approved and read-only audit reviewed; **G1/B01–B08 still BLOCKED** in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3).
-- **WP1A accepted** [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6): pure safety kernel and typed contracts.
-- **WP1B accepted** [PR #9](https://github.com/dragonidf/ha-heating-2/pull/9): offline durable store and fake gateway.
-- **WP1C accepted** [PR #13](https://github.com/dragonidf/ha-heating-2/pull/13): synthetic thermal model, planning, learning and fan policy.
-- **WP2A accepted** [PR #16](https://github.com/dragonidf/ha-heating-2/pull/16): isolated fake HA contracts, energy/evidence archive and synthetic migration; 351 Python tests / 12 successful final-SHA CI checks.
-- **WP2B APPROVED OFFLINE ONLY (2026-11-04)**: [owner approval](docs/wp2b/APPROVAL-2026-11-04.md), [Codex task](docs/wp2b/WP2B-TASK.md), [Issue #17](https://github.com/dragonidf/ha-heating-2/issues/17). Complete mock-based frontend, chart, operator UX and browser tests.
-- **NOT authorized:** WP2C+, real HA integration, device commands, private data migration, production installations, existing dashboard changes, shadow, physical testing, cutover. Read [AGENTS.md](AGENTS.md) and [roadmap](docs/ROADMAP-TO-LAUNCH.md).
+- **G0 / WP0:** ADR01–07 approved; read-only audit reviewed in [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2).
+- **WP1A accepted** in [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6): pure contracts and safety reducer.
+- **WP1B accepted** in [PR #9](https://github.com/dragonidf/ha-heating-2/pull/9): synthetic SQLite control store, fake gateway and crash simulation.
+- **WP1C accepted** in [PR #13](https://github.com/dragonidf/ha-heating-2/pull/13): offline thermal model, bounded planner, champion/challenger and fan-demand policy; 219 regression tests, final CI 9/9.
+- **WP2A APPROVED OFFLINE ONLY:** [owner approval](docs/wp2a/APPROVAL-2026-11-03.md), [Codex implementation task](docs/wp2a/WP2A-TASK.md), [Issue #14](https://github.com/dragonidf/ha-heating-2/issues/14). Fake HA-facing contracts, independent energy/evidence archive, **synthetic** migration rehearsal.
+- **G1 remains BLOCKED** (B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3)). **Not authorized:** WP2B+, actual HA/device writer, installation, migration of private data, shadow on the real home, physical tests, cutover.
+- Follow the [gated roadmap](docs/ROADMAP-TO-LAUNCH.md) and current [AGENTS.md](AGENTS.md).
 
 ## Documentation
 - [Project handoff](docs/spec/heating-ai-2.0/HANDOFF.md)
@@ -44,7 +44,7 @@ The pure WP1A modules retain their standard-library boundary. The combined test 
 
 ## WP1B offline proof
 
-`packages/control_store` persists synthetic critical state; `packages/simulator` can only record fake actions in memory. See the [report](docs/wp1b/REPORT.md), [decisions](docs/wp1b/ADR-WP1B.md), [additive requirements](docs/wp1b/requirements-coverage.csv) and [scenarios](docs/wp1b/scenario-coverage.csv). G1/B01–B08 remain BLOCKED. WP1C was accepted offline in PR #13 and WP2A in PR #16. WP2B synthetic UI is now authorized; no real device transport exists.
+`packages/control_store` persists synthetic critical state; `packages/simulator` can only record fake actions in memory. See the [report](docs/wp1b/REPORT.md), [decisions](docs/wp1b/ADR-WP1B.md), [additive requirements](docs/wp1b/requirements-coverage.csv) and [scenarios](docs/wp1b/scenario-coverage.csv). G1/B01–B08 remain BLOCKED. WP1C was accepted offline in PR #13. WP2A offline is separately authorized; no real device transport exists.
 
 Run only in a disposable Linux development/CI environment. The pinned SQLite build downloads official source and creates a test library under `/tmp`; it does not replace system or production libraries:
 
@@ -58,6 +58,6 @@ sha256sum --check docs/wp1b/SHA256SUMS
 
 Use a disposable directory on the filesystem being evaluated as `TMPDIR` and record its type; tmpfs does not prove disk durability. The actual linked SQLite/version/source ID must qualify before any simulated HEAT. CI checks 3.12/3.13/3.14 with the pinned library, retains every WP1A test and exercises isolated SIGKILL/fault scenarios. WP1B has been independently reviewed and merged via PR #9; this remains an offline-only simulator, not a deployable controller.
 
-## Current WP2B development
+## Current WP2A development
 
-The next deliverable is **one standalone fully working frontend** with `Дім · Історія · Налаштування`, additional model/diagnostics, immutable 12h-original vs actual graphs, honest energy coverage, durable-mock settings receipts and synthetic-only browser E2E. See [Issue #17](https://github.com/dragonidf/ha-heating-2/issues/17) and [WP2B task](docs/wp2b/WP2B-TASK.md). The demo has **no live Home Assistant service, URL, session, or device transport** and the code PR must remain unmerged for independent review. G1 remains BLOCKED.
+The offline-only WP2A implementation must follow [Issue #14](https://github.com/dragonidf/ha-heating-2/issues/14) and [WP2A-TASK.md](docs/wp2a/WP2A-TASK.md). There is **no real HA client, live integration, activated command sender or production migration** in the approved scope. All examples and fixtures use synthetic data in disposable local storage. Code must remain in a separate unmerged PR until independent review; neither G1 nor later staging is waived.
