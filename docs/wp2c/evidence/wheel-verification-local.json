@@ -1,0 +1,10 @@
+{
+  "package": "homeassistant",
+  "version": "2026.10.4",
+  "source": "https://pypi.org/pypi/homeassistant/2026.10.4/json",
+  "artifact": "official PyPI homeassistant-2026.10.4-py3-none-any.whl",
+  "declared_sha256": "71843060980a763187d856a8ff170640f1e287a7b741334cd838c81404f1f452",
+  "downloaded_sha256": "71843060980a763187d856a8ff170640f1e287a7b741334cd838c81404f1f452",
+  "match": true,
+  "local_build_note": "local HA image predates Dockerfile in-build hash enforcement; separately downloaded official wheel checksum verified; final CI Dockerfile enforces it"
+}

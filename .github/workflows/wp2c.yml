@@ -1,0 +1,86 @@
+name: WP2C isolated native Home Assistant
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  native:
+    name: WP2C HA 2026.10.4 native ${{ matrix.browser }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.14'
+      - name: Verify immutable accepted baseline and WP2C evidence
+        run: |
+          sha256sum --check docs/wp2b/REGRESSION-BASELINE.sha256
+          sha256sum --check docs/wp2c/SHA256SUMS
+          python -m tools.wp2c.verify
+      - name: Build the synthetic panel and verify fixture export
+        run: |
+          npm ci --ignore-scripts --prefix frontend
+          npm run typecheck --prefix frontend
+          npm run build --prefix frontend
+          node tools/wp2c/export-fixtures.mjs --check
+          python tools/wp2c/package.py --output /tmp/heating-wp2c-package-ci
+          python -m unittest tools.wp2c.test_package
+      - name: Retrieve pinned official dependencies during setup only
+        run: |
+          python tools/wp2c/sandbox.py build
+          docker --host=unix:///var/run/docker.sock pull mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      - name: Start a new real HA with no network and synthetic identities
+        run: |
+          mkdir -p /tmp/wp2c-evidence
+          python tools/wp2c/sandbox.py up --state /tmp/wp2c-sandbox.json --package-dir /tmp/heating-wp2c-package-ci | tee /tmp/wp2c-evidence/bootstrap-isolation.txt
+      - name: Strict SDK types on actual pinned Home Assistant
+        run: python tools/wp2c/sandbox.py typecheck --state /tmp/wp2c-sandbox.json | tee /tmp/wp2c-evidence/sdk-types.txt
+      - name: Native authenticated integration and lifecycle fault checks
+        run: python tools/wp2c/sandbox.py checks --state /tmp/wp2c-sandbox.json | tee /tmp/wp2c-evidence/native-checks.txt
+      - name: Genuine HA restart and recovery
+        run: python tools/wp2c/sandbox.py restart --state /tmp/wp2c-sandbox.json | tee /tmp/wp2c-evidence/native-restart.txt
+      - name: Config entry migration and new synthetic Recorder only
+        run: python tools/wp2c/sandbox.py migration --state /tmp/wp2c-sandbox.json | tee /tmp/wp2c-evidence/native-migration.txt
+      - name: Actual browser matrix in the same isolated namespace
+        run: python tools/wp2c/sandbox.py browser --state /tmp/wp2c-sandbox.json --project ${{ matrix.browser }} --output /tmp/wp2c-browser-results
+      - name: Verify isolation after native browsers
+        run: python tools/wp2c/sandbox.py proof --state /tmp/wp2c-sandbox.json | tee /tmp/wp2c-evidence/final-isolation.txt
+      - name: Remove only this run's disposable HA and labeled volumes
+        if: always()
+        run: |
+          if test -f /tmp/wp2c-sandbox.json; then
+            python tools/wp2c/sandbox.py stop --state /tmp/wp2c-sandbox.json
+          fi
+      - name: Record exact tested head
+        if: always()
+        run: |
+          mkdir -p /tmp/wp2c-evidence
+          git rev-parse HEAD > /tmp/wp2c-evidence/tested-sha.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: wp2c-native-${{ matrix.browser }}-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            /tmp/wp2c-evidence/
+            /tmp/wp2c-browser-results/
+            /tmp/wp2c-sandbox-isolation.json
+            /tmp/wp2c-sandbox-teardown.json
+            /tmp/heating-wp2c-package-ci/BUILD-MANIFEST.json
+          retention-days: 14

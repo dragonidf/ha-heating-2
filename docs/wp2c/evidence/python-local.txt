@@ -1,0 +1,7 @@
+Synthetic isolated development host; no production/target qualification.
+Python3.12.14: make check —425 testsPASS, strictmypyPASS, branchcoverage98% (unchanged95%floor).
+Python3.13.5 linkedSQLite3.51.3: make check —425 testsPASS, strictmypyPASS, branchcoverage98%.
+Unittestdiscover includes351accepted +36nativebackend +34futuremeter +4SDKstaticboundary tests.
+Packagebuilder:3additionaltooltestsPASS (explicit invocation afterfrontendbuild).
+Standalone Chromium/WebKit mobile+desktop:80/80PASS, originalgoldensunchanged.
+FinalPython3.14 andfinalheadfullCI are recordedbyPRchecks/artifacts.

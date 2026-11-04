@@ -2,14 +2,16 @@
 
 Replacement heating controller for Home Assistant.
 
-## Project status (2026-11-03)
+## Project status (2026-11-04)
 
 - **G0 / WP0:** ADR01–07 approved; read-only audit reviewed in [PR #2](https://github.com/dragonidf/ha-heating-2/pull/2).
 - **WP1A accepted** in [PR #6](https://github.com/dragonidf/ha-heating-2/pull/6): pure contracts and safety reducer.
 - **WP1B accepted** in [PR #9](https://github.com/dragonidf/ha-heating-2/pull/9): synthetic SQLite control store, fake gateway and crash simulation.
 - **WP1C accepted** in [PR #13](https://github.com/dragonidf/ha-heating-2/pull/13): offline thermal model, bounded planner, champion/challenger and fan-demand policy; 219 regression tests, final CI 9/9.
-- **WP2A APPROVED OFFLINE ONLY:** [owner approval](docs/wp2a/APPROVAL-2026-11-03.md), [Codex implementation task](docs/wp2a/WP2A-TASK.md), [Issue #14](https://github.com/dragonidf/ha-heating-2/issues/14). Fake HA-facing contracts, independent energy/evidence archive, **synthetic** migration rehearsal.
-- **G1 remains BLOCKED** (B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3)). **Not authorized:** WP2B+, actual HA/device writer, installation, migration of private data, shadow on the real home, physical tests, cutover.
+- **WP2A accepted** in [PR #16](https://github.com/dragonidf/ha-heating-2/pull/16): fake HA contracts, independent energy/evidence archive and synthetic migration;351 Python tests.
+- **WP2B accepted** in [PR #19](https://github.com/dragonidf/ha-heating-2/pull/19): standalone three-tab UI;202 frontend and80 browser tests.
+- **WP2C approved isolated test only:** [Issue #20](https://github.com/dragonidf/ha-heating-2/issues/20), [approval](docs/wp2c/APPROVAL-2026-11-04.md), [implementation report](docs/wp2c/REPORT.md). Native package and real disposable HA compatibility, synthetic-only, pending independent code review.
+- **G1 remains BLOCKED** (B01–B08 in [Issue #3](https://github.com/dragonidf/ha-heating-2/issues/3)). **Not authorized:** WP2D+, production/existing HA access, real device writer, installation on owner infrastructure, private migration, household shadow, physical tests or cutover.
 - Follow the [gated roadmap](docs/ROADMAP-TO-LAUNCH.md) and current [AGENTS.md](AGENTS.md).
 
 ## Documentation
@@ -58,6 +60,10 @@ sha256sum --check docs/wp1b/SHA256SUMS
 
 Use a disposable directory on the filesystem being evaluated as `TMPDIR` and record its type; tmpfs does not prove disk durability. The actual linked SQLite/version/source ID must qualify before any simulated HEAT. CI checks 3.12/3.13/3.14 with the pinned library, retains every WP1A test and exercises isolated SIGKILL/fault scenarios. WP1B has been independently reviewed and merged via PR #9; this remains an offline-only simulator, not a deployable controller.
 
-## Current WP2A development
+## WP2C disposable native package
 
-The offline-only WP2A implementation must follow [Issue #14](https://github.com/dragonidf/ha-heating-2/issues/14) and [WP2A-TASK.md](docs/wp2a/WP2A-TASK.md). There is **no real HA client, live integration, activated command sender or production migration** in the approved scope. All examples and fixtures use synthetic data in disposable local storage. Code must remain in a separate unmerged PR until independent review; neither G1 nor later staging is waived.
+The SDK template is `ha_sdk/heating_ai`; `tools/wp2c/package.py` generates a self-contained custom component only under an explicitly disposable output path. Native setup requires a sandbox marker; simulation and all registry sensors default disabled. There is no real actuator route. The panel uses the existing test HA session, with authoritative synthetic backend settings/history and unknown physical state.
+
+See [reproduction and isolation](docs/wp2c/ISOLATION.md), [native version matrix](docs/wp2c/HA-VERSION-MATRIX.md), [QA](docs/wp2c/QA.md), [86/38 mappings](docs/wp2c/requirements-coverage.csv) and [report](docs/wp2c/REPORT.md). The native harness must run solely in a new Codex/ephemeral CI environment, never on owner HA/Proxmox/LAN. It uses network-none containers, random synthetic accounts and disposable volumes, and removes only its own labeled resources. No private configuration or telemetry is required.
+
+Pure modules still need no HA installation. Only native SDK qualification uses pinned Core2026.10.4/Python3.14.2. G1/B01–B08 remain BLOCKED; native compatibility grants no deployment permission. Keep the WP2C PR open for independent review; do not begin WP2D.

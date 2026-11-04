@@ -1,0 +1,1 @@
+{"domain":"heating_ai","name":"Heating AI 2.0 — isolated synthetic test","version":"0.2.0","config_flow":true,"single_config_entry":true,"integration_type":"service","iot_class":"local_push","dependencies":["frontend","http","websocket_api","panel_custom"],"requirements":[],"documentation":"https://github.com/dragonidf/ha-heating-2","codeowners":["@dragonidf"]}

@@ -1,0 +1,13 @@
+{
+  "qualification": "PASS_ISOLATED",
+  "checks": [
+    "actual_ha_startup",
+    "native_owner_onboarding",
+    "native_authorization_code_exchange",
+    "native_read_only_identity",
+    "native_login_flow",
+    "anonymous_api_denied",
+    "invalid_ws_auth_denied"
+  ],
+  "count": 7
+}

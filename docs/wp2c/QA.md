@@ -1,0 +1,42 @@
+# QA, faults and bounded performance — implementation self-tests
+
+This is Codex implementation/self-testing. It is not independent acceptance. Canonical86/38 criteria remain visible in the CSVs; a mapped synthetic slice is not full household acceptance.
+
+## Regression preservation
+
+`docs/wp2b/REGRESSION-BASELINE.sha256` still verifies all101 accepted Python package/test files exactly. All351 accepted test methods remain. The old WP2A import/network boundary is unchanged: SDK source is a template in `ha_sdk`, installable components exist only in disposable build output. Full pure discovery adds backend/store, future meter and static SDK transport boundaries; mypy remains strict, Python coverage remains>=95%. Frontend202 accepted cases and80 browser cases remain, including4 unchanged goldens,44px targets,1300px mobile hierarchy,1.5% visual limit, axe and90/85% unit coverage floors. New native adapter/contracts are included in the coverage scope.243 unit/component/harness tests pass locally:95.40% statements,92.71% branches,95.60% functions and97.17% lines.
+
+## Genuine native evidence
+
+The local evidence directory contains actual HA results:7 bootstrap/auth,8 network-isolation assertion groups,36 unique SDK integration checks,5 restart checks and6 config-entry/Recorder/short-soak checks:62 groups total. No mock is counted as a native check. The final-head native script adds6 groups for duplicate-owner rejection, fresh-input inhibition, partial options preservation, model requests and nonempty original immutability (68 total when passed). Additional actual browser matrix results are retained in final CI artifacts. Both native jobs run the full setup/lifecycle/migration/teardown sequence against their independently created instances.
+
+Native checks include explicit config confirmation/default disabled/unique owner; native reader vs admin permissions; invalid version/entry/body flags; read-only disabled sensors; panel/static resources; authenticated typed source zero/duplicate/invalid/stale; settings CAS/readback/idempotence/changed-body conflict; history bounds; subscriptions; unload/reload/re-enable; new boot; unsupported SQLite startup failure with no loaded transport/panel; recovery; registry rename/removal invalidation; unresolved one-shot/manual STOP across restart; and SQLite/config-entry migrations. Synthetic Recorder is newly created for one fake zero state and kept separate from critical/evidence stores. No original Recorder or private migration is involved.
+
+Independent logical STOP is measured while another actual process holds BEGIN IMMEDIATE on critical SQLite. Accepted memory state is MANUAL_PAUSE before persistence can succeed; all physical fields remain unknown/unverified. Local observed request1.765ms (threshold500ms; host-only). The measurement includes SDK WebSocket round trip. It cannot establish equipment OFF, N100 scheduling or worst-case physical latency. A50-request sequential native status consistency run observed max5.398ms/mean0.642ms; this is a short bounded check, not a7day soak or throughput guarantee. Exact observations are in evidence JSON; CI independently repeats them.
+
+## Pure synthetic faults
+
+A nonempty25-point original forecast retains exact bytes/SHA and issue/receipt proof through model/settings/manual actions, restart, evidence migration and rollback. New service/store tests exercise two-client CAS, durable idempotence, request-body conflicts, owner epoch, STOP vs in-flight disk work, lock/readonly/EIO/ENOSPC, corrupt hash/schema/WAL, independent evidence loss, failed initial schema transaction, reversible v1 migration, rollback and symlink/hardlink restrictions. Child processes exit before commit or after an uncheckpointed commit: no partial settings/receipt and no one-shot heat replay. Closing a backend invalidates work already in progress without waiting for disk. Restart starts required input missing; an authenticated own synthetic observation is required again, while manual pause survives.
+
+Meter tests cover future unbound capabilities; W vs VA/V/A; total/per-phase lineage and contradiction; online/relay/protection not heat proof; exact freshness/future/zero/missing; bad phase totals; reset/jumps; cumulative kWh origin; overlapping accounting groups; missing meter with explicit lower-confidence stage estimate; physical qualification always false. All default meter limits are artificial test-policy values, never discovered device ratings.
+
+## Test-first defect evidence
+
+Initial package-builder tests failed with ModuleNotFoundError before the implementation (2errors). Later the original unchanged351-case suite caught an installed-component directory at repository root; SDK templates were separated from generated installable output, preserving that boundary without altering its test or old source hashes.
+
+Two added ShutdownFence reproductions failed before the backend fix:
+
+```text
+python -m unittest discover -s tests/wp2c_backend -p test_backend.py -k ShutdownFence
+close_during_committing_save_cannot_revive_old_backend: 'saved' != 'unavailable'
+open_and_reboot_require_new_synthetic_observation: True is not false
+Ran2tests; FAILED(failures=2)
+```
+
+The close fence now advances memory serial/owner and leaves STOP; a late executor cannot revive it. Open/reboot now clears required source eligibility. The same regression methods pass after the algorithm change. Native SDK strict mypy initially found8 actual SDK/export/type errors; direct documented module imports and validated JSON numbers corrected them, with no ignores or type-gate reduction. Genuine HA startup exposed an invalid empty panel_custom YAML configuration; it was removed and SDK registration now loads the dependency normally. Native UI regressions additionally cover stale history ranges, new-boot subscription cleanup, bounded RPC deadlines, honest archive failures, source/permission changes and Shadow DOM focus.
+
+## Browser evidence and limits
+
+The standalone80-case suite was run against a frozen completed build and passed with original goldens. Never rebuild assets while a preview/browser run consumes them. Native Chromium/WebKit jobs use the pinned official browser image and the same network-none namespace as HA. Trace is disabled to exclude auth response bodies; sanitized results and synthetic screenshots remain. Local native-browser execution is BLOCKED by the sandbox inode budget; genuine CI native browser results, not mock tests, determine final compatibility.
+
+Owner phone, Android WebView, practical screen reader assessment, electrical/OEM behavior, actual private migration, fsync on N100, real forecast error and household shadow remain BLOCKED/NOT_TESTED. No passing synthetic/native SDK test changes G1/B01–B08.

@@ -5,3 +5,4 @@ __pycache__/
 htmlcov/
 .mypy_cache/
 .venv/
+frontend/playwright-report-native/

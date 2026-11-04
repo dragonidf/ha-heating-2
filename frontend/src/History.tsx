@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Chart, Badge } from "./components";
-import { original, latest, NOW, timeline } from "./fixtures";
+import { NOW } from "./fixtures";
 import {
   kyivRange,
   shiftDate,
@@ -8,7 +8,7 @@ import {
   fmt,
   dateTime,
 } from "./domain";
-import type { DemoAPI } from "./mock";
+import { operatorView, type OperatorAPI } from "./operator";
 import type { Snapshot } from "./types";
 import { readHistory } from "./history";
 import { scopedEnergy } from "./historyEnergy";
@@ -17,10 +17,13 @@ export function History({
   state,
   onModel,
 }: {
-  api: DemoAPI;
+  api: OperatorAPI;
   state: Snapshot;
   onModel: () => void;
 }) {
+  const { original, latest, timeline } = operatorView(api);
+  const [archiveVersion, setArchiveVersion] = useState(0);
+  const [archiveError, setArchiveError] = useState("");
   const [first, setFirst] = useState("2026-10-29"),
     [last, setLast] = useState("2026-11-04"),
     [metric, setMetric] = useState("temperature");
@@ -31,6 +34,28 @@ export function History({
   } catch (e) {
     rangeError = e instanceof Error ? e.message : "Некоректний період";
   }
+  useEffect(() => {
+    if (!api.loadHistory || rangeError) return;
+    let active = true;
+    setArchiveError("Читаємо синтетичний архів…");
+    void api.loadHistory(range).then(
+      () => {
+        if (active) {
+          setArchiveError("");
+          setArchiveVersion((v) => v + 1);
+        }
+      },
+      () => {
+        if (active)
+          setArchiveError(
+            "Архів недоступний. Повторіть запит або скоротіть період.",
+          );
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [api, range.start, range.end, rangeError, state.generation]);
   const history = useMemo(() => {
     try {
       return {
@@ -47,14 +72,23 @@ export function History({
         error: `Історію не вдалося прочитати. ${e instanceof Error ? e.message : "Помилка джерела"}. Повторіть запит або скоротіть період.`,
       };
     }
-  }, [api, api.scenario, range.start, range.end, state.now, state.generation]);
+  }, [
+    api,
+    api.scenario,
+    range.start,
+    range.end,
+    state.now,
+    state.generation,
+    archiveVersion,
+  ]);
   const { rows } = history;
   const source =
-    api.scenario === "missing-original"
+    original && api.scenario === "missing-original"
       ? { ...original, received: original.reference - 3600 }
       : original;
-  const eligible = originalEligible(source);
+  const eligible = source !== null && originalEligible(source);
   const hasOriginal =
+    source !== null &&
     eligible &&
     source.coverage.start < range.end &&
     source.coverage.end >= range.start;
@@ -71,11 +105,21 @@ export function History({
           "Архів енергії або тарифи недоступні чи суперечливі. Підсумок і покриття невідомі.",
       };
     }
-  }, [api, api.scenario, range.start, range.end, state.now, state.generation]);
+  }, [
+    api,
+    api.scenario,
+    range.start,
+    range.end,
+    state.now,
+    state.generation,
+    archiveVersion,
+  ]);
   const energy = energyResult.data;
   const error =
     rangeError ||
-    (metric === "temperature" ? history.error : energyResult.error);
+    (metric === "temperature"
+      ? archiveError || history.error
+      : energyResult.error);
   const entries = energy?.entries ?? [];
   const energyPoints = entries.map((i) => ({
     at: i.start,
@@ -182,7 +226,7 @@ export function History({
             ) : (
               <Chart
                 actual={rows}
-                original={hasOriginal ? source.points : []}
+                original={source && hasOriginal ? source.points : []}
                 forecast={latest}
                 now={state.now}
                 scope={range}
@@ -214,22 +258,22 @@ export function History({
                     : "MISSING · не відновлюється заднім числом"}
                 </dd>
                 <dt>Початок циклу</dt>
-                <dd>{dateTime(source.reference)}</dd>
+                <dd>{source ? dateTime(source.reference) : "—"}</dd>
                 <dt>Час випуску</dt>
-                <dd>{dateTime(source.issued)}</dd>
+                <dd>{source ? dateTime(source.issued) : "—"}</dd>
                 <dt>Архів отримав</dt>
-                <dd>{dateTime(source.received)}</dd>
+                <dd>{source ? dateTime(source.received) : "—"}</dd>
                 <dt>Фактичне випередження отримання</dt>
                 <dd>
-                  {fmt((source.reference - source.received) / 3600)}год ·
-                  потрібно≥12 год
+                  {fmt(
+                    source ? (source.reference - source.received) / 3600 : null,
+                  )}
+                  год · потрібно≥12 год
                 </dd>
                 <dt>Модель / план</dt>
-                <dd>
-                  v{source.model} ·{source.plan}
-                </dd>
+                <dd>{source ? `v${source.model} · ${source.plan}` : "—"}</dd>
                 <dt>Джерело</dt>
-                <dd>{source.source}</dd>
+                <dd>{source?.source ?? "—"}</dd>
               </dl>
               <p>
                 Новий прогноз не замінює оригінал; факт доступний незалежно від

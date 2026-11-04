@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Badge } from "./components";
 import { validateSettings } from "./domain";
-import type { DemoAPI } from "./mock";
+import type { OperatorAPI } from "./operator";
 import type { SettingsController } from "./useSettings";
 import type { Settings as Values } from "./types";
 import { Diagnostics } from "./Diagnostics";
@@ -10,7 +10,7 @@ export function Settings({
   controller,
   modelOpen = false,
 }: {
-  api: DemoAPI;
+  api: OperatorAPI;
   controller: SettingsController;
   modelOpen?: boolean;
 }) {
