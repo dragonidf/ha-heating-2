@@ -11,8 +11,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:browser": "playwright test",
-    "format:check": "prettier --check src tests e2e *.ts *.json index.html",
-    "format": "prettier --write src tests e2e *.ts *.json index.html"
+    "format:check": "prettier --check src tests e2e e2e-native *.ts *.json index.html",
+    "format": "prettier --write src tests e2e e2e-native *.ts *.json index.html",
+    "test:browser:native": "playwright test --config playwright.native.config.ts"
   },
   "dependencies": {
     "react": "19.3.1",

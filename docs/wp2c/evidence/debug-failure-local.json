@@ -1,0 +1,22 @@
+{
+  "scope": "new disposable HA network-none plus custom local debug browser only; not official MCR qualification",
+  "ha_version": "2026.10.4",
+  "frontend_version": "20260930.5",
+  "authentication": "actual native login selectors succeeded, redirected to /heating-ai",
+  "native_browser_failure": {
+    "websocket_operation": "get_services",
+    "code": "unknown_error",
+    "message": "Unknown error",
+    "server_cause": "ModuleNotFoundError: hassil in helpers.service._base_components -> ai_task -> conversation",
+    "visible_result": "HA loading spinner; heating-ai-panel count 0"
+  },
+  "dependency_probe": {
+    "official_pins_added": "tools/wp2c/requirements-ha-ui.txt",
+    "subsequent_confirmed_import": "assist_satellite -> assist_pipeline.audio_enhancer -> pymicro_vad",
+    "source_compilation": "pymicro-vad==1.0.1 and pyspeex-noise==1.0.2 compile successfully on CPython3.14",
+    "local_abi_limit": "host GCC14 wheel requires GLIBCXX_3.4.32 absent on bookworm; final CI builder compiles on the identical pinned bookworm Python base"
+  },
+  "no_auth_traces": true,
+  "physical_authority": false,
+  "production": "NOT_ACCESSED"
+}

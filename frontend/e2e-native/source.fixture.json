@@ -1,0 +1,30 @@
+{
+  "data": {
+    "author": "sensor",
+    "entity": "synthetic.native.room",
+    "identity": "native-browser-1",
+    "observed_action": null,
+    "reading": {
+      "evidence_ids": [],
+      "observed_at": 0,
+      "physical_id": "synthetic.native.room",
+      "provenance": { "components": [], "independent": true, "kind": "direct" },
+      "quality": {
+        "age_s": 0,
+        "lower": null,
+        "reason": "synthetic",
+        "status": "valid",
+        "upper": null
+      },
+      "received_at": 0,
+      "signed": false,
+      "source_id": "synthetic.native.room",
+      "unit": "\u00b0C",
+      "value": 21
+    },
+    "received_at": 0,
+    "sequence": 1
+  },
+  "type": "SourceEvent",
+  "version": [2, 0]
+}

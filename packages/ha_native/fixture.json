@@ -1,0 +1,6614 @@
+{
+  "snapshot": {
+    "version": 1,
+    "seq": 1,
+    "generation": 1,
+    "now": 1793750400,
+    "connected": true,
+    "permitted": true,
+    "status": {
+      "actual": null,
+      "archive_lost": 0,
+      "archive_pending": 0,
+      "boot_id": "synthetic.ui.boot",
+      "desired": "stop_demand",
+      "mode": "AUTO_HOLD",
+      "owner_epoch": 7,
+      "physical_verified": false,
+      "receipt_stage": null,
+      "snapshot_at": 1793750400,
+      "snapshot_id": "synthetic.ui.snapshot",
+      "status_seq": 1
+    },
+    "room": {
+      "value": 21.8,
+      "observed": 1793750400,
+      "quality": "valid"
+    },
+    "grid": true,
+    "notices": [],
+    "fan": {
+      "phase": "Спокій",
+      "requested": 0,
+      "actual": null,
+      "night": true,
+      "fire": false
+    },
+    "oneShot": {
+      "state": "inactive",
+      "expires": null,
+      "gridEpoch": 4
+    },
+    "diagnostics": {
+      "loopLagMs": 8,
+      "persistence": "ok",
+      "worker": "ready",
+      "source": "valid"
+    }
+  },
+  "settings": {
+    "day": 21.5,
+    "night": 20.5,
+    "budget": 650,
+    "windowStart": "23:00",
+    "windowEnd": "07:00",
+    "strategy": "balanced",
+    "mode": "auto",
+    "circulation": "auto",
+    "fan": 42,
+    "scenario": 6,
+    "freshness": 30,
+    "aiAdvice": false
+  },
+  "actual": [
+    {
+      "at": 1791072000,
+      "value": null
+    },
+    {
+      "at": 1791075600,
+      "value": null
+    },
+    {
+      "at": 1791079200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791079200
+      }
+    },
+    {
+      "at": 1791082800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791079200
+      }
+    },
+    {
+      "at": 1791086400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791082800
+      }
+    },
+    {
+      "at": 1791090000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791086400
+      }
+    },
+    {
+      "at": 1791093600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791090000
+      }
+    },
+    {
+      "at": 1791097200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791093600
+      }
+    },
+    {
+      "at": 1791100800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791097200
+      }
+    },
+    {
+      "at": 1791104400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791100800
+      }
+    },
+    {
+      "at": 1791108000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791104400
+      }
+    },
+    {
+      "at": 1791111600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791108000
+      }
+    },
+    {
+      "at": 1791115200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791111600
+      }
+    },
+    {
+      "at": 1791118800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791115200
+      }
+    },
+    {
+      "at": 1791122400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791118800
+      }
+    },
+    {
+      "at": 1791126000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791122400
+      }
+    },
+    {
+      "at": 1791129600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791126000
+      }
+    },
+    {
+      "at": 1791133200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791129600
+      }
+    },
+    {
+      "at": 1791136800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791133200
+      }
+    },
+    {
+      "at": 1791140400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791136800
+      }
+    },
+    {
+      "at": 1791144000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791140400
+      }
+    },
+    {
+      "at": 1791147600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791144000
+      }
+    },
+    {
+      "at": 1791151200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791147600
+      }
+    },
+    {
+      "at": 1791154800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791151200
+      }
+    },
+    {
+      "at": 1791158400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791154800
+      }
+    },
+    {
+      "at": 1791162000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791158400
+      }
+    },
+    {
+      "at": 1791165600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791162000
+      }
+    },
+    {
+      "at": 1791169200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791165600
+      }
+    },
+    {
+      "at": 1791172800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791169200
+      }
+    },
+    {
+      "at": 1791176400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791172800
+      }
+    },
+    {
+      "at": 1791180000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791176400
+      }
+    },
+    {
+      "at": 1791183600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791180000
+      }
+    },
+    {
+      "at": 1791187200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791183600
+      }
+    },
+    {
+      "at": 1791190800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791187200
+      }
+    },
+    {
+      "at": 1791194400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791190800
+      }
+    },
+    {
+      "at": 1791198000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791194400
+      }
+    },
+    {
+      "at": 1791201600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791198000
+      }
+    },
+    {
+      "at": 1791205200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791201600
+      }
+    },
+    {
+      "at": 1791208800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791205200
+      }
+    },
+    {
+      "at": 1791212400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791208800
+      }
+    },
+    {
+      "at": 1791216000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791212400
+      }
+    },
+    {
+      "at": 1791219600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791216000
+      }
+    },
+    {
+      "at": 1791223200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791219600
+      }
+    },
+    {
+      "at": 1791226800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791223200
+      }
+    },
+    {
+      "at": 1791230400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791226800
+      }
+    },
+    {
+      "at": 1791234000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791230400
+      }
+    },
+    {
+      "at": 1791237600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791234000
+      }
+    },
+    {
+      "at": 1791241200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791237600
+      }
+    },
+    {
+      "at": 1791244800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791241200
+      }
+    },
+    {
+      "at": 1791248400,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791244800
+      }
+    },
+    {
+      "at": 1791252000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791248400
+      }
+    },
+    {
+      "at": 1791255600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791252000
+      }
+    },
+    {
+      "at": 1791259200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791255600
+      }
+    },
+    {
+      "at": 1791262800,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791259200
+      }
+    },
+    {
+      "at": 1791266400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791262800
+      }
+    },
+    {
+      "at": 1791270000,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791266400
+      }
+    },
+    {
+      "at": 1791273600,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791270000
+      }
+    },
+    {
+      "at": 1791277200,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791273600
+      }
+    },
+    {
+      "at": 1791280800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791277200
+      }
+    },
+    {
+      "at": 1791284400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791280800
+      }
+    },
+    {
+      "at": 1791288000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791284400
+      }
+    },
+    {
+      "at": 1791291600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791288000
+      }
+    },
+    {
+      "at": 1791295200,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791291600
+      }
+    },
+    {
+      "at": 1791298800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791295200
+      }
+    },
+    {
+      "at": 1791302400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791298800
+      }
+    },
+    {
+      "at": 1791306000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791302400
+      }
+    },
+    {
+      "at": 1791309600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791306000
+      }
+    },
+    {
+      "at": 1791313200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791309600
+      }
+    },
+    {
+      "at": 1791316800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791313200
+      }
+    },
+    {
+      "at": 1791320400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791316800
+      }
+    },
+    {
+      "at": 1791324000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791320400
+      }
+    },
+    {
+      "at": 1791327600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791324000
+      }
+    },
+    {
+      "at": 1791331200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791327600
+      }
+    },
+    {
+      "at": 1791334800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791331200
+      }
+    },
+    {
+      "at": 1791338400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791334800
+      }
+    },
+    {
+      "at": 1791342000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791338400
+      }
+    },
+    {
+      "at": 1791345600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791342000
+      }
+    },
+    {
+      "at": 1791349200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791345600
+      }
+    },
+    {
+      "at": 1791352800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791349200
+      }
+    },
+    {
+      "at": 1791356400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791352800
+      }
+    },
+    {
+      "at": 1791360000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791356400
+      }
+    },
+    {
+      "at": 1791363600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791360000
+      }
+    },
+    {
+      "at": 1791367200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791363600
+      }
+    },
+    {
+      "at": 1791370800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791367200
+      }
+    },
+    {
+      "at": 1791374400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791370800
+      }
+    },
+    {
+      "at": 1791378000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791374400
+      }
+    },
+    {
+      "at": 1791381600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791378000
+      }
+    },
+    {
+      "at": 1791385200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791381600
+      }
+    },
+    {
+      "at": 1791388800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791385200
+      }
+    },
+    {
+      "at": 1791392400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791388800
+      }
+    },
+    {
+      "at": 1791396000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791392400
+      }
+    },
+    {
+      "at": 1791399600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791396000
+      }
+    },
+    {
+      "at": 1791403200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791399600
+      }
+    },
+    {
+      "at": 1791406800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791403200
+      }
+    },
+    {
+      "at": 1791410400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791406800
+      }
+    },
+    {
+      "at": 1791414000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791410400
+      }
+    },
+    {
+      "at": 1791417600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791414000
+      }
+    },
+    {
+      "at": 1791421200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791417600
+      }
+    },
+    {
+      "at": 1791424800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791421200
+      }
+    },
+    {
+      "at": 1791428400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791424800
+      }
+    },
+    {
+      "at": 1791432000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791428400
+      }
+    },
+    {
+      "at": 1791435600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791432000
+      }
+    },
+    {
+      "at": 1791439200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791435600
+      }
+    },
+    {
+      "at": 1791442800,
+      "value": null
+    },
+    {
+      "at": 1791446400,
+      "value": null
+    },
+    {
+      "at": 1791450000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791450000
+      }
+    },
+    {
+      "at": 1791453600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791450000
+      }
+    },
+    {
+      "at": 1791457200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791453600
+      }
+    },
+    {
+      "at": 1791460800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791457200
+      }
+    },
+    {
+      "at": 1791464400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791460800
+      }
+    },
+    {
+      "at": 1791468000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791464400
+      }
+    },
+    {
+      "at": 1791471600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791468000
+      }
+    },
+    {
+      "at": 1791475200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791471600
+      }
+    },
+    {
+      "at": 1791478800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791475200
+      }
+    },
+    {
+      "at": 1791482400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791478800
+      }
+    },
+    {
+      "at": 1791486000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791482400
+      }
+    },
+    {
+      "at": 1791489600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791486000
+      }
+    },
+    {
+      "at": 1791493200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791489600
+      }
+    },
+    {
+      "at": 1791496800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791493200
+      }
+    },
+    {
+      "at": 1791500400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791496800
+      }
+    },
+    {
+      "at": 1791504000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791500400
+      }
+    },
+    {
+      "at": 1791507600,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791504000
+      }
+    },
+    {
+      "at": 1791511200,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791507600
+      }
+    },
+    {
+      "at": 1791514800,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791511200
+      }
+    },
+    {
+      "at": 1791518400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791514800
+      }
+    },
+    {
+      "at": 1791522000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791518400
+      }
+    },
+    {
+      "at": 1791525600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791522000
+      }
+    },
+    {
+      "at": 1791529200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791525600
+      }
+    },
+    {
+      "at": 1791532800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791529200
+      }
+    },
+    {
+      "at": 1791536400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791532800
+      }
+    },
+    {
+      "at": 1791540000,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791536400
+      }
+    },
+    {
+      "at": 1791543600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791540000
+      }
+    },
+    {
+      "at": 1791547200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791543600
+      }
+    },
+    {
+      "at": 1791550800,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791547200
+      }
+    },
+    {
+      "at": 1791554400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791550800
+      }
+    },
+    {
+      "at": 1791558000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791554400
+      }
+    },
+    {
+      "at": 1791561600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791558000
+      }
+    },
+    {
+      "at": 1791565200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791561600
+      }
+    },
+    {
+      "at": 1791568800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791565200
+      }
+    },
+    {
+      "at": 1791572400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791568800
+      }
+    },
+    {
+      "at": 1791576000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791572400
+      }
+    },
+    {
+      "at": 1791579600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791576000
+      }
+    },
+    {
+      "at": 1791583200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791579600
+      }
+    },
+    {
+      "at": 1791586800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791583200
+      }
+    },
+    {
+      "at": 1791590400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791586800
+      }
+    },
+    {
+      "at": 1791594000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791590400
+      }
+    },
+    {
+      "at": 1791597600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791594000
+      }
+    },
+    {
+      "at": 1791601200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791597600
+      }
+    },
+    {
+      "at": 1791604800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791601200
+      }
+    },
+    {
+      "at": 1791608400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791604800
+      }
+    },
+    {
+      "at": 1791612000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791608400
+      }
+    },
+    {
+      "at": 1791615600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791612000
+      }
+    },
+    {
+      "at": 1791619200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791615600
+      }
+    },
+    {
+      "at": 1791622800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791619200
+      }
+    },
+    {
+      "at": 1791626400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791622800
+      }
+    },
+    {
+      "at": 1791630000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791626400
+      }
+    },
+    {
+      "at": 1791633600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791630000
+      }
+    },
+    {
+      "at": 1791637200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791633600
+      }
+    },
+    {
+      "at": 1791640800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791637200
+      }
+    },
+    {
+      "at": 1791644400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791640800
+      }
+    },
+    {
+      "at": 1791648000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791644400
+      }
+    },
+    {
+      "at": 1791651600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791648000
+      }
+    },
+    {
+      "at": 1791655200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791651600
+      }
+    },
+    {
+      "at": 1791658800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791655200
+      }
+    },
+    {
+      "at": 1791662400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791658800
+      }
+    },
+    {
+      "at": 1791666000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791662400
+      }
+    },
+    {
+      "at": 1791669600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791666000
+      }
+    },
+    {
+      "at": 1791673200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791669600
+      }
+    },
+    {
+      "at": 1791676800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791673200
+      }
+    },
+    {
+      "at": 1791680400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791676800
+      }
+    },
+    {
+      "at": 1791684000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791680400
+      }
+    },
+    {
+      "at": 1791687600,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791684000
+      }
+    },
+    {
+      "at": 1791691200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791687600
+      }
+    },
+    {
+      "at": 1791694800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791691200
+      }
+    },
+    {
+      "at": 1791698400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791694800
+      }
+    },
+    {
+      "at": 1791702000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791698400
+      }
+    },
+    {
+      "at": 1791705600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791702000
+      }
+    },
+    {
+      "at": 1791709200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791705600
+      }
+    },
+    {
+      "at": 1791712800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791709200
+      }
+    },
+    {
+      "at": 1791716400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791712800
+      }
+    },
+    {
+      "at": 1791720000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791716400
+      }
+    },
+    {
+      "at": 1791723600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791720000
+      }
+    },
+    {
+      "at": 1791727200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791723600
+      }
+    },
+    {
+      "at": 1791730800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791727200
+      }
+    },
+    {
+      "at": 1791734400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791730800
+      }
+    },
+    {
+      "at": 1791738000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791734400
+      }
+    },
+    {
+      "at": 1791741600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791738000
+      }
+    },
+    {
+      "at": 1791745200,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791741600
+      }
+    },
+    {
+      "at": 1791748800,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791745200
+      }
+    },
+    {
+      "at": 1791752400,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791748800
+      }
+    },
+    {
+      "at": 1791756000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791752400
+      }
+    },
+    {
+      "at": 1791759600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791756000
+      }
+    },
+    {
+      "at": 1791763200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791759600
+      }
+    },
+    {
+      "at": 1791766800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791763200
+      }
+    },
+    {
+      "at": 1791770400,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791766800
+      }
+    },
+    {
+      "at": 1791774000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791770400
+      }
+    },
+    {
+      "at": 1791777600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791774000
+      }
+    },
+    {
+      "at": 1791781200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791777600
+      }
+    },
+    {
+      "at": 1791784800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791781200
+      }
+    },
+    {
+      "at": 1791788400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791784800
+      }
+    },
+    {
+      "at": 1791792000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791788400
+      }
+    },
+    {
+      "at": 1791795600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791792000
+      }
+    },
+    {
+      "at": 1791799200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791795600
+      }
+    },
+    {
+      "at": 1791802800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791799200
+      }
+    },
+    {
+      "at": 1791806400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791802800
+      }
+    },
+    {
+      "at": 1791810000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791806400
+      }
+    },
+    {
+      "at": 1791813600,
+      "value": null
+    },
+    {
+      "at": 1791817200,
+      "value": null
+    },
+    {
+      "at": 1791820800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791820800
+      }
+    },
+    {
+      "at": 1791824400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791820800
+      }
+    },
+    {
+      "at": 1791828000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791824400
+      }
+    },
+    {
+      "at": 1791831600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791828000
+      }
+    },
+    {
+      "at": 1791835200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791831600
+      }
+    },
+    {
+      "at": 1791838800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791835200
+      }
+    },
+    {
+      "at": 1791842400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791838800
+      }
+    },
+    {
+      "at": 1791846000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791842400
+      }
+    },
+    {
+      "at": 1791849600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791846000
+      }
+    },
+    {
+      "at": 1791853200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791849600
+      }
+    },
+    {
+      "at": 1791856800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791853200
+      }
+    },
+    {
+      "at": 1791860400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791856800
+      }
+    },
+    {
+      "at": 1791864000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791860400
+      }
+    },
+    {
+      "at": 1791867600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791864000
+      }
+    },
+    {
+      "at": 1791871200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791867600
+      }
+    },
+    {
+      "at": 1791874800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791871200
+      }
+    },
+    {
+      "at": 1791878400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791874800
+      }
+    },
+    {
+      "at": 1791882000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791878400
+      }
+    },
+    {
+      "at": 1791885600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791882000
+      }
+    },
+    {
+      "at": 1791889200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791885600
+      }
+    },
+    {
+      "at": 1791892800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791889200
+      }
+    },
+    {
+      "at": 1791896400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791892800
+      }
+    },
+    {
+      "at": 1791900000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791896400
+      }
+    },
+    {
+      "at": 1791903600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791900000
+      }
+    },
+    {
+      "at": 1791907200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791903600
+      }
+    },
+    {
+      "at": 1791910800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791907200
+      }
+    },
+    {
+      "at": 1791914400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791910800
+      }
+    },
+    {
+      "at": 1791918000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791914400
+      }
+    },
+    {
+      "at": 1791921600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791918000
+      }
+    },
+    {
+      "at": 1791925200,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791921600
+      }
+    },
+    {
+      "at": 1791928800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791925200
+      }
+    },
+    {
+      "at": 1791932400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791928800
+      }
+    },
+    {
+      "at": 1791936000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791932400
+      }
+    },
+    {
+      "at": 1791939600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791936000
+      }
+    },
+    {
+      "at": 1791943200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791939600
+      }
+    },
+    {
+      "at": 1791946800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791943200
+      }
+    },
+    {
+      "at": 1791950400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791946800
+      }
+    },
+    {
+      "at": 1791954000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791950400
+      }
+    },
+    {
+      "at": 1791957600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791954000
+      }
+    },
+    {
+      "at": 1791961200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791957600
+      }
+    },
+    {
+      "at": 1791964800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791961200
+      }
+    },
+    {
+      "at": 1791968400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791964800
+      }
+    },
+    {
+      "at": 1791972000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791968400
+      }
+    },
+    {
+      "at": 1791975600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791972000
+      }
+    },
+    {
+      "at": 1791979200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791975600
+      }
+    },
+    {
+      "at": 1791982800,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791979200
+      }
+    },
+    {
+      "at": 1791986400,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791982800
+      }
+    },
+    {
+      "at": 1791990000,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791986400
+      }
+    },
+    {
+      "at": 1791993600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791990000
+      }
+    },
+    {
+      "at": 1791997200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791993600
+      }
+    },
+    {
+      "at": 1792000800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1791997200
+      }
+    },
+    {
+      "at": 1792004400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792000800
+      }
+    },
+    {
+      "at": 1792008000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792004400
+      }
+    },
+    {
+      "at": 1792011600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792008000
+      }
+    },
+    {
+      "at": 1792015200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792011600
+      }
+    },
+    {
+      "at": 1792018800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792015200
+      }
+    },
+    {
+      "at": 1792022400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792018800
+      }
+    },
+    {
+      "at": 1792026000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792022400
+      }
+    },
+    {
+      "at": 1792029600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792026000
+      }
+    },
+    {
+      "at": 1792033200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792029600
+      }
+    },
+    {
+      "at": 1792036800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792033200
+      }
+    },
+    {
+      "at": 1792040400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792036800
+      }
+    },
+    {
+      "at": 1792044000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792040400
+      }
+    },
+    {
+      "at": 1792047600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792044000
+      }
+    },
+    {
+      "at": 1792051200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792047600
+      }
+    },
+    {
+      "at": 1792054800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792051200
+      }
+    },
+    {
+      "at": 1792058400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792054800
+      }
+    },
+    {
+      "at": 1792062000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792058400
+      }
+    },
+    {
+      "at": 1792065600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792062000
+      }
+    },
+    {
+      "at": 1792069200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792065600
+      }
+    },
+    {
+      "at": 1792072800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792069200
+      }
+    },
+    {
+      "at": 1792076400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792072800
+      }
+    },
+    {
+      "at": 1792080000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792076400
+      }
+    },
+    {
+      "at": 1792083600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792080000
+      }
+    },
+    {
+      "at": 1792087200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792083600
+      }
+    },
+    {
+      "at": 1792090800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792087200
+      }
+    },
+    {
+      "at": 1792094400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792090800
+      }
+    },
+    {
+      "at": 1792098000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792094400
+      }
+    },
+    {
+      "at": 1792101600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792098000
+      }
+    },
+    {
+      "at": 1792105200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792101600
+      }
+    },
+    {
+      "at": 1792108800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792105200
+      }
+    },
+    {
+      "at": 1792112400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792108800
+      }
+    },
+    {
+      "at": 1792116000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792112400
+      }
+    },
+    {
+      "at": 1792119600,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792116000
+      }
+    },
+    {
+      "at": 1792123200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792119600
+      }
+    },
+    {
+      "at": 1792126800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792123200
+      }
+    },
+    {
+      "at": 1792130400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792126800
+      }
+    },
+    {
+      "at": 1792134000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792130400
+      }
+    },
+    {
+      "at": 1792137600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792134000
+      }
+    },
+    {
+      "at": 1792141200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792137600
+      }
+    },
+    {
+      "at": 1792144800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792141200
+      }
+    },
+    {
+      "at": 1792148400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792144800
+      }
+    },
+    {
+      "at": 1792152000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792148400
+      }
+    },
+    {
+      "at": 1792155600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792152000
+      }
+    },
+    {
+      "at": 1792159200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792155600
+      }
+    },
+    {
+      "at": 1792162800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792159200
+      }
+    },
+    {
+      "at": 1792166400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792162800
+      }
+    },
+    {
+      "at": 1792170000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792166400
+      }
+    },
+    {
+      "at": 1792173600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792170000
+      }
+    },
+    {
+      "at": 1792177200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792173600
+      }
+    },
+    {
+      "at": 1792180800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792177200
+      }
+    },
+    {
+      "at": 1792184400,
+      "value": null
+    },
+    {
+      "at": 1792188000,
+      "value": null
+    },
+    {
+      "at": 1792191600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792191600
+      }
+    },
+    {
+      "at": 1792195200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792191600
+      }
+    },
+    {
+      "at": 1792198800,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792195200
+      }
+    },
+    {
+      "at": 1792202400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792198800
+      }
+    },
+    {
+      "at": 1792206000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792202400
+      }
+    },
+    {
+      "at": 1792209600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792206000
+      }
+    },
+    {
+      "at": 1792213200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792209600
+      }
+    },
+    {
+      "at": 1792216800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792213200
+      }
+    },
+    {
+      "at": 1792220400,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792216800
+      }
+    },
+    {
+      "at": 1792224000,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792220400
+      }
+    },
+    {
+      "at": 1792227600,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792224000
+      }
+    },
+    {
+      "at": 1792231200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792227600
+      }
+    },
+    {
+      "at": 1792234800,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792231200
+      }
+    },
+    {
+      "at": 1792238400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792234800
+      }
+    },
+    {
+      "at": 1792242000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792238400
+      }
+    },
+    {
+      "at": 1792245600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792242000
+      }
+    },
+    {
+      "at": 1792249200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792245600
+      }
+    },
+    {
+      "at": 1792252800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792249200
+      }
+    },
+    {
+      "at": 1792256400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792252800
+      }
+    },
+    {
+      "at": 1792260000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792256400
+      }
+    },
+    {
+      "at": 1792263600,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792260000
+      }
+    },
+    {
+      "at": 1792267200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792263600
+      }
+    },
+    {
+      "at": 1792270800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792267200
+      }
+    },
+    {
+      "at": 1792274400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792270800
+      }
+    },
+    {
+      "at": 1792278000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792274400
+      }
+    },
+    {
+      "at": 1792281600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792278000
+      }
+    },
+    {
+      "at": 1792285200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792281600
+      }
+    },
+    {
+      "at": 1792288800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792285200
+      }
+    },
+    {
+      "at": 1792292400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792288800
+      }
+    },
+    {
+      "at": 1792296000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792292400
+      }
+    },
+    {
+      "at": 1792299600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792296000
+      }
+    },
+    {
+      "at": 1792303200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792299600
+      }
+    },
+    {
+      "at": 1792306800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792303200
+      }
+    },
+    {
+      "at": 1792310400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792306800
+      }
+    },
+    {
+      "at": 1792314000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792310400
+      }
+    },
+    {
+      "at": 1792317600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792314000
+      }
+    },
+    {
+      "at": 1792321200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792317600
+      }
+    },
+    {
+      "at": 1792324800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792321200
+      }
+    },
+    {
+      "at": 1792328400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792324800
+      }
+    },
+    {
+      "at": 1792332000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792328400
+      }
+    },
+    {
+      "at": 1792335600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792332000
+      }
+    },
+    {
+      "at": 1792339200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792335600
+      }
+    },
+    {
+      "at": 1792342800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792339200
+      }
+    },
+    {
+      "at": 1792346400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792342800
+      }
+    },
+    {
+      "at": 1792350000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792346400
+      }
+    },
+    {
+      "at": 1792353600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792350000
+      }
+    },
+    {
+      "at": 1792357200,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792353600
+      }
+    },
+    {
+      "at": 1792360800,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792357200
+      }
+    },
+    {
+      "at": 1792364400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792360800
+      }
+    },
+    {
+      "at": 1792368000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792364400
+      }
+    },
+    {
+      "at": 1792371600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792368000
+      }
+    },
+    {
+      "at": 1792375200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792371600
+      }
+    },
+    {
+      "at": 1792378800,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792375200
+      }
+    },
+    {
+      "at": 1792382400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792378800
+      }
+    },
+    {
+      "at": 1792386000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792382400
+      }
+    },
+    {
+      "at": 1792389600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792386000
+      }
+    },
+    {
+      "at": 1792393200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792389600
+      }
+    },
+    {
+      "at": 1792396800,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792393200
+      }
+    },
+    {
+      "at": 1792400400,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792396800
+      }
+    },
+    {
+      "at": 1792404000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792400400
+      }
+    },
+    {
+      "at": 1792407600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792404000
+      }
+    },
+    {
+      "at": 1792411200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792407600
+      }
+    },
+    {
+      "at": 1792414800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792411200
+      }
+    },
+    {
+      "at": 1792418400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792414800
+      }
+    },
+    {
+      "at": 1792422000,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792418400
+      }
+    },
+    {
+      "at": 1792425600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792422000
+      }
+    },
+    {
+      "at": 1792429200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792425600
+      }
+    },
+    {
+      "at": 1792432800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792429200
+      }
+    },
+    {
+      "at": 1792436400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792432800
+      }
+    },
+    {
+      "at": 1792440000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792436400
+      }
+    },
+    {
+      "at": 1792443600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792440000
+      }
+    },
+    {
+      "at": 1792447200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792443600
+      }
+    },
+    {
+      "at": 1792450800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792447200
+      }
+    },
+    {
+      "at": 1792454400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792450800
+      }
+    },
+    {
+      "at": 1792458000,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792454400
+      }
+    },
+    {
+      "at": 1792461600,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792458000
+      }
+    },
+    {
+      "at": 1792465200,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792461600
+      }
+    },
+    {
+      "at": 1792468800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792465200
+      }
+    },
+    {
+      "at": 1792472400,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792468800
+      }
+    },
+    {
+      "at": 1792476000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792472400
+      }
+    },
+    {
+      "at": 1792479600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792476000
+      }
+    },
+    {
+      "at": 1792483200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792479600
+      }
+    },
+    {
+      "at": 1792486800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792483200
+      }
+    },
+    {
+      "at": 1792490400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792486800
+      }
+    },
+    {
+      "at": 1792494000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792490400
+      }
+    },
+    {
+      "at": 1792497600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792494000
+      }
+    },
+    {
+      "at": 1792501200,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792497600
+      }
+    },
+    {
+      "at": 1792504800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792501200
+      }
+    },
+    {
+      "at": 1792508400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792504800
+      }
+    },
+    {
+      "at": 1792512000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792508400
+      }
+    },
+    {
+      "at": 1792515600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792512000
+      }
+    },
+    {
+      "at": 1792519200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792515600
+      }
+    },
+    {
+      "at": 1792522800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792519200
+      }
+    },
+    {
+      "at": 1792526400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792522800
+      }
+    },
+    {
+      "at": 1792530000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792526400
+      }
+    },
+    {
+      "at": 1792533600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792530000
+      }
+    },
+    {
+      "at": 1792537200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792533600
+      }
+    },
+    {
+      "at": 1792540800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792537200
+      }
+    },
+    {
+      "at": 1792544400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792540800
+      }
+    },
+    {
+      "at": 1792548000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792544400
+      }
+    },
+    {
+      "at": 1792551600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792548000
+      }
+    },
+    {
+      "at": 1792555200,
+      "value": null
+    },
+    {
+      "at": 1792558800,
+      "value": null
+    },
+    {
+      "at": 1792562400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792562400
+      }
+    },
+    {
+      "at": 1792566000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792562400
+      }
+    },
+    {
+      "at": 1792569600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792566000
+      }
+    },
+    {
+      "at": 1792573200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792569600
+      }
+    },
+    {
+      "at": 1792576800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792573200
+      }
+    },
+    {
+      "at": 1792580400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792576800
+      }
+    },
+    {
+      "at": 1792584000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792580400
+      }
+    },
+    {
+      "at": 1792587600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792584000
+      }
+    },
+    {
+      "at": 1792591200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792587600
+      }
+    },
+    {
+      "at": 1792594800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792591200
+      }
+    },
+    {
+      "at": 1792598400,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792594800
+      }
+    },
+    {
+      "at": 1792602000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792598400
+      }
+    },
+    {
+      "at": 1792605600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792602000
+      }
+    },
+    {
+      "at": 1792609200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792605600
+      }
+    },
+    {
+      "at": 1792612800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792609200
+      }
+    },
+    {
+      "at": 1792616400,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792612800
+      }
+    },
+    {
+      "at": 1792620000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792616400
+      }
+    },
+    {
+      "at": 1792623600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792620000
+      }
+    },
+    {
+      "at": 1792627200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792623600
+      }
+    },
+    {
+      "at": 1792630800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792627200
+      }
+    },
+    {
+      "at": 1792634400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792630800
+      }
+    },
+    {
+      "at": 1792638000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792634400
+      }
+    },
+    {
+      "at": 1792641600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792638000
+      }
+    },
+    {
+      "at": 1792645200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792641600
+      }
+    },
+    {
+      "at": 1792648800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792645200
+      }
+    },
+    {
+      "at": 1792652400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792648800
+      }
+    },
+    {
+      "at": 1792656000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792652400
+      }
+    },
+    {
+      "at": 1792659600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792656000
+      }
+    },
+    {
+      "at": 1792663200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792659600
+      }
+    },
+    {
+      "at": 1792666800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792663200
+      }
+    },
+    {
+      "at": 1792670400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792666800
+      }
+    },
+    {
+      "at": 1792674000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792670400
+      }
+    },
+    {
+      "at": 1792677600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792674000
+      }
+    },
+    {
+      "at": 1792681200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792677600
+      }
+    },
+    {
+      "at": 1792684800,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792681200
+      }
+    },
+    {
+      "at": 1792688400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792684800
+      }
+    },
+    {
+      "at": 1792692000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792688400
+      }
+    },
+    {
+      "at": 1792695600,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792692000
+      }
+    },
+    {
+      "at": 1792699200,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792695600
+      }
+    },
+    {
+      "at": 1792702800,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792699200
+      }
+    },
+    {
+      "at": 1792706400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792702800
+      }
+    },
+    {
+      "at": 1792710000,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792706400
+      }
+    },
+    {
+      "at": 1792713600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792710000
+      }
+    },
+    {
+      "at": 1792717200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792713600
+      }
+    },
+    {
+      "at": 1792720800,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792717200
+      }
+    },
+    {
+      "at": 1792724400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792720800
+      }
+    },
+    {
+      "at": 1792728000,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792724400
+      }
+    },
+    {
+      "at": 1792731600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792728000
+      }
+    },
+    {
+      "at": 1792735200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792731600
+      }
+    },
+    {
+      "at": 1792738800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792735200
+      }
+    },
+    {
+      "at": 1792742400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792738800
+      }
+    },
+    {
+      "at": 1792746000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792742400
+      }
+    },
+    {
+      "at": 1792749600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792746000
+      }
+    },
+    {
+      "at": 1792753200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792749600
+      }
+    },
+    {
+      "at": 1792756800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792753200
+      }
+    },
+    {
+      "at": 1792760400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792756800
+      }
+    },
+    {
+      "at": 1792764000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792760400
+      }
+    },
+    {
+      "at": 1792767600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792764000
+      }
+    },
+    {
+      "at": 1792771200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792767600
+      }
+    },
+    {
+      "at": 1792774800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792771200
+      }
+    },
+    {
+      "at": 1792778400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792774800
+      }
+    },
+    {
+      "at": 1792782000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792778400
+      }
+    },
+    {
+      "at": 1792785600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792782000
+      }
+    },
+    {
+      "at": 1792789200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792785600
+      }
+    },
+    {
+      "at": 1792792800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792789200
+      }
+    },
+    {
+      "at": 1792796400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792792800
+      }
+    },
+    {
+      "at": 1792800000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792796400
+      }
+    },
+    {
+      "at": 1792803600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792800000
+      }
+    },
+    {
+      "at": 1792807200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792803600
+      }
+    },
+    {
+      "at": 1792810800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792807200
+      }
+    },
+    {
+      "at": 1792814400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792810800
+      }
+    },
+    {
+      "at": 1792818000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792814400
+      }
+    },
+    {
+      "at": 1792821600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792818000
+      }
+    },
+    {
+      "at": 1792825200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792821600
+      }
+    },
+    {
+      "at": 1792828800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792825200
+      }
+    },
+    {
+      "at": 1792832400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792828800
+      }
+    },
+    {
+      "at": 1792836000,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792832400
+      }
+    },
+    {
+      "at": 1792839600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792836000
+      }
+    },
+    {
+      "at": 1792843200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792839600
+      }
+    },
+    {
+      "at": 1792846800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792843200
+      }
+    },
+    {
+      "at": 1792850400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792846800
+      }
+    },
+    {
+      "at": 1792854000,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792850400
+      }
+    },
+    {
+      "at": 1792857600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792854000
+      }
+    },
+    {
+      "at": 1792861200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792857600
+      }
+    },
+    {
+      "at": 1792864800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792861200
+      }
+    },
+    {
+      "at": 1792868400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792864800
+      }
+    },
+    {
+      "at": 1792872000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792868400
+      }
+    },
+    {
+      "at": 1792875600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792872000
+      }
+    },
+    {
+      "at": 1792879200,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792875600
+      }
+    },
+    {
+      "at": 1792882800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792879200
+      }
+    },
+    {
+      "at": 1792886400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792882800
+      }
+    },
+    {
+      "at": 1792890000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792886400
+      }
+    },
+    {
+      "at": 1792893600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792890000
+      }
+    },
+    {
+      "at": 1792897200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792893600
+      }
+    },
+    {
+      "at": 1792900800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792897200
+      }
+    },
+    {
+      "at": 1792904400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792900800
+      }
+    },
+    {
+      "at": 1792908000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792904400
+      }
+    },
+    {
+      "at": 1792911600,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792908000
+      }
+    },
+    {
+      "at": 1792915200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792911600
+      }
+    },
+    {
+      "at": 1792918800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792915200
+      }
+    },
+    {
+      "at": 1792922400,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792918800
+      }
+    },
+    {
+      "at": 1792926000,
+      "value": null
+    },
+    {
+      "at": 1792929600,
+      "value": null
+    },
+    {
+      "at": 1792933200,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792933200
+      }
+    },
+    {
+      "at": 1792936800,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792933200
+      }
+    },
+    {
+      "at": 1792940400,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792936800
+      }
+    },
+    {
+      "at": 1792944000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792940400
+      }
+    },
+    {
+      "at": 1792947600,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792944000
+      }
+    },
+    {
+      "at": 1792951200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792947600
+      }
+    },
+    {
+      "at": 1792954800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792951200
+      }
+    },
+    {
+      "at": 1792958400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792954800
+      }
+    },
+    {
+      "at": 1792962000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792958400
+      }
+    },
+    {
+      "at": 1792965600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792962000
+      }
+    },
+    {
+      "at": 1792969200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792965600
+      }
+    },
+    {
+      "at": 1792972800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792969200
+      }
+    },
+    {
+      "at": 1792976400,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792972800
+      }
+    },
+    {
+      "at": 1792980000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792976400
+      }
+    },
+    {
+      "at": 1792983600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792980000
+      }
+    },
+    {
+      "at": 1792987200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792983600
+      }
+    },
+    {
+      "at": 1792990800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792987200
+      }
+    },
+    {
+      "at": 1792994400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792990800
+      }
+    },
+    {
+      "at": 1792998000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792994400
+      }
+    },
+    {
+      "at": 1793001600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1792998000
+      }
+    },
+    {
+      "at": 1793005200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793001600
+      }
+    },
+    {
+      "at": 1793008800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793005200
+      }
+    },
+    {
+      "at": 1793012400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793008800
+      }
+    },
+    {
+      "at": 1793016000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793012400
+      }
+    },
+    {
+      "at": 1793019600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793016000
+      }
+    },
+    {
+      "at": 1793023200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793019600
+      }
+    },
+    {
+      "at": 1793026800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793023200
+      }
+    },
+    {
+      "at": 1793030400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793026800
+      }
+    },
+    {
+      "at": 1793034000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793030400
+      }
+    },
+    {
+      "at": 1793037600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793034000
+      }
+    },
+    {
+      "at": 1793041200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793037600
+      }
+    },
+    {
+      "at": 1793044800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793041200
+      }
+    },
+    {
+      "at": 1793048400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793044800
+      }
+    },
+    {
+      "at": 1793052000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793048400
+      }
+    },
+    {
+      "at": 1793055600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793052000
+      }
+    },
+    {
+      "at": 1793059200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793055600
+      }
+    },
+    {
+      "at": 1793062800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793059200
+      }
+    },
+    {
+      "at": 1793066400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793062800
+      }
+    },
+    {
+      "at": 1793070000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793066400
+      }
+    },
+    {
+      "at": 1793073600,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793070000
+      }
+    },
+    {
+      "at": 1793077200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793073600
+      }
+    },
+    {
+      "at": 1793080800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793077200
+      }
+    },
+    {
+      "at": 1793084400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793080800
+      }
+    },
+    {
+      "at": 1793088000,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793084400
+      }
+    },
+    {
+      "at": 1793091600,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793088000
+      }
+    },
+    {
+      "at": 1793095200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793091600
+      }
+    },
+    {
+      "at": 1793098800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793095200
+      }
+    },
+    {
+      "at": 1793102400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793098800
+      }
+    },
+    {
+      "at": 1793106000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793102400
+      }
+    },
+    {
+      "at": 1793109600,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793106000
+      }
+    },
+    {
+      "at": 1793113200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793109600
+      }
+    },
+    {
+      "at": 1793116800,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793113200
+      }
+    },
+    {
+      "at": 1793120400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793116800
+      }
+    },
+    {
+      "at": 1793124000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793120400
+      }
+    },
+    {
+      "at": 1793127600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793124000
+      }
+    },
+    {
+      "at": 1793131200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793127600
+      }
+    },
+    {
+      "at": 1793134800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793131200
+      }
+    },
+    {
+      "at": 1793138400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793134800
+      }
+    },
+    {
+      "at": 1793142000,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793138400
+      }
+    },
+    {
+      "at": 1793145600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793142000
+      }
+    },
+    {
+      "at": 1793149200,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793145600
+      }
+    },
+    {
+      "at": 1793152800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793149200
+      }
+    },
+    {
+      "at": 1793156400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793152800
+      }
+    },
+    {
+      "at": 1793160000,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793156400
+      }
+    },
+    {
+      "at": 1793163600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793160000
+      }
+    },
+    {
+      "at": 1793167200,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793163600
+      }
+    },
+    {
+      "at": 1793170800,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793167200
+      }
+    },
+    {
+      "at": 1793174400,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793170800
+      }
+    },
+    {
+      "at": 1793178000,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793174400
+      }
+    },
+    {
+      "at": 1793181600,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793178000
+      }
+    },
+    {
+      "at": 1793185200,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793181600
+      }
+    },
+    {
+      "at": 1793188800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793185200
+      }
+    },
+    {
+      "at": 1793192400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793188800
+      }
+    },
+    {
+      "at": 1793196000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793192400
+      }
+    },
+    {
+      "at": 1793199600,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793196000
+      }
+    },
+    {
+      "at": 1793203200,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793199600
+      }
+    },
+    {
+      "at": 1793206800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793203200
+      }
+    },
+    {
+      "at": 1793210400,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793206800
+      }
+    },
+    {
+      "at": 1793214000,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793210400
+      }
+    },
+    {
+      "at": 1793217600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793214000
+      }
+    },
+    {
+      "at": 1793221200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793217600
+      }
+    },
+    {
+      "at": 1793224800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793221200
+      }
+    },
+    {
+      "at": 1793228400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793224800
+      }
+    },
+    {
+      "at": 1793232000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793228400
+      }
+    },
+    {
+      "at": 1793235600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793232000
+      }
+    },
+    {
+      "at": 1793239200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793235600
+      }
+    },
+    {
+      "at": 1793242800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793239200
+      }
+    },
+    {
+      "at": 1793246400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793242800
+      }
+    },
+    {
+      "at": 1793250000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793246400
+      }
+    },
+    {
+      "at": 1793253600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793250000
+      }
+    },
+    {
+      "at": 1793257200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793253600
+      }
+    },
+    {
+      "at": 1793260800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793257200
+      }
+    },
+    {
+      "at": 1793264400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793260800
+      }
+    },
+    {
+      "at": 1793268000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793264400
+      }
+    },
+    {
+      "at": 1793271600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793268000
+      }
+    },
+    {
+      "at": 1793275200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793271600
+      }
+    },
+    {
+      "at": 1793278800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793275200
+      }
+    },
+    {
+      "at": 1793282400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793278800
+      }
+    },
+    {
+      "at": 1793286000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793282400
+      }
+    },
+    {
+      "at": 1793289600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793286000
+      }
+    },
+    {
+      "at": 1793293200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793289600
+      }
+    },
+    {
+      "at": 1793296800,
+      "value": null
+    },
+    {
+      "at": 1793300400,
+      "value": null
+    },
+    {
+      "at": 1793304000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793304000
+      }
+    },
+    {
+      "at": 1793307600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793304000
+      }
+    },
+    {
+      "at": 1793311200,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793307600
+      }
+    },
+    {
+      "at": 1793314800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793311200
+      }
+    },
+    {
+      "at": 1793318400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793314800
+      }
+    },
+    {
+      "at": 1793322000,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793318400
+      }
+    },
+    {
+      "at": 1793325600,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793322000
+      }
+    },
+    {
+      "at": 1793329200,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793325600
+      }
+    },
+    {
+      "at": 1793332800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793329200
+      }
+    },
+    {
+      "at": 1793336400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793332800
+      }
+    },
+    {
+      "at": 1793340000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793336400
+      }
+    },
+    {
+      "at": 1793343600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793340000
+      }
+    },
+    {
+      "at": 1793347200,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793343600
+      }
+    },
+    {
+      "at": 1793350800,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793347200
+      }
+    },
+    {
+      "at": 1793354400,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793350800
+      }
+    },
+    {
+      "at": 1793358000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793354400
+      }
+    },
+    {
+      "at": 1793361600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793358000
+      }
+    },
+    {
+      "at": 1793365200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793361600
+      }
+    },
+    {
+      "at": 1793368800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793365200
+      }
+    },
+    {
+      "at": 1793372400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793368800
+      }
+    },
+    {
+      "at": 1793376000,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793372400
+      }
+    },
+    {
+      "at": 1793379600,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793376000
+      }
+    },
+    {
+      "at": 1793383200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793379600
+      }
+    },
+    {
+      "at": 1793386800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793383200
+      }
+    },
+    {
+      "at": 1793390400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793386800
+      }
+    },
+    {
+      "at": 1793394000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793390400
+      }
+    },
+    {
+      "at": 1793397600,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793394000
+      }
+    },
+    {
+      "at": 1793401200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793397600
+      }
+    },
+    {
+      "at": 1793404800,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793401200
+      }
+    },
+    {
+      "at": 1793408400,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793404800
+      }
+    },
+    {
+      "at": 1793412000,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793408400
+      }
+    },
+    {
+      "at": 1793415600,
+      "value": 20.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793412000
+      }
+    },
+    {
+      "at": 1793419200,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793415600
+      }
+    },
+    {
+      "at": 1793422800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793419200
+      }
+    },
+    {
+      "at": 1793426400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793422800
+      }
+    },
+    {
+      "at": 1793430000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793426400
+      }
+    },
+    {
+      "at": 1793433600,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793430000
+      }
+    },
+    {
+      "at": 1793437200,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793433600
+      }
+    },
+    {
+      "at": 1793440800,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793437200
+      }
+    },
+    {
+      "at": 1793444400,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793440800
+      }
+    },
+    {
+      "at": 1793448000,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793444400
+      }
+    },
+    {
+      "at": 1793451600,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793448000
+      }
+    },
+    {
+      "at": 1793455200,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793451600
+      }
+    },
+    {
+      "at": 1793458800,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793455200
+      }
+    },
+    {
+      "at": 1793462400,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793458800
+      }
+    },
+    {
+      "at": 1793466000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793462400
+      }
+    },
+    {
+      "at": 1793469600,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793466000
+      }
+    },
+    {
+      "at": 1793473200,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793469600
+      }
+    },
+    {
+      "at": 1793476800,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793473200
+      }
+    },
+    {
+      "at": 1793480400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793476800
+      }
+    },
+    {
+      "at": 1793484000,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793480400
+      }
+    },
+    {
+      "at": 1793487600,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793484000
+      }
+    },
+    {
+      "at": 1793491200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793487600
+      }
+    },
+    {
+      "at": 1793494800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793491200
+      }
+    },
+    {
+      "at": 1793498400,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793494800
+      }
+    },
+    {
+      "at": 1793502000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793498400
+      }
+    },
+    {
+      "at": 1793505600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793502000
+      }
+    },
+    {
+      "at": 1793509200,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793505600
+      }
+    },
+    {
+      "at": 1793512800,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793509200
+      }
+    },
+    {
+      "at": 1793516400,
+      "value": 21.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793512800
+      }
+    },
+    {
+      "at": 1793520000,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793516400
+      }
+    },
+    {
+      "at": 1793523600,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793520000
+      }
+    },
+    {
+      "at": 1793527200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793523600
+      }
+    },
+    {
+      "at": 1793530800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793527200
+      }
+    },
+    {
+      "at": 1793534400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793530800
+      }
+    },
+    {
+      "at": 1793538000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793534400
+      }
+    },
+    {
+      "at": 1793541600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793538000
+      }
+    },
+    {
+      "at": 1793545200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793541600
+      }
+    },
+    {
+      "at": 1793548800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793545200
+      }
+    },
+    {
+      "at": 1793552400,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793548800
+      }
+    },
+    {
+      "at": 1793556000,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793552400
+      }
+    },
+    {
+      "at": 1793559600,
+      "value": 20.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793556000
+      }
+    },
+    {
+      "at": 1793563200,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793559600
+      }
+    },
+    {
+      "at": 1793566800,
+      "value": 20.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793563200
+      }
+    },
+    {
+      "at": 1793570400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793566800
+      }
+    },
+    {
+      "at": 1793574000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793570400
+      }
+    },
+    {
+      "at": 1793577600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793574000
+      }
+    },
+    {
+      "at": 1793581200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793577600
+      }
+    },
+    {
+      "at": 1793584800,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793581200
+      }
+    },
+    {
+      "at": 1793588400,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793584800
+      }
+    },
+    {
+      "at": 1793592000,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793588400
+      }
+    },
+    {
+      "at": 1793595600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793592000
+      }
+    },
+    {
+      "at": 1793599200,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793595600
+      }
+    },
+    {
+      "at": 1793602800,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793599200
+      }
+    },
+    {
+      "at": 1793606400,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793602800
+      }
+    },
+    {
+      "at": 1793610000,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793606400
+      }
+    },
+    {
+      "at": 1793613600,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793610000
+      }
+    },
+    {
+      "at": 1793617200,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793613600
+      }
+    },
+    {
+      "at": 1793620800,
+      "value": 21.3,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793617200
+      }
+    },
+    {
+      "at": 1793624400,
+      "value": 21.4,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793620800
+      }
+    },
+    {
+      "at": 1793628000,
+      "value": 21.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793624400
+      }
+    },
+    {
+      "at": 1793631600,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793628000
+      }
+    },
+    {
+      "at": 1793635200,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793631600
+      }
+    },
+    {
+      "at": 1793638800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793635200
+      }
+    },
+    {
+      "at": 1793642400,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793638800
+      }
+    },
+    {
+      "at": 1793646000,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793642400
+      }
+    },
+    {
+      "at": 1793649600,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793646000
+      }
+    },
+    {
+      "at": 1793653200,
+      "value": 22,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793649600
+      }
+    },
+    {
+      "at": 1793656800,
+      "value": 21.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793653200
+      }
+    },
+    {
+      "at": 1793660400,
+      "value": 21.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793656800
+      }
+    },
+    {
+      "at": 1793664000,
+      "value": 21.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793660400
+      }
+    },
+    {
+      "at": 1793667600,
+      "value": null
+    },
+    {
+      "at": 1793671200,
+      "value": null
+    },
+    {
+      "at": 1793674800,
+      "value": 21.2,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793674800
+      }
+    },
+    {
+      "at": 1793678400,
+      "value": 21.1,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793674800
+      }
+    },
+    {
+      "at": 1793682000,
+      "value": 21,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793678400
+      }
+    },
+    {
+      "at": 1793685600,
+      "value": 20.9,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793682000
+      }
+    },
+    {
+      "at": 1793689200,
+      "value": 20.8,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793685600
+      }
+    },
+    {
+      "at": 1793692800,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793689200
+      }
+    },
+    {
+      "at": 1793696400,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793692800
+      }
+    },
+    {
+      "at": 1793700000,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793696400
+      }
+    },
+    {
+      "at": 1793703600,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793700000
+      }
+    },
+    {
+      "at": 1793707200,
+      "value": 20.7,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793703600
+      }
+    },
+    {
+      "at": 1793710800,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793707200
+      }
+    },
+    {
+      "at": 1793714400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793710800
+      }
+    },
+    {
+      "at": 1793718000,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793714400
+      }
+    },
+    {
+      "at": 1793721600,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793718000
+      }
+    },
+    {
+      "at": 1793725200,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793721600
+      }
+    },
+    {
+      "at": 1793728800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793725200
+      }
+    },
+    {
+      "at": 1793732400,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793728800
+      }
+    },
+    {
+      "at": 1793736000,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793732400
+      }
+    },
+    {
+      "at": 1793739600,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793736000
+      }
+    },
+    {
+      "at": 1793743200,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793739600
+      }
+    },
+    {
+      "at": 1793746800,
+      "value": 20.5,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793743200
+      }
+    },
+    {
+      "at": 1793750400,
+      "value": 20.6,
+      "coverage": {
+        "source": "synthetic.hourly.v1",
+        "from": 1793746800
+      }
+    }
+  ],
+  "original": {
+    "id": "synthetic.original.2026-11-03",
+    "reference": 1793682000,
+    "issued": 1793637000,
+    "received": 1793638000,
+    "coverage": {
+      "start": 1793682000,
+      "end": 1793768400
+    },
+    "frozen": true,
+    "model": 3,
+    "plan": "synthetic.plan.frozen",
+    "source": "synthetic.original.source",
+    "points": [
+      {
+        "at": 1793682000,
+        "value": 21.2
+      },
+      {
+        "at": 1793685600,
+        "value": 21.279468
+      },
+      {
+        "at": 1793689200,
+        "value": 21.355767
+      },
+      {
+        "at": 1793692800,
+        "value": 21.425857
+      },
+      {
+        "at": 1793696400,
+        "value": 21.486942
+      },
+      {
+        "at": 1793700000,
+        "value": 21.536588
+      },
+      {
+        "at": 1793703600,
+        "value": 21.572816
+      },
+      {
+        "at": 1793707200,
+        "value": 21.59418
+      },
+      {
+        "at": 1793710800,
+        "value": 21.599829
+      },
+      {
+        "at": 1793714400,
+        "value": 21.589539
+      },
+      {
+        "at": 1793718000,
+        "value": 21.563719
+      },
+      {
+        "at": 1793721600,
+        "value": 21.523399
+      },
+      {
+        "at": 1793725200,
+        "value": 21.470185
+      },
+      {
+        "at": 1793728800,
+        "value": 21.406201
+      },
+      {
+        "at": 1793732400,
+        "value": 21.333995
+      },
+      {
+        "at": 1793736000,
+        "value": 21.256448
+      },
+      {
+        "at": 1793739600,
+        "value": 21.17665
+      },
+      {
+        "at": 1793743200,
+        "value": 21.097784
+      },
+      {
+        "at": 1793746800,
+        "value": 21.022992
+      },
+      {
+        "at": 1793750400,
+        "value": 20.955257
+      },
+      {
+        "at": 1793754000,
+        "value": 20.897279
+      },
+      {
+        "at": 1793757600,
+        "value": 20.85137
+      },
+      {
+        "at": 1793761200,
+        "value": 20.819359
+      },
+      {
+        "at": 1793764800,
+        "value": 20.802524
+      },
+      {
+        "at": 1793768400,
+        "value": 20.801534
+      }
+    ],
+    "energy": 18.5,
+    "scope": {
+      "start": 1793682000,
+      "end": 1793768400
+    }
+  },
+  "latest": [
+    {
+      "at": 1793750400,
+      "value": 21.9
+    },
+    {
+      "at": 1793754000,
+      "value": 22
+    },
+    {
+      "at": 1793757600,
+      "value": 22
+    },
+    {
+      "at": 1793761200,
+      "value": 22
+    },
+    {
+      "at": 1793764800,
+      "value": 22
+    },
+    {
+      "at": 1793768400,
+      "value": 21.9
+    },
+    {
+      "at": 1793772000,
+      "value": 21.9
+    },
+    {
+      "at": 1793775600,
+      "value": 21.8
+    },
+    {
+      "at": 1793779200,
+      "value": 21.7
+    },
+    {
+      "at": 1793782800,
+      "value": 21.6
+    },
+    {
+      "at": 1793786400,
+      "value": 21.5
+    },
+    {
+      "at": 1793790000,
+      "value": 21.4
+    },
+    {
+      "at": 1793793600,
+      "value": 21.2
+    },
+    {
+      "at": 1793797200,
+      "value": 21.1
+    },
+    {
+      "at": 1793800800,
+      "value": 21
+    },
+    {
+      "at": 1793804400,
+      "value": 20.9
+    },
+    {
+      "at": 1793808000,
+      "value": 20.9
+    },
+    {
+      "at": 1793811600,
+      "value": 20.8
+    },
+    {
+      "at": 1793815200,
+      "value": 20.8
+    },
+    {
+      "at": 1793818800,
+      "value": 20.8
+    },
+    {
+      "at": 1793822400,
+      "value": 20.8
+    },
+    {
+      "at": 1793826000,
+      "value": 20.9
+    },
+    {
+      "at": 1793829600,
+      "value": 20.9
+    },
+    {
+      "at": 1793833200,
+      "value": 21
+    },
+    {
+      "at": 1793836800,
+      "value": 21.1
+    }
+  ],
+  "intervals": [
+    {
+      "start": 1793577600,
+      "end": 1793581200,
+      "kwh": null,
+      "category": "unknown",
+      "price": null
+    },
+    {
+      "start": 1793581200,
+      "end": 1793584800,
+      "kwh": 0.4173176787846317,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793584800,
+      "end": 1793588400,
+      "kwh": 0.4227437941460545,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793588400,
+      "end": 1793592000,
+      "kwh": 0.3612896006447894,
+      "category": "confirmed",
+      "price": 2.16
+    },
+    {
+      "start": 1793592000,
+      "end": 1793595600,
+      "kwh": 0.2894558003753657,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793595600,
+      "end": 1793599200,
+      "kwh": 0.2732860580269489,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793599200,
+      "end": 1793602800,
+      "kwh": 0.3276467601440859,
+      "category": "confirmed",
+      "price": 2.16
+    },
+    {
+      "start": 1793602800,
+      "end": 1793606400,
+      "kwh": 0,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793606400,
+      "end": 1793610000,
+      "kwh": 0.42914865972987054,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793610000,
+      "end": 1793613600,
+      "kwh": 0.3829694788193405,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793613600,
+      "end": 1793617200,
+      "kwh": 0.3064783111288504,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793617200,
+      "end": 1793620800,
+      "kwh": 0.2700007834759437,
+      "category": "estimated",
+      "price": 4.32
+    },
+    {
+      "start": 1793620800,
+      "end": 1793624400,
+      "kwh": 0.30707416655996517,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793624400,
+      "end": 1793628000,
+      "kwh": null,
+      "category": "unknown",
+      "price": 4.32
+    },
+    {
+      "start": 1793628000,
+      "end": 1793631600,
+      "kwh": 0,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793631600,
+      "end": 1793635200,
+      "kwh": 0.40202302721256933,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793635200,
+      "end": 1793638800,
+      "kwh": 0.32696773466679474,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793638800,
+      "end": 1793642400,
+      "kwh": 0.27308820064963546,
+      "category": "recovered",
+      "price": 4.32
+    },
+    {
+      "start": 1793642400,
+      "end": 1793646000,
+      "kwh": 0.2899210202582659,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793646000,
+      "end": 1793649600,
+      "kwh": 0.3619901767730362,
+      "category": "derived",
+      "price": null
+    },
+    {
+      "start": 1793649600,
+      "end": 1793653200,
+      "kwh": 0.42303562005821016,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793653200,
+      "end": 1793656800,
+      "kwh": 0,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793656800,
+      "end": 1793660400,
+      "kwh": 0.3492918952567677,
+      "category": "estimated",
+      "price": 4.32
+    },
+    {
+      "start": 1793660400,
+      "end": 1793664000,
+      "kwh": 0.2823023676659863,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793664000,
+      "end": 1793667600,
+      "kwh": 0.27755373103947006,
+      "category": "confirmed",
+      "price": 2.16
+    },
+    {
+      "start": 1793667600,
+      "end": 1793671200,
+      "kwh": 0.33941185999217816,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793671200,
+      "end": 1793674800,
+      "kwh": null,
+      "category": "unknown",
+      "price": 2.16
+    },
+    {
+      "start": 1793674800,
+      "end": 1793678400,
+      "kwh": 0.4265100742723602,
+      "category": "confirmed",
+      "price": 2.16
+    },
+    {
+      "start": 1793678400,
+      "end": 1793682000,
+      "kwh": 0,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793682000,
+      "end": 1793685600,
+      "kwh": 0.29690928926296256,
+      "category": "derived",
+      "price": 2.16
+    },
+    {
+      "start": 1793685600,
+      "end": 1793689200,
+      "kwh": 0.27095747007257104,
+      "category": "confirmed",
+      "price": 2.16
+    },
+    {
+      "start": 1793689200,
+      "end": 1793692800,
+      "kwh": 0.31767698837415476,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793692800,
+      "end": 1793696400,
+      "kwh": 0.39411413449933524,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793696400,
+      "end": 1793700000,
+      "kwh": 0.42999294880858135,
+      "category": "estimated",
+      "price": 4.32
+    },
+    {
+      "start": 1793700000,
+      "end": 1793703600,
+      "kwh": 0.3923266148896019,
+      "category": "recovered",
+      "price": 4.32
+    },
+    {
+      "start": 1793703600,
+      "end": 1793707200,
+      "kwh": 0,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793707200,
+      "end": 1793710800,
+      "kwh": 0.27065769172455073,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793710800,
+      "end": 1793714400,
+      "kwh": 0.29851694933144,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793714400,
+      "end": 1793718000,
+      "kwh": 0.3737094862967508,
+      "category": "derived",
+      "price": null
+    },
+    {
+      "start": 1793718000,
+      "end": 1793721600,
+      "kwh": null,
+      "category": "unknown",
+      "price": 4.32
+    },
+    {
+      "start": 1793721600,
+      "end": 1793725200,
+      "kwh": 0.40960905283834786,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793725200,
+      "end": 1793728800,
+      "kwh": 0.3373101864956233,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793728800,
+      "end": 1793732400,
+      "kwh": 0,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793732400,
+      "end": 1793736000,
+      "kwh": 0.28345802058971215,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793736000,
+      "end": 1793739600,
+      "kwh": 0.35141615400843307,
+      "category": "estimated",
+      "price": 4.32
+    },
+    {
+      "start": 1793739600,
+      "end": 1793743200,
+      "kwh": 0.41807228196272944,
+      "category": "confirmed",
+      "price": 4.32
+    },
+    {
+      "start": 1793743200,
+      "end": 1793746800,
+      "kwh": 0.4221430678119047,
+      "category": "derived",
+      "price": 4.32
+    },
+    {
+      "start": 1793746800,
+      "end": 1793750400,
+      "kwh": 0.3598858498196179,
+      "category": "derived",
+      "price": 4.32
+    }
+  ],
+  "cycleEnergy": {
+    "actualUntil": 1793750400,
+    "reference": 18.5,
+    "known": 8.2,
+    "estimated": 0.7,
+    "unknownS": 1080,
+    "projected": 20.6,
+    "scope": {
+      "start": 1793746800,
+      "end": 1793768400
+    }
+  },
+  "timeline": [
+    {
+      "start": 1793736000,
+      "end": 1793737800,
+      "kind": "heat"
+    },
+    {
+      "start": 1793761200,
+      "end": 1793763600,
+      "kind": "heat"
+    },
+    {
+      "start": 1793779200,
+      "end": 1793786400,
+      "kind": "outage"
+    },
+    {
+      "start": 1793808000,
+      "end": 1793811600,
+      "kind": "heat"
+    }
+  ],
+  "metrics": [
+    {
+      "hours": 1,
+      "days": 8,
+      "samples": 64,
+      "mae": 0.18,
+      "p90": 0.35,
+      "qualified": true
+    },
+    {
+      "hours": 3,
+      "days": 8,
+      "samples": 64,
+      "mae": 0.21,
+      "p90": 0.35,
+      "qualified": true
+    },
+    {
+      "hours": 6,
+      "days": 8,
+      "samples": 64,
+      "mae": 0.24,
+      "p90": 0.35,
+      "qualified": true
+    },
+    {
+      "hours": 12,
+      "days": 3,
+      "samples": 12,
+      "mae": 0.4,
+      "p90": null,
+      "qualified": false
+    },
+    {
+      "hours": 24,
+      "days": 3,
+      "samples": 12,
+      "mae": 0.4,
+      "p90": null,
+      "qualified": false
+    },
+    {
+      "hours": 36,
+      "days": 0,
+      "samples": 0,
+      "mae": null,
+      "p90": null,
+      "qualified": false
+    },
+    {
+      "hours": 48,
+      "days": 0,
+      "samples": 0,
+      "mae": null,
+      "p90": null,
+      "qualified": false
+    }
+  ]
+}

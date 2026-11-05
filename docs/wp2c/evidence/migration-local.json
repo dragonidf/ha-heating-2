@@ -1,0 +1,16 @@
+{
+  "qualification": "PASS_ISOLATED",
+  "checks": [
+    "actual_config_entry_v1_minor0_migration_disables_simulation",
+    "actual_config_entry_migration_persisted_native_schema",
+    "actual_new_synthetic_recorder_schema_created",
+    "actual_recorder_persists_fake_zero_state",
+    "critical_and_evidence_stores_separate_from_synthetic_recorder",
+    "short_50_request_native_status_consistency_soak"
+  ],
+  "count": 6,
+  "status_50_requests_ms": {
+    "max": 5.398,
+    "mean": 0.642
+  }
+}

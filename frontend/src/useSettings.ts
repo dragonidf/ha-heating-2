@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Persisted, Settings } from "./types";
-import type { DemoAPI } from "./mock";
+import type { OperatorAPI } from "./operator";
 import { defaults } from "./fixtures";
 import {
   equal,
@@ -8,7 +8,7 @@ import {
   replaceField,
   type FieldDifference,
 } from "./settingsMerge";
-export function useSettings(api: DemoAPI) {
+export function useSettings(api: OperatorAPI) {
   const [saved, setSaved] = useState<Persisted | null>(null),
     [draft, setDraft] = useState<Settings>({ ...defaults });
   const [pending, setPending] = useState(false),
@@ -126,7 +126,7 @@ export function useSettings(api: DemoAPI) {
           r.persisted_revision !== r.revision ||
           state.revision !== r.revision ||
           r.revision !== saved.revision + 1 ||
-          JSON.stringify(state.values) !== JSON.stringify(values) ||
+          !equal(state.values, values) ||
           !api.canChange() ||
           generation !== api.feed.value.generation
         ) {

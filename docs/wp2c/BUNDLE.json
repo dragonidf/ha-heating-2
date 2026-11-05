@@ -1,0 +1,30 @@
+{
+  "scope": "synthetic build only; no target-host claim",
+  "node": "v24.19.0",
+  "files": [
+    {
+      "name": "App-C7LwA3BZ.js",
+      "bytes": 305603,
+      "gzip_bytes": 93351,
+      "sha256": "eab989107523ee42eec4208c67892a64c7ebfb41bbf98135c5a1e4843e4e8bc6"
+    },
+    {
+      "name": "main-BmGZsNj5.css",
+      "bytes": 19138,
+      "gzip_bytes": 4713,
+      "sha256": "81d94e7ddbb0edacd97840e3a71f62b76c4622f8c5b222c4cc557ffb86473bf2"
+    },
+    {
+      "name": "main.js",
+      "bytes": 1162,
+      "gzip_bytes": 720,
+      "sha256": "78ea4e62ace4d1490eba30fb9bbdd860c4dd506062419f3b17f461bfdfcd7d40"
+    },
+    {
+      "name": "panel.js",
+      "bytes": 34937,
+      "gzip_bytes": 10366,
+      "sha256": "7644b0cd26dbd4e9250420cb0e7110bf5b66c33e9982ce6e00f15d5c24509291"
+    }
+  ]
+}

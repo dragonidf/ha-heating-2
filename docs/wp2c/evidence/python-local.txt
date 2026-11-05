@@ -1,0 +1,7 @@
+Synthetic isolated development hosts; no production/target qualification.
+Previous host: Python3.12.14 and3.13.5 —426 testsPASS, strictmypyPASS, branchcoverage98%.
+Resumed host2026-11-05: Python3.12.14 linkedSQLite3.53.1 —427 testsPASS, strictmypyPASS, branchcoverage98%, unchanged95%floor.
+427 pure cases include351accepted +38nativebackend +34futuremeter +4SDKstaticboundary.
+Explicit after-build tools:3packagebuilder +2realPlaywright/output-export regressions PASS.
+Standalone Chromium/WebKit mobile+desktop:80/80PASS with originalgoldensunchanged on precedingCIheads.
+Final3.12/3.13/3.14 andfullheadCI counts are authoritative in PR checks/artifacts.
