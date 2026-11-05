@@ -82,7 +82,8 @@ async function setSimulation(page: Page, enabled: boolean) {
   // An explicit off/on fixture setup guarantees a new boot with no cached source assertion.
   if (enabled) await select(false);
   await select(enabled);
-  await page.reload();
+  // HA routes away while a native panel is unregistered during entry reload.
+  await page.goto(panelPath);
   await expect(
     page.getByRole("heading", { name: "Дім", exact: true }),
   ).toBeAttached();
@@ -231,9 +232,7 @@ test("native theme, keyboard, responsive and accessible UI in HA shadow root", a
   await expect(panel.locator("main")).toBeFocused();
   await page.getByRole("button", { name: "Налаштування", exact: true }).click();
   await page.getByText("Модель і діагностика", { exact: true }).click();
-  await expect(
-    page.getByText("G1/B01–B08 BLOCKED.", { exact: false }),
-  ).toBeVisible();
+  await expect(panel.getByText(/^G1\/B01–B08 BLOCKED\./)).toBeVisible();
   const results = await new AxeBuilder({ page })
     .include(context)
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
