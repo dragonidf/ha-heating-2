@@ -226,6 +226,18 @@ config.write_text(text)
 def browser(state_path: Path, project: str, image: str, output: Path) -> None:
     state = load(state_path)
     name = state["name"] + "-browser-" + project
+    # Both ends stay in this new namespace; no gateway, prefix route or host peer.
+    proof(state_path)
+    details = json.loads(docker("inspect", state["name"]))[0]
+    assert details["Config"]["Labels"].get(LABEL) == state["name"]
+    link = docker("run", "--rm", "--name", state["name"] + "-local-link",
+                  "--label", f"{LABEL}={state['name']}",
+                  "--network", "container:" + state["name"],
+                  "--cap-drop", "ALL", "--cap-add", "NET_ADMIN",
+                  "--security-opt", "no-new-privileges", "--read-only",
+                  "--entrypoint", "python", BASE_IMAGE, "-c", (HERE / "namespace_link.py").read_text())
+    print(link, end="")
+    proof(state_path)
     # Mountpoints must exist before /work becomes read-only (fresh CI checkout).
     for directory in ("test-results", "playwright-report-native"):
         (ROOT / "frontend" / directory).mkdir(exist_ok=True)
@@ -239,6 +251,7 @@ def browser(state_path: Path, project: str, image: str, output: Path) -> None:
            "--tmpfs", "/work/test-results:rw,mode=1777", "--tmpfs", "/work/playwright-report-native:rw,mode=1777",
            "--workdir", "/work", "-e", "CI=1", "-e", "TEST_HA_BASE_URL=http://127.0.0.1:8123",
            "-e", "GIO_USE_PROXY_RESOLVER=dummy",
+           "-e", "GIO_USE_NETWORK_MONITOR=base",
            "-e", "NO_PROXY=127.0.0.1,localhost", "-e", "no_proxy=127.0.0.1,localhost",
            *[arg for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy") for arg in ("-e", key + "=")],
            "--entrypoint", "node", image, "-e", "setInterval(()=>{},1000)")

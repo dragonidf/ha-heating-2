@@ -157,6 +157,11 @@ async def isolation() -> dict:
         await ws.connection.close()
     route_lines = Path("/proc/net/route").read_text().splitlines()
     assert len(route_lines) == 1, "network-none namespace must have no IPv4 routes"
+    interfaces = dict((name, index) for index, name in socket.if_nameindex())
+    assert set(interfaces) in ({"lo"}, {"lo", "wp2c-local", "wp2c-peer"})
+    if "wp2c-local" in interfaces:
+        for own, peer in (("wp2c-local", "wp2c-peer"), ("wp2c-peer", "wp2c-local")):
+            assert int(Path("/sys/class/net", own, "iflink").read_text()) == interfaces[peer]
     probes = []
     for host, port in (("192.0.2.1", 8123), ("198.51.100.1", 1883), ("203.0.113.1", 502), ("127.0.0.1", 9)):
         with socket.socket() as probe:
@@ -170,7 +175,7 @@ async def isolation() -> dict:
         if fields[3] == "0A":
             listeners.append(fields[1])
     assert listeners == ["0100007F:1FBB"], f"Unexpected listener: {listeners}"
-    return {"ha_version": version("homeassistant"), "frontend_version": version("home-assistant-frontend"), "python_version": sys.version.split()[0], "sqlite_version": sqlite3.sqlite_version, "sqlite_source_id": sqlite_source_id, "sqlite_library_sha256": sha256(Path("/opt/wp2c/lib/libsqlite3.so.0").read_bytes()).hexdigest(), "components": components, "ipv4_routes": [], "tcp_listeners": listeners, "negative_transport_probes": probes, "count": 8}
+    return {"ha_version": version("homeassistant"), "frontend_version": version("home-assistant-frontend"), "python_version": sys.version.split()[0], "sqlite_version": sqlite3.sqlite_version, "sqlite_source_id": sqlite_source_id, "sqlite_library_sha256": sha256(Path("/opt/wp2c/lib/libsqlite3.so.0").read_bytes()).hexdigest(), "components": components, "interfaces": interfaces, "ipv4_routes": [], "tcp_listeners": listeners, "negative_transport_probes": probes, "count": 8}
 
 
 async def integration(restart: bool = False) -> dict:
