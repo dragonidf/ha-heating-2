@@ -1,0 +1,28 @@
+{
+  "qualification": "PASS_ISOLATED",
+  "scope": "local disposable namespace setup probe, no Home Assistant/browser claim",
+  "base_image": "python:3.14.2-slim-bookworm@sha256:e87711ef5c86aaeaa7031718a69db79d334d94c545c709583f651b8185870941",
+  "script": "tools/wp2c/namespace_link.py",
+  "checks": [
+    "create veth pair in new network-none namespace",
+    "repeat execution without replacement",
+    "both peer indices resolve in same namespace",
+    "no main IPv4 routes",
+    "reserved external transport denied"
+  ],
+  "address": "192.0.2.254/32, RFC5737, NOPREFIXROUTE",
+  "interfaces": [
+    "lo",
+    "wp2c-peer",
+    "wp2c-local"
+  ],
+  "helper_capabilities": [
+    "NET_ADMIN"
+  ],
+  "runtime_capabilities": [],
+  "probe_resources_removed": true,
+  "owned_test_containers_after": [],
+  "owned_test_volumes_after": [],
+  "production": "NOT_ACCESSED",
+  "g1": "B01-B08 BLOCKED"
+}

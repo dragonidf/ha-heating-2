@@ -3,28 +3,28 @@
   "node": "v24.19.0",
   "files": [
     {
-      "name": "App-CAjsDEpl.js",
-      "bytes": 305501,
-      "gzip_bytes": 93337,
-      "sha256": "aa791bf96042cd8275e343d9f3de995a716b377a0c6c1d0b3dbd583a8736477a"
+      "name": "App-C7LwA3BZ.js",
+      "bytes": 305603,
+      "gzip_bytes": 93351,
+      "sha256": "eab989107523ee42eec4208c67892a64c7ebfb41bbf98135c5a1e4843e4e8bc6"
     },
     {
-      "name": "main-zXt-b1Hu.css",
-      "bytes": 19110,
-      "gzip_bytes": 4709,
-      "sha256": "f46c423d4c1c31ceb0b13235564d5bf8c63f95cb54fd1541a37062a140a39f74"
+      "name": "main-BmGZsNj5.css",
+      "bytes": 19138,
+      "gzip_bytes": 4713,
+      "sha256": "81d94e7ddbb0edacd97840e3a71f62b76c4622f8c5b222c4cc557ffb86473bf2"
     },
     {
       "name": "main.js",
       "bytes": 1162,
-      "gzip_bytes": 716,
-      "sha256": "9298a6b823ee89241a527f670a37c769aee54330de9fa095a500750008e9a4d3"
+      "gzip_bytes": 720,
+      "sha256": "78ea4e62ace4d1490eba30fb9bbdd860c4dd506062419f3b17f461bfdfcd7d40"
     },
     {
       "name": "panel.js",
-      "bytes": 34909,
-      "gzip_bytes": 10363,
-      "sha256": "a8c61f46fff34c63056418d9642cd24eadab1c737cb7dc7feb7517171c22ec43"
+      "bytes": 34937,
+      "gzip_bytes": 10366,
+      "sha256": "7644b0cd26dbd4e9250420cb0e7110bf5b66c33e9982ce6e00f15d5c24509291"
     }
   ]
 }

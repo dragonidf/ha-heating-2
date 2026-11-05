@@ -34,7 +34,12 @@ export function Diagnostics({
         </div>
         <Badge tone="warning">Фізична точність не доведена</Badge>
       </div>
-      <div className="table-scroll">
+      <div
+        className="table-scroll"
+        role="region"
+        aria-label="Синтетичні метрики за горизонтом"
+        tabIndex={0}
+      >
         <table>
           <caption>Синтетичні метрики за горизонтом</caption>
           <thead>

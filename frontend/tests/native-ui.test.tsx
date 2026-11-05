@@ -213,3 +213,15 @@ it("settings hook accepts verified native readback with a different JSON key ord
     expect(ui.getByText("Verified synthetic readback")).toBeTruthy(),
   );
 });
+it("native diagnostics metrics remain keyboard focusable when all model actions are disabled", async () => {
+  const ui = render(<App api={readonlyNative()} />);
+  fireEvent.click(ui.getByRole("button", { name: /^Налаштування$/ }));
+  fireEvent.click(ui.getByText("Модель і діагностика", { exact: true }));
+  const region = ui.getByRole("region", {
+    name: "Синтетичні метрики за горизонтом",
+  });
+  expect(region.tabIndex).toBe(0);
+  region.focus();
+  expect(document.activeElement).toBe(region);
+  expect(within(region).getByRole("table")).toBeTruthy();
+});

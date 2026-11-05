@@ -241,6 +241,17 @@ test("native theme, keyboard, responsive and accessible UI in HA shadow root", a
     .getByText("Докази відновлення енергії та безпека", { exact: true })
     .click();
   await expect(panel.getByText(/^G1\/B01–B08 BLOCKED\./)).toBeVisible();
+  const metrics = panel.getByRole("region", {
+    name: "Синтетичні метрики за горизонтом",
+  });
+  await metrics.focus();
+  await expect(metrics).toBeFocused();
+  if (await metrics.evaluate((el) => el.scrollWidth > el.clientWidth)) {
+    await page.keyboard.press("ArrowRight");
+    await expect
+      .poll(() => metrics.evaluate((el) => el.scrollLeft))
+      .toBeGreaterThan(0);
+  }
   const results = await new AxeBuilder({ page })
     .include(context)
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
