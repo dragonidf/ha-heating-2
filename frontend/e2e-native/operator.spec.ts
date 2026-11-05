@@ -106,6 +106,16 @@ async function setSimulation(page: Page, enabled: boolean) {
   }
 }
 test.beforeEach(async ({ page }) => {
+  // The network-none namespace has a reachable loopback HA but no routable NIC.
+  // Explicitly emulate that online test link through the browser protocol;
+  // this changes no container route and leaves the real offline transition test intact.
+  console.info(
+    "Cold namespace navigator.onLine:",
+    await page.evaluate(() => navigator.onLine),
+  );
+  await page.context().setOffline(true);
+  await page.context().setOffline(false);
+  expect(await page.evaluate(() => navigator.onLine)).toBe(true);
   await login(page);
 });
 test("native authenticated registration, disabled simulation and shadow isolation", async ({
