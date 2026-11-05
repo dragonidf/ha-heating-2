@@ -205,12 +205,7 @@ test("native HA disconnect disables writes and ready reconnect refreshes authori
   await expect(target).toBeDisabled();
   await expect(page.getByText("Немає зв’язку · останні дані")).toBeVisible();
   await context.setOffline(false);
-  // HA may already have emitted ready; otherwise an explicit full refresh is available.
-  const reconnect = page.getByRole("button", {
-    name: "Відновити симуляцію",
-    exact: true,
-  });
-  if (await reconnect.isVisible()) await reconnect.click();
+  // Online must obtain a fresh snapshot even when HA's socket never closed.
   await expect(target).toBeEnabled();
   await expect(page.getByText("Фізичний стан котла — невідомий")).toBeVisible();
 });
@@ -232,6 +227,9 @@ test("native theme, keyboard, responsive and accessible UI in HA shadow root", a
   await expect(panel.locator("main")).toBeFocused();
   await page.getByRole("button", { name: "Налаштування", exact: true }).click();
   await page.getByText("Модель і діагностика", { exact: true }).click();
+  await panel
+    .getByText("Докази відновлення енергії та безпека", { exact: true })
+    .click();
   await expect(panel.getByText(/^G1\/B01–B08 BLOCKED\./)).toBeVisible();
   const results = await new AxeBuilder({ page })
     .include(context)

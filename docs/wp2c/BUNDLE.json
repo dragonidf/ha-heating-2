@@ -22,9 +22,9 @@
     },
     {
       "name": "panel.js",
-      "bytes": 34017,
-      "gzip_bytes": 10177,
-      "sha256": "037cda766550753c32f91be979a74e8222612d7007bd424a867eae1a8f1bd906"
+      "bytes": 34909,
+      "gzip_bytes": 10363,
+      "sha256": "a8c61f46fff34c63056418d9642cd24eadab1c737cb7dc7feb7517171c22ec43"
     }
   ]
 }

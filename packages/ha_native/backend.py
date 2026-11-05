@@ -480,6 +480,8 @@ class NativeBackend:
         shot = obj(state['oneShot'])
         if kind == 'resume':
             obj(state['status'])['mode'] = 'RECOVERING'
+            state['notices'] = [notice for notice in cast(list[JSON], state['notices'])
+                                if obj(notice).get('priority') != 'manual']
         elif kind == 'arm' and shot['state'] in ('unknown_outcome', 'consumed'):
             return self._receipt(request, 'denied')
         elif kind == 'consume' and (shot['state'] != 'armed' or state['grid'] is not True

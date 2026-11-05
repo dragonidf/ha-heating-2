@@ -120,6 +120,8 @@ export class NativeAPI implements OperatorAPI {
   private unsubscribe?: () => void;
   private epoch = 0;
   private closed = false;
+  private browserOnline =
+    typeof navigator === "undefined" || navigator.onLine !== false;
   private refreshing?: Promise<void>;
   constructor(
     private hass: Hass,
@@ -129,6 +131,10 @@ export class NativeAPI implements OperatorAPI {
       throw Error("Некоректний entry_id");
     hass.connection.addEventListener?.("disconnected", this.offline);
     hass.connection.addEventListener?.("ready", this.ready);
+    if (typeof window !== "undefined") {
+      window.addEventListener("offline", this.browserOffline);
+      window.addEventListener("online", this.browserReady);
+    }
   }
   private message(operation: string, values: Record<string, unknown> = {}) {
     return {
@@ -139,16 +145,32 @@ export class NativeAPI implements OperatorAPI {
     };
   }
   private async read(operation: string, values: Record<string, unknown> = {}) {
-    return withDeadline(
+    if (!this.browserOnline || this.closed)
+      throw Error("Немає зв’язку. Лише читання.");
+    const epoch = this.epoch;
+    const result = await withDeadline(
       this.hass.callWS<unknown>(this.message(operation, values)),
     );
+    if (epoch !== this.epoch || !this.browserOnline || this.closed)
+      throw Error("Сесію змінено. Перечитайте стан.");
+    return result;
   }
+  private browserOffline = () => {
+    this.browserOnline = false;
+    this.offline();
+  };
+  private browserReady = () => {
+    this.browserOnline = true;
+    this.ready();
+  };
   private offline = () => {
     this.epoch++;
+    release(this.unsubscribe);
+    this.unsubscribe = undefined;
     this.feed.reset({ ...this.feed.value, connected: false, permitted: false });
   };
   private ready = () => {
-    if (this.closed) return;
+    if (this.closed || !this.browserOnline) return;
     if (this.refreshing) {
       void this.refreshing.then(
         () => {
@@ -169,6 +191,8 @@ export class NativeAPI implements OperatorAPI {
   }
   reconnect(): Promise<void> {
     if (this.closed) return Promise.reject(Error("Панель закрита"));
+    if (!this.browserOnline)
+      return Promise.reject(Error("Немає зв’язку. Лише читання."));
     if (this.refreshing) return this.refreshing;
     this.refreshing = this.bootstrap().finally(() => {
       this.refreshing = undefined;
@@ -269,11 +293,16 @@ export class NativeAPI implements OperatorAPI {
     release(this.unsubscribe);
     this.hass.connection.removeEventListener?.("disconnected", this.offline);
     this.hass.connection.removeEventListener?.("ready", this.ready);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("offline", this.browserOffline);
+      window.removeEventListener("online", this.browserReady);
+    }
   }
   canChange() {
     const s = this.feed.value;
     return (
       !this.closed &&
+      this.browserOnline &&
       this.enabled !== false &&
       s.connected &&
       s.permitted &&
@@ -285,6 +314,7 @@ export class NativeAPI implements OperatorAPI {
   canStop() {
     return (
       !this.closed &&
+      this.browserOnline &&
       this.enabled !== false &&
       this.hass.connected !== false &&
       this.hass.user?.is_admin === true &&

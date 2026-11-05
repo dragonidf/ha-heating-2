@@ -41,6 +41,17 @@ def observe(backend):
 
 
 class BackendTests(unittest.TestCase):
+    def test_explicit_resume_does_not_keep_the_current_pause_notice(self):
+        self.backend.dispatch('control', self.request(kind='pause', request_id='notice-pause'), True)
+        paused = self.backend.status(True)
+        self.assertEqual(paused['status']['mode'], 'MANUAL_PAUSE')
+        self.assertTrue(any(n['priority'] == 'manual' for n in paused['notices']))
+        receipt = self.backend.dispatch('control', self.request(kind='resume', request_id='notice-resume'), True)
+        self.assertEqual(receipt['status'], 'accepted_fake')
+        resumed = self.backend.status(True)
+        self.assertEqual(resumed['status']['mode'], 'RECOVERING')
+        self.assertFalse(any(n['priority'] == 'manual' for n in resumed['notices']))
+
     def test_overview_uses_the_agreed_blocked_gate_identifiers(self):
         overview = self.backend.dispatch('overview', {'entry_id': 'synthetic-entry', 'version': [2, 0]}, True)
         self.assertEqual(overview['gates'], [f'B0{i}' for i in range(1, 9)])

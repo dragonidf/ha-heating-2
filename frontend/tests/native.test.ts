@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   NativeAPI,
   type Hass,
@@ -23,6 +23,14 @@ import {
   NOW,
 } from "../src/fixtures";
 import type { Persisted, Snapshot } from "../src/types";
+const clients = new Set<NativeAPI>();
+afterEach(() => {
+  for (const api of clients) api.close();
+  clients.clear();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 function server(enabled = true) {
   let state = snapshot();
   state.status.mode = "SHADOW";
@@ -141,11 +149,13 @@ function server(enabled = true) {
       return structuredClone(result) as T;
     },
   };
+  const api = new NativeAPI(hass, "synthetic-entry");
+  clients.add(api);
   return {
     hass,
     calls,
     events,
-    api: new NativeAPI(hass, "synthetic-entry"),
+    api,
     emit: (s: Snapshot) => listener?.(s),
     get state() {
       return state;
@@ -673,4 +683,173 @@ describe("native missing original forecast", () => {
     ])
       expect(() => readOverview({ ...overview, original: invalid })).toThrow();
   });
+});
+
+describe("native browser network signals with an open HA socket", () => {
+  it("immediately disables ordinary mutations and STOP when the browser goes offline", async () => {
+    const s = server();
+    await s.api.start();
+    expect(s.api.canChange()).toBe(true);
+    expect(s.api.canStop()).toBe(true);
+    window.dispatchEvent(new Event("offline"));
+    expect(s.hass.connected).toBe(true);
+    expect(s.api.feed.value.connected).toBe(false);
+    expect(s.api.feed.value.permitted).toBe(false);
+    expect(s.api.canChange()).toBe(false);
+    expect(s.api.canStop()).toBe(false);
+    await expect(s.api.control("arm", s.api.session)).rejects.toThrow();
+    await expect(s.api.control("pause", s.api.session)).rejects.toThrow();
+    expect(
+      s.calls.filter((call) => call.type === "heating_ai/control"),
+    ).toHaveLength(0);
+  });
+  it("ignores old socket frames, HA ready and manual reconnect while the browser is offline", async () => {
+    const s = server(),
+      subscribe = s.hass.connection.subscribeMessage.bind(s.hass.connection);
+    let stale!: (value: unknown) => void;
+    s.hass.connection.subscribeMessage = async <T>(
+      callback: (value: T) => void,
+      message: Record<string, unknown>,
+    ) => {
+      stale = callback as (value: unknown) => void;
+      return subscribe(callback, message);
+    };
+    await s.api.start();
+    const calls = s.calls.length;
+    window.dispatchEvent(new Event("offline"));
+    stale({
+      ...s.state,
+      seq: s.state.seq + 1,
+      permitted: true,
+      connected: true,
+    });
+    s.api.updateConnection(true);
+    s.events.get("ready")!();
+    await expect(s.api.reconnect()).rejects.toThrow();
+    expect(s.calls).toHaveLength(calls);
+    expect(s.api.feed.value.connected).toBe(false);
+    expect(s.api.feed.value.permitted).toBe(false);
+  });
+  it("requires a fresh authoritative snapshot after online without replacing the API or feed", async () => {
+    const s = server();
+    await s.api.start();
+    const feed = s.api.feed,
+      session = s.api.session,
+      call = s.hass.callWS.bind(s.hass);
+    let snapshot!: (value: unknown) => void;
+    s.hass.callWS = async <T>(message: Record<string, unknown>) =>
+      message.type === "heating_ai/status"
+        ? ((await new Promise<unknown>((resolve) => {
+            snapshot = resolve;
+          })) as T)
+        : call<T>(message);
+    window.dispatchEvent(new Event("offline"));
+    window.dispatchEvent(new Event("online"));
+    expect(s.api.canChange()).toBe(false);
+    expect(s.api.canStop()).toBe(false);
+    snapshot(structuredClone(s.state));
+    await s.api.reconnect();
+    expect(s.api.feed).toBe(feed);
+    expect(s.api.session).toBe(session);
+    expect(s.api.canChange()).toBe(true);
+    expect(s.api.canStop()).toBe(true);
+    expect(s.hass.connected).toBe(true);
+  });
+  it("uses refreshed revocation after online rather than an old permitted socket frame", async () => {
+    const s = server(),
+      subscribe = s.hass.connection.subscribeMessage.bind(s.hass.connection);
+    let stale!: (value: unknown) => void;
+    s.hass.connection.subscribeMessage = async <T>(
+      callback: (value: T) => void,
+      message: Record<string, unknown>,
+    ) => {
+      stale ??= callback as (value: unknown) => void;
+      return subscribe(callback, message);
+    };
+    await s.api.start();
+    const previous = structuredClone(s.state);
+    window.dispatchEvent(new Event("offline"));
+    s.state = { ...s.state, permitted: false };
+    s.hass.user = { id: "synthetic-reader", is_admin: false };
+    window.dispatchEvent(new Event("online"));
+    await vi.waitFor(() => expect(s.api.feed.value.permitted).toBe(false));
+    stale({ ...previous, seq: previous.seq + 1 });
+    expect(s.api.feed.value.permitted).toBe(false);
+    expect(s.api.canChange()).toBe(false);
+    expect(s.api.canStop()).toBe(false);
+  });
+  it("rejects an old pending mutation receipt even after an online refresh in the same backend generation", async () => {
+    const s = server();
+    await s.api.start();
+    const call = s.hass.callWS.bind(s.hass);
+    let receipt!: (value: unknown) => void;
+    s.hass.callWS = async <T>(message: Record<string, unknown>) => {
+      const value = await call<T>(message);
+      return message.type === "heating_ai/control"
+        ? ((await new Promise<unknown>((resolve) => {
+            receipt = resolve;
+          })) as T)
+        : value;
+    };
+    const pending = s.api.control("arm", s.api.session);
+    await vi.waitFor(() => expect(receipt).toBeTypeOf("function"));
+    window.dispatchEvent(new Event("offline"));
+    expect(s.api.feed.value.connected).toBe(false);
+    window.dispatchEvent(new Event("online"));
+    await vi.waitFor(() => expect(s.api.canChange()).toBe(true));
+    const rejected = expect(pending).rejects.toThrow("Сесію змінено");
+    receipt({});
+    await rejected;
+    expect(s.api.canChange()).toBe(true);
+  });
+  it("starts offline without issuing RPCs and detaches both browser listeners on close", async () => {
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    const add = vi.spyOn(window, "addEventListener"),
+      remove = vi.spyOn(window, "removeEventListener");
+    const s = server();
+    await expect(s.api.start()).rejects.toThrow();
+    expect(s.calls).toHaveLength(0);
+    const network = add.mock.calls.filter(
+      ([type]) => type === "offline" || type === "online",
+    );
+    expect(network).toHaveLength(2);
+    s.api.close();
+    for (const [type, callback] of network)
+      expect(
+        remove.mock.calls.some(
+          ([removedType, removedCallback]) =>
+            removedType === type && removedCallback === callback,
+        ),
+      ).toBe(true);
+    const value = s.api.feed.value;
+    window.dispatchEvent(new Event("offline"));
+    window.dispatchEvent(new Event("online"));
+    expect(s.api.feed.value).toBe(value);
+    expect(s.calls).toHaveLength(0);
+  });
+});
+it("rejects pending settings reads invalidated by a browser offline transition", async () => {
+  const s = server();
+  await s.api.start();
+  const call = s.hass.callWS.bind(s.hass);
+  let readback!: (value: unknown) => void;
+  s.hass.callWS = async <T>(message: Record<string, unknown>) =>
+    message.type === "heating_ai/settings/get"
+      ? ((await new Promise<unknown>((resolve) => {
+          readback = resolve;
+        })) as T)
+      : call<T>(message);
+  const pending = s.api.settings();
+  window.dispatchEvent(new Event("offline"));
+  const rejected = expect(pending).rejects.toThrow("Сесію змінено");
+  readback({ revision: 1, values: defaults, lastRequest: null });
+  await rejected;
+});
+it("keeps the native bridge usable without browser globals", async () => {
+  vi.stubGlobal("window", undefined);
+  vi.stubGlobal("navigator", undefined);
+  const s = server();
+  await s.api.start();
+  expect(s.api.canChange()).toBe(true);
+  s.api.close();
 });
