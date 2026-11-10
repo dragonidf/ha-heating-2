@@ -1,0 +1,28 @@
+# WP2C isolated adapter contract
+
+**2026-11-10 revision:** [Source/time clarification](REVISION-2026-11-10.md) supersedes prior source-selection and frozen-clock wording below. KWS Tuya Local is the future boiler evidence role; input220 Zigbee2MQTT alone supplies grid-input voltage. Historical qualification records remain unchanged.
+
+Implementation seam for Issue20, not production authority. HA2026.10.4 (public PyPI metadata, Python>=3.14.2) is the pinned qualification target. HA and browser containers share only an isolated `--network none` namespace; no published ports, host networking, private credentials or discovery. Integration setup requires an explicit disposable-sandbox marker; simulation defaults OFF. There is never a real actuator route.
+
+## Authenticated WebSocket projection
+
+Every request uses `type: heating_ai/<operation>`, `entry_id` and `version:[2,0]`; mutation additionally uses current `boot_id`, `generation` and `owner_epoch` from the authoritative snapshot. HA connection user identity is supplied by the SDK wrapper, never a JSON permission flag. Read operations require an authenticated user, mutations require an admin AND explicit enabled simulation. Unknown keys, >256KiB, wrong versions, wrong entry/boot/generation/owner, replay/body conflicts and arbitrary service names fail closed. History pages remain<=64KiB,128 default/256 max. No token is stored in frontend code.
+
+- `status` -> exact WP2B Snapshot shape (synthetic frozen clock), authoritative permitted flag per user; `status.physical_verified=false` forever. Disabled -> SAFE_HOLD/permitted=false; enabled fake observation -> SHADOW. Reload/restart creates a new boot identity and increments generation/owner epoch; no HEAT replay. Required room input starts missing/SAFE_HOLD until an authenticated own synthetic observation; manual pause survives.
+- `subscribe` -> initial full Snapshot and ordered full Snapshot updates; unsubscribe removes the callback. Reconnect requires a full snapshot and refreshed generation.
+- `overview` -> `{original,latest,cycleEnergy,timeline,metrics,model}` using accepted WP2B shapes, and `{enabled,gates:[B01..B08],physical_authority:false}`; gates are the exact identifiers of BLOCKED gates, never completed gates. Original bytes/receipt proof immutable. Fixture export is deterministic from reviewed TS/Python fixtures, never household data.
+- `history` with `{start,end,cursor:null|HistoryCursor,limit}` -> HistoryPage. Scope<=31calendar days (+timezone DST tolerance), stable source watermark; raw future points remain subject to the shared UI now-quarantine. No uncontrolled large bootstrap payload.
+- `energy` -> bounded EnergyInterval[] (synthetic retained scope), history and energy failures independent.
+- `settings/get` -> `{revision,values:Settings,lastRequest}` (WP2B12 fields).
+- `settings/save` with `{request_id,expected_revision,values}` -> WP2A-compatible APIReceipt fields. Durable transactional CAS and independent readback; disabled/revoked/mismatched boot fail. Idempotent same request/body returns same persisted revision; concurrent clients conflict. Never client-side IndexedDB authority in native mode.
+- `control` with `{kind:pause|resume|arm|cancel|expire|unknown|consume}` -> APIReceipt; logical simulation only. STOP bypasses settings/history work. Manual state and consumed/unknown one-shot persist; restart never repeats HEAT. G1 blockers always deny physical authority.
+- `model` with `{kind:train|promote|rollback|freeze}` -> `{reason,model}`; same explicit synthetic demonstration as reviewed WP2B, never physical qualification or a replacement learning algorithm.
+- `diagnostics` -> bounded sanitized lifecycle/store/source/gate status; admin only.
+
+The standalone DemoAPI remains usable with all202/80 regressions. An OperatorAPI public structural interface can widen control/model results to Promise without changing DemoAPI's synchronous test contract. Native client uses the existing HA `hass.callWS`/connection subscription only, no new socket constructor or endpoint/token. Panel lives in Shadow DOM; injected scope and backend permissions are authoritative. Home/History/Diagnostics use backend overview in native mode and approved fixtures in standalone mode. Initial native UI waits for status, overview, settings and bounded paged history; cache is explicitly synthetic/readonly and refreshes on new boot. Demo fault controls are hidden in native mode.
+
+## Pure service/SDK boundary
+
+`packages/ha_native/` contains typed synthetic service, configuration/meter binding and state contracts. HA SDK source template is `ha_sdk/heating_ai/`; an installable `custom_components/heating_ai/` exists only in the explicitly built disposable artifact; deterministic build vendors existing `packages/` under `core/` by rewriting only the absolute import prefix, with source hashes recorded. No change to accepted core algorithms. All disk work runs through the HA executor. Settings/critical store and evidence remain separate SQLite files; no HA Recorder file is opened. Existing disposable-root/SQLite qualification restrictions stay binding. Package startup/migration failure is unavailable/SAFE_HOLD, never silently empty successful state.
+
+Future dedicated-meter binding: exact physical model/wiring/accuracy/entity names are unknown; unbound by default. Only synthetic sources in WP2C. Active W/kWh/phase origin/freshness/online/relay status, resets/jumps and overlap exclusion are modeled; VA/current/relay ON cannot be active energy or physical heat proof. Meter source selection cannot grant command authority; B03 remains BLOCKED.

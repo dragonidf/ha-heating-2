@@ -1,27 +1,32 @@
 import { useState } from "react";
-import type { DemoAPI } from "./mock";
-import { metrics } from "./fixtures";
+import { operatorView, type OperatorAPI } from "./operator";
 import { fmt, dateTime } from "./domain";
 import { Badge } from "./components";
 export function Diagnostics({
   api,
   open = false,
 }: {
-  api: DemoAPI;
+  api: OperatorAPI;
   open?: boolean;
 }) {
   const [message, setMessage] = useState("");
+  const { metrics } = operatorView(api);
   const m = api.model;
   const state = api.feed.value;
   const action = (kind: "train" | "promote" | "rollback" | "freeze") =>
-    setMessage(api.modelAction(kind, api.session));
+    void Promise.resolve(api.modelAction(kind, api.session)).then(
+      setMessage,
+      () => setMessage("Операцію не підтверджено"),
+    );
   return (
     <details open={open || undefined} className="model-details">
       <summary>Модель і діагностика</summary>
       <div className="model-overview">
         <div>
           <span className="eyebrow">Двостанна теплова модель</span>
-          <h3>Champion v{m.revision}</h3>
+          <h3>
+            {m.revision ? `Champion v${m.revision}` : "Модель недоступна"}
+          </h3>
           <p>
             Температура кімнати + запас тепла. Зворотка — непрямий індикатор, не
             температура поверхні підлоги.
@@ -29,7 +34,12 @@ export function Diagnostics({
         </div>
         <Badge tone="warning">Фізична точність не доведена</Badge>
       </div>
-      <div className="table-scroll">
+      <div
+        className="table-scroll"
+        role="region"
+        aria-label="Синтетичні метрики за горизонтом"
+        tabIndex={0}
+      >
         <table>
           <caption>Синтетичні метрики за горизонтом</caption>
           <thead>

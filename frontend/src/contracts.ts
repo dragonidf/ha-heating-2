@@ -1,3 +1,4 @@
+import { voltageKeys } from "./voltage";
 import type { APIReceipt, StatusView, Persisted } from "./types";
 import { validateSettings } from "./domain";
 export function object(v: unknown): Record<string, unknown> {
@@ -96,6 +97,9 @@ export function persisted(v: unknown): Persisted {
         "scenario",
         "freshness",
         "aiAdvice",
+        ...(voltageKeys.some((key) => Object.hasOwn(s, key))
+          ? voltageKeys
+          : []),
       ]
         .sort()
         .join() ||

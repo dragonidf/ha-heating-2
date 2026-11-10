@@ -1,9 +1,9 @@
+import { ElectricalEvidence } from "./ElectricalEvidence";
 import { useState } from "react";
 import { Card, Badge, Chart, Dialog, Icon } from "./components";
-import { actual, latest, cycleEnergy, timeline } from "./fixtures";
 import { fmt, time, dateTime, prioritize, energySummary } from "./domain";
 import type { Snapshot } from "./types";
-import type { DemoAPI } from "./mock";
+import { operatorView, type OperatorAPI } from "./operator";
 import type { SettingsController } from "./useSettings";
 export function Home({
   state,
@@ -12,11 +12,12 @@ export function Home({
   onHistory,
 }: {
   state: Snapshot;
-  api: DemoAPI;
+  api: OperatorAPI;
   settings: SettingsController;
   onHistory: () => void;
 }) {
   const [controlMessage, setControlMessage] = useState("");
+  const { actual, latest, cycleEnergy, timeline } = operatorView(api);
   const current = settings.saved?.values;
   const alert = prioritize(state.notices);
   const budget = {
@@ -31,7 +32,10 @@ export function Home({
     settings.collisions.length > 0;
   const room = state.room.quality === "valid" ? state.room.value : null;
   const intent = (kind: "pause" | "resume" | "arm" | "cancel") =>
-    setControlMessage(api.control(kind, api.session).reason);
+    void Promise.resolve(api.control(kind, api.session)).then(
+      (receipt) => setControlMessage(receipt.reason),
+      () => setControlMessage("Запит не підтверджено. Перечитайте стан."),
+    );
   return (
     <>
       <h1 className="sr-only">Дім</h1>
@@ -108,7 +112,11 @@ export function Home({
             </span>
           </div>
           <button
-            disabled={!permitted}
+            disabled={
+              !(state.status.mode === "MANUAL_PAUSE"
+                ? api.canChange()
+                : (api.canStop?.() ?? api.canChange()))
+            }
             onClick={() =>
               intent(state.status.mode === "MANUAL_PAUSE" ? "resume" : "pause")
             }
@@ -309,6 +317,7 @@ export function Home({
           </Card>
         </div>
       </div>
+      {api.native && <ElectricalEvidence state={state} />}
       <details className="card compact-details">
         <summary>
           Одноразовий запит після відновлення живлення · симуляція
@@ -336,7 +345,13 @@ export function Home({
         </p>
         <div className="button-row">
           <button
-            disabled={!permitted || state.oneShot.state === "unknown_outcome"}
+            disabled={
+              !permitted ||
+              (api.native &&
+                (state.demand_eligible !== true ||
+                  state.voltage?.eligible !== true)) ||
+              state.oneShot.state === "unknown_outcome"
+            }
             onClick={() => intent("arm")}
           >
             Запланувати один раз у симуляції

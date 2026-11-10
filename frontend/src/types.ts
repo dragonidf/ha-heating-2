@@ -34,7 +34,14 @@ export interface Envelope<T> {
   type: string;
   data: T;
 }
-export interface Settings {
+export interface VoltageSettings {
+  min_voltage_v: number;
+  max_voltage_v: number;
+  hysteresis_v: number;
+  stable_recovery_s: number;
+  voltage_max_age_s: number;
+}
+export interface Settings extends Partial<VoltageSettings> {
   day: number;
   night: number;
   budget: number;
@@ -124,7 +131,45 @@ export type Scenario =
   | "revoked"
   | "recovering"
   | "long-copy";
+export type VoltageStatus =
+  "LOW" | "HIGH" | "MISSING_OR_STALE" | "STABILIZING" | "NORMAL";
+export type Phase = "L1" | "L2" | "L3";
+export interface VoltageView {
+  status: VoltageStatus;
+  eligible: boolean;
+  affected_phases: Phase[];
+  reason: string;
+  ages: Record<Phase, number | null>;
+  phases: {
+    phase: Phase;
+    voltage_v: number | null;
+    age_s: number | null;
+    online: boolean | null;
+    qualified: boolean;
+  }[];
+  limits: VoltageSettings;
+  source_role: "grid_input_voltage";
+  source_provider: "zigbee2mqtt_input220";
+  physical_authority: false;
+  scope: "synthetic_only";
+}
+export interface PowerView {
+  source_role: "boiler_power_energy";
+  source_provider: "tuya_local_kws";
+  cloud_duplicate_policy: "excluded_no_fallback";
+  stage: "OFF" | "PUMP_ONLY" | "~3kW" | "~6kW" | "~9kW" | "UNKNOWN";
+  total_active_w: number | null;
+  total_imported_kwh: number | null;
+  phases: { phase: Phase; active_w: number | null; age_s: number | null }[];
+  reason: string;
+  physical_authority: false;
+  physical_heat: null;
+  scope: "synthetic_only";
+}
 export interface Snapshot {
+  power?: PowerView;
+  voltage?: VoltageView;
+  demand_eligible?: boolean;
   version: 1;
   seq: number;
   generation: number;

@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Card, Badge } from "./components";
 import { validateSettings } from "./domain";
-import type { DemoAPI } from "./mock";
+import type { OperatorAPI } from "./operator";
 import type { SettingsController } from "./useSettings";
 import type { Settings as Values } from "./types";
 import { Diagnostics } from "./Diagnostics";
+import { voltageValues, voltageRanges, withVoltageSettings } from "./voltage";
+import type { VoltageSettings } from "./types";
 export function Settings({
   api,
   controller,
   modelOpen = false,
 }: {
-  api: DemoAPI;
+  api: OperatorAPI;
   controller: SettingsController;
   modelOpen?: boolean;
 }) {
@@ -140,6 +142,84 @@ export function Settings({
               </label>
             </div>
           </fieldset>
+          {api.native && (
+            <fieldset disabled={locked}>
+              <legend>Вхідна напруга мережі · синтетичні межі</legend>
+              <p>
+                Захист запиту нагріву використовує три фази вхідного лічильника
+                Zigbee2MQTT input 220. Це не напруга на клемах котла.
+                Налаштування не змінюють апаратний захист KWS, насос або
+                OEM-захисти.
+              </p>
+              {s.min_voltage_v === undefined && (
+                <p className="helper">
+                  Показано синтетичні типові межі. Сервер має підтвердити їх
+                  міграцію або нове збереження.
+                </p>
+              )}
+              <div className="form-grid">
+                {(
+                  [
+                    ["min_voltage_v", "Мінімальна вхідна напруга · В"],
+                    ["max_voltage_v", "Максимальна вхідна напруга · В"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key}>
+                    {label}
+                    <input
+                      type="number"
+                      name={key}
+                      min={voltageRanges[key][0]}
+                      max={voltageRanges[key][1]}
+                      step="any"
+                      value={voltageValues(s)[key]}
+                      onChange={(e) =>
+                        c.edit(
+                          withVoltageSettings(s, key, e.target.valueAsNumber),
+                        )
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+              <details>
+                <summary>Експертні межі відновлення напруги</summary>
+                <div className="form-grid">
+                  {(
+                    [
+                      ["hysteresis_v", "Гістерезис напруги · В"],
+                      ["stable_recovery_s", "Стабільне відновлення · с"],
+                      ["voltage_max_age_s", "Граничний вік звіту напруги · с"],
+                    ] as [keyof VoltageSettings, string][]
+                  ).map(([key, label]) => (
+                    <label key={key}>
+                      {label}
+                      <input
+                        type="number"
+                        name={key}
+                        min={voltageRanges[key][0]}
+                        max={voltageRanges[key][1]}
+                        step="any"
+                        value={voltageValues(s)[key]}
+                        onChange={(e) =>
+                          c.edit(
+                            withVoltageSettings(s, key, e.target.valueAsNumber),
+                          )
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+              </details>
+              <p className="helper">
+                Значення рівно на мінімумі або максимумі не порушують зовнішню
+                межу. Після блокування потрібні всі три свіжі фази в межах
+                мінімум + гістерезис … максимум − гістерезис протягом усього
+                стабільного періоду. Повертається лише допустимість запиту;
+                автоматичного нагріву чи скасування ручної паузи немає.
+              </p>
+            </fieldset>
+          )}
           {errors.length > 0 && (
             <ul className="validation" role="alert">
               {errors.map((e) => (
@@ -349,6 +429,11 @@ function fieldLabel(path: string[]): string {
     scenario: "Сценарій потужності",
     freshness: "Давність даних",
     aiAdvice: "Пояснення AI",
+    min_voltage_v: "Мінімальна вхідна напруга",
+    max_voltage_v: "Максимальна вхідна напруга",
+    hysteresis_v: "Гістерезис напруги",
+    stable_recovery_s: "Стабільне відновлення",
+    voltage_max_age_s: "Граничний вік звіту напруги",
   };
   return path.length === 1 ? (labels[path[0]!] ?? path[0]!) : path.join(" / ");
 }

@@ -1,0 +1,5 @@
+"""Native test constants, no physical-device capability."""
+DOMAIN = "heating_ai"
+PANEL = "heating-ai"
+ASSETS = "/heating_ai/assets"
+EVENT_SAMPLE = "heating_ai_synthetic_sample"

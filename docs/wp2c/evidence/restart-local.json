@@ -1,0 +1,11 @@
+{
+  "qualification": "PASS_ISOLATED",
+  "checks": [
+    "restart_new_boot_generation_and_owner_epoch",
+    "restart_preserves_manual_stop",
+    "restart_never_repeats_heat",
+    "restart_settings_readback",
+    "restart_oneshot_no_replay"
+  ],
+  "count": 5
+}
