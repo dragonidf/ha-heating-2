@@ -5,6 +5,8 @@ import {
   qualifySource,
   sourceEvent,
   shadowContext,
+  qualifyVoltage,
+  voltageEvent,
 } from "./helpers";
 const panelPath = process.env.TEST_HA_PANEL_PATH ?? "/heating-ai";
 async function login(page: Page) {
@@ -103,6 +105,7 @@ async function setSimulation(page: Page, enabled: boolean) {
         .toBe("RECOVERING");
       await qualifySource(page, 2);
     }
+    await qualifyVoltage(page);
   }
 }
 test.beforeEach(async ({ page }) => {
@@ -306,4 +309,61 @@ test("native 200 percent text keeps main tabs and settings accessible", async ({
     path: info.outputPath("native-text-200.png"),
     fullPage: true,
   });
+});
+
+test("native input voltage guard preserves manual STOP across low high missing and recovery", async ({
+  page,
+}) => {
+  await setSimulation(page, true);
+  const initial = await backendStatus(page),
+    limits = initial.voltage!.limits;
+  await expect(
+    page.getByRole("heading", { name: "Вхідна напруга мережі" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Потужність та лічильник котла" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Пауза симуляції", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await backendStatus(page)).status.mode)
+    .toBe("MANUAL_PAUSE");
+  const shot = (await backendStatus(page)).oneShot.state;
+  await voltageEvent(page, 2, [230, limits.min_voltage_v - 1, 230]);
+  await expect
+    .poll(async () => (await backendStatus(page)).voltage?.status)
+    .toBe("LOW");
+  await expect(page.getByText(/LOW/, { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Налаштування", exact: true }).click();
+  await expect(
+    page.getByRole("spinbutton", { name: /Мінімальна вхідна напруга/ }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Дім", exact: true }).click();
+  await voltageEvent(page, 3, [230, 230, limits.max_voltage_v + 1]);
+  await expect
+    .poll(async () => (await backendStatus(page)).voltage?.status)
+    .toBe("HIGH");
+  await voltageEvent(page, 4, [230, 230, 230], "L1");
+  await expect
+    .poll(async () => (await backendStatus(page)).voltage?.status)
+    .toBe("MISSING_OR_STALE");
+  await voltageEvent(page, 5);
+  await expect
+    .poll(async () => (await backendStatus(page)).voltage?.status)
+    .toBe("NORMAL");
+  const recovered = await backendStatus(page);
+  expect(recovered.demand_eligible).toBe(false);
+  expect(recovered.status.mode).toBe("MANUAL_PAUSE");
+  expect(recovered.oneShot.state).toBe(shot);
+  expect(recovered.status.physical_verified).toBe(false);
+  await page
+    .getByText("Одноразовий запит після відновлення живлення · симуляція", {
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Запланувати один раз у симуляції" }),
+  ).toBeDisabled();
+  await expect(page.getByText("Фізичний стан котла — невідомий")).toBeVisible();
 });

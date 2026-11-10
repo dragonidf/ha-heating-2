@@ -1,3 +1,4 @@
+import { validateVoltageSettings } from "./voltage";
 import type {
   Energy,
   ForecastProof,
@@ -152,7 +153,7 @@ export function decimate(points: readonly Point[], target = 256): Point[] {
   return [...selected.values()].sort((a, b) => a.at - b.at);
 }
 export function validateSettings(s: Settings): string[] {
-  const errors: string[] = [];
+  const errors: string[] = validateVoltageSettings(s);
   for (const [key, label] of [
     ["day", "День"],
     ["night", "Сон"],

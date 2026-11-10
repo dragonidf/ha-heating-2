@@ -1,3 +1,4 @@
+import { qualifiedVoltage } from "./electricalFixtures";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   NativeAPI,
@@ -32,7 +33,11 @@ afterEach(() => {
   vi.useRealTimers();
 });
 function server(enabled = true) {
-  let state = snapshot();
+  let state: Snapshot = {
+    ...snapshot(),
+    voltage: qualifiedVoltage(),
+    demand_eligible: true,
+  };
   state.status.mode = "SHADOW";
   state.permitted = enabled;
   const calls: Record<string, unknown>[] = [];

@@ -25,6 +25,7 @@ export default defineConfig({
         "src/historyEnergy.ts",
         "src/nativeAdapter.ts",
         "src/nativeContracts.ts",
+        "src/voltage.ts",
       ],
       thresholds: { lines: 90, branches: 85, functions: 90, statements: 90 },
     },

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from packages.ha_native.backend import NativeBackend, NativeProtocolError
+from packages.ha_native.backend import NativeBackend, NativeProtocolError, VOLTAGE_DEFAULTS
 from packages.ha_native.store import NativeStore, StoreError
 
 
@@ -21,7 +21,7 @@ def fixture():
         'diagnostics': {'loopLagMs': 8, 'persistence': 'ok', 'worker': 'ready', 'source': 'valid'}},
         'settings': {'day': 21.5, 'night': 20.5, 'budget': 650, 'windowStart': '23:00',
         'windowEnd': '07:00', 'strategy': 'balanced', 'mode': 'auto', 'circulation': 'auto',
-        'fan': 42, 'scenario': 6, 'freshness': 30, 'aiAdvice': False},
+        'fan': 42, 'scenario': 6, 'freshness': 30, 'aiAdvice': False} | VOLTAGE_DEFAULTS | {'stable_recovery_s': 0},
         'actual': [{'at': 1793750300, 'value': 21.8, 'quality': 'valid'}], 'intervals': [],
         'original': None, 'latest': [], 'cycleEnergy': {}, 'timeline': [], 'metrics': []}
 
@@ -37,6 +37,10 @@ def observe(backend):
         provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
     assert backend.accept_source(SourceEvent(boot + '.setup', 'synthetic.native.room', 0, now, reading),
                                  Clock(utc=now, monotonic=0, boot_id=boot))
+    from packages.ha_native.voltage import VoltageFrame, VoltagePhase
+    backend.accept_voltage(VoltageFrame(tuple(VoltagePhase(p, 'synthetic.input.' + p, 220, now, now, 0,
+        phase_verified=True, online=True) for p in ('L1', 'L2', 'L3')), mapping_verified=True,
+        grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True))
     assert backend.flush_stop()
 
 
@@ -580,6 +584,10 @@ reading = Reading(physical_id='synthetic.native.room', source_id='synthetic.nati
     provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
 assert backend.accept_source(SourceEvent(boot + '.setup', 'synthetic.native.room', 0, now, reading),
                              Clock(utc=now, monotonic=0, boot_id=boot))
+from packages.ha_native.voltage import VoltageFrame, VoltagePhase
+backend.accept_voltage(VoltageFrame(tuple(VoltagePhase(p, 'synthetic.input.' + p, 220, now, now, 0,
+    phase_verified=True, online=True) for p in ('L1', 'L2', 'L3')), mapping_verified=True,
+    grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True))
 assert backend.flush_stop()
 def request(**fields):
     state = backend.status(True)

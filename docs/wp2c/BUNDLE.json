@@ -3,10 +3,10 @@
   "node": "v24.19.0",
   "files": [
     {
-      "name": "App-C7LwA3BZ.js",
-      "bytes": 305603,
-      "gzip_bytes": 93351,
-      "sha256": "eab989107523ee42eec4208c67892a64c7ebfb41bbf98135c5a1e4843e4e8bc6"
+      "name": "App-DXYYfGSv.js",
+      "bytes": 314954,
+      "gzip_bytes": 95943,
+      "sha256": "894d716347b20a9b22e5462c9d6332c46617c9a90b812a27ff54406f6020bf3f"
     },
     {
       "name": "main-BmGZsNj5.css",
@@ -16,15 +16,15 @@
     },
     {
       "name": "main.js",
-      "bytes": 1162,
-      "gzip_bytes": 720,
-      "sha256": "78ea4e62ace4d1490eba30fb9bbdd860c4dd506062419f3b17f461bfdfcd7d40"
+      "bytes": 1157,
+      "gzip_bytes": 717,
+      "sha256": "e19bfb2d9d3fb3c031a311789459cc7a46ab6ce72d66cd444b74915db2c58032"
     },
     {
       "name": "panel.js",
-      "bytes": 34937,
-      "gzip_bytes": 10366,
-      "sha256": "7644b0cd26dbd4e9250420cb0e7110bf5b66c33e9982ce6e00f15d5c24509291"
+      "bytes": 37121,
+      "gzip_bytes": 11104,
+      "sha256": "8c0f268a257a2c611c98f789587171281d06cf8ee43b1290bb3c5595756c4494"
     }
   ]
 }

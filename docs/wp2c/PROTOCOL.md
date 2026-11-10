@@ -1,5 +1,7 @@
 # WP2C isolated adapter contract
 
+**2026-11-10 revision:** [Source/time clarification](REVISION-2026-11-10.md) supersedes prior source-selection and frozen-clock wording below. KWS Tuya Local is the future boiler evidence role; input220 Zigbee2MQTT alone supplies grid-input voltage. Historical qualification records remain unchanged.
+
 Implementation seam for Issue20, not production authority. HA2026.10.4 (public PyPI metadata, Python>=3.14.2) is the pinned qualification target. HA and browser containers share only an isolated `--network none` namespace; no published ports, host networking, private credentials or discovery. Integration setup requires an explicit disposable-sandbox marker; simulation defaults OFF. There is never a real actuator route.
 
 ## Authenticated WebSocket projection

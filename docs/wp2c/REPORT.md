@@ -1,5 +1,7 @@
 # WP2C — isolated native HA packaging and compatibility
 
+**2026-11-10 revision:** [Source/time clarification](REVISION-2026-11-10.md) supersedes prior source-selection and frozen-clock wording below. KWS Tuya Local is the future boiler evidence role; input220 Zigbee2MQTT alone supplies grid-input voltage. Historical qualification records remain unchanged.
+
 Implementation/self-test handoff for [Issue20](https://github.com/dragonidf/ha-heating-2/issues/20), based on main `662a9c4324938981c33db3a7b429cf948abb8321`. One feature/wp2c-isolated-ha-packaging PR; independent ChatGPT review determines acceptance. No merge, production access or WP2D. G1/B01–B08 remain BLOCKED.
 
 ## Delivered package

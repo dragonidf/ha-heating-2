@@ -6,15 +6,25 @@ import re
 from copy import deepcopy
 from pathlib import Path
 from threading import RLock
-from typing import cast
+from typing import Callable, cast
 from uuid import uuid4
+from time import monotonic
 
 from packages.contracts import Clock, ControlState, ControlPolicy, ControlMode, HeatPermit, Unit
 from packages.control import evaluate
 from packages.ha_fake.adapter import SourceAdapter
-from packages.offline.contracts import Binding, Registry, SourceEvent
+from packages.offline.contracts import Binding, Registry, SourceEvent, EnergySlice
+from packages.offline.codec import encode as encode_contract, decode as decode_contract
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
+from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view
+from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
+
+
+VOLTAGE_DEFAULTS: dict[str, JSON] = {
+    'min_voltage_v': 190, 'max_voltage_v': 250, 'hysteresis_v': 5,
+    'stable_recovery_s': 30, 'voltage_max_age_s': 30,
+}
 
 
 class NativeProtocolError(ValueError):
@@ -42,12 +52,19 @@ def number(value: JSON) -> float:
 
 
 def settings_valid(values: JSON) -> bool:
-    if not isinstance(values, dict) or set(values) != {
+    legacy = {
         'day', 'night', 'budget', 'windowStart', 'windowEnd', 'strategy',
         'mode', 'circulation', 'fan', 'scenario', 'freshness', 'aiAdvice',
-    }:
+    }
+    if not isinstance(values, dict) or set(values) not in (legacy, legacy | set(VOLTAGE_DEFAULTS)):
         return False
     try:
+        if set(VOLTAGE_DEFAULTS) <= set(values):
+            low, high, hysteresis, recovery, max_age = (number(values[k]) for k in VOLTAGE_DEFAULTS)
+            if not (80 <= low <= 280 and 120 <= high <= 300 and low < high
+                    and 0 <= hysteresis <= 30 and 2 * hysteresis < high - low
+                    and 0 <= recovery <= 600 and 1 <= max_age <= 300):
+                return False
         day, night = number(values['day']), number(values['night'])
         budget, fan, freshness = (number(values[k]) for k in ('budget', 'fan', 'freshness'))
         start, end = values['windowStart'], values['windowEnd']
@@ -69,7 +86,8 @@ def settings_valid(values: JSON) -> bool:
 class NativeBackend:
     """Only trusted SDK code supplies enabled/admin. Payload flags cannot grant either."""
     def __init__(self, root: Path, fixture: dict[str, JSON] | None = None, *,
-                 entry_id: str = 'synthetic-entry', enabled: bool = False):
+                 entry_id: str = 'synthetic-entry', enabled: bool = False,
+                 clock: Callable[[], tuple[float, float]] | None = None):
         if type(enabled) is not bool or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', entry_id):
             raise NativeProtocolError('invalid_configuration')
         self.fixture = deepcopy(fixture) if fixture is not None else obj(decode(Path(__file__).with_name('fixture.json').read_text()))
@@ -79,6 +97,12 @@ class NativeBackend:
         self.critical = NativeStore(root, 'critical')
         self.evidence = NativeStore(root, 'evidence')
         self._snapshot = deepcopy(obj(self.fixture['snapshot']))
+        anchor_utc, anchor_mono = number(self._snapshot['now']), monotonic()
+        self._clock = clock if clock is not None else lambda: (anchor_utc + monotonic() - anchor_mono, monotonic())
+        self._last_clock: tuple[float, float] | None = None
+        self._clock_bad = False
+        self._room_seen_mono: float | None = None
+        self._room_initial_age = 0.0
         self._memory = RLock()
         self._serial = 0
         self._source_max_age = 30.0
@@ -88,9 +112,30 @@ class NativeBackend:
         self._pending_stop = False
         self._store_failed = False
         self._model: dict[str, JSON] = {'revision': 3, 'candidate': False, 'frozen': False}
+        self._settings_values: dict[str, JSON] = {}
+        self._voltage_frame = VoltageFrame()
+        self._voltage_state: VoltageState | None = None
+        self._kws_frame = KWSFrame()
+        self._kws_state: KWSState | None = None
+        self._counter_left: KWSFrame | None = None
+        self._counter_epoch = 0
+        self._energy_pending: list[EnergySlice] = []
+        self._energy_ledger: list[EnergySlice] = []
+        self._energy_unavailable = False
 
     def open(self) -> None:
         self._opened = False
+        self._last_clock = None
+        self._clock_bad = False
+        self._room_seen_mono = None
+        self._voltage_frame = VoltageFrame()
+        self._voltage_state = None
+        self._kws_frame = KWSFrame()
+        self._kws_state = None
+        self._counter_left = None
+        self._energy_pending = []
+        self._energy_ledger = []
+        self._energy_unavailable = False
         self._store_failed = True
         self._snapshot['permitted'] = False
         obj(self._snapshot['status'])['desired'] = 'stop_demand'
@@ -98,13 +143,26 @@ class NativeBackend:
         defaults = self.fixture.get('settings', self.fixture.get('defaults'))
         if not settings_valid(defaults):
             raise StoreError('Invalid synthetic fixture settings')
+        defaults = VOLTAGE_DEFAULTS | obj(defaults)
         self.critical.open({'settings': {'revision': 1, 'values': defaults, 'lastRequest': None},
+                            'settings_schema': 2,
                             'snapshot': self._snapshot, 'requests': {}, 'model': self._model})
         with self.critical.transaction() as con:
             saved = obj(self.critical.read_from(con, 'settings'))
             if not settings_valid(saved.get('values')):
                 raise StoreError('Invalid stored synthetic settings')
+            schema = self.critical.read_from(con, 'settings_schema') if con.execute(
+                "SELECT 1 FROM records WHERE name='settings_schema'").fetchone() else 1
+            if type(schema) is not int or schema not in (1, 2):
+                raise StoreError('Unsupported synthetic settings schema')
+            if schema == 2 and not set(VOLTAGE_DEFAULTS) <= set(obj(saved['values'])):
+                raise StoreError('Incomplete synthetic settings schema')
             integer(saved.get('revision'), 1)
+            self._settings_values = VOLTAGE_DEFAULTS | obj(saved['values'])
+            if saved['values'] != self._settings_values:
+                saved['values'] = self._settings_values
+                self.critical.write(con, 'settings', saved)
+            self.critical.write(con, 'settings_schema', 2)
             state = deepcopy(obj(self.critical.read_from(con, 'snapshot')))
             view = obj(state['status'])
             state['generation'] = integer(state['generation']) + 1
@@ -128,15 +186,22 @@ class NativeBackend:
             self._model = obj(self.critical.read_from(con, 'model'))
         self._snapshot = state
         self._serial += 1
+        self._adapter = self._source_adapter(self._source_max_age)
         self._adapter.connection(integer(state['generation']))
         # Evidence may fail independently; safety and STOP keep their own critical path.
         try:
-            self.evidence.open({'fixture': self.fixture})
+            self.evidence.open({'fixture': self.fixture, 'kws_energy': []})
+            with self.evidence.transaction() as con:
+                if not con.execute("SELECT 1 FROM records WHERE name='kws_energy'").fetchone():
+                    self.evidence.write(con, 'kws_energy', [])
+                self._energy_ledger = self._read_energy(self.evidence.read_from(con, 'kws_energy'))
         except StoreError:
+            self._energy_unavailable = True
             obj(self._snapshot['diagnostics'])['persistence'] = 'archive_unavailable'
         self._store_failed = False
         self._pending_stop = False
         self._opened = True
+        self.refresh()
 
     def close(self) -> None:
         with self._memory:
@@ -156,18 +221,204 @@ class NativeBackend:
 
     def status(self, is_admin: bool = False) -> dict[str, JSON]:
         with self._memory:
+            permitted = self._can_change(is_admin)
             result = deepcopy(self._snapshot)
-            result['permitted'] = self._can_change(is_admin)
+            result['permitted'] = permitted
             obj(result['status'])['physical_verified'] = False
             if self.safety_permit().allowed:
                 raise NativeProtocolError('physical_authority_forbidden')
             return result
 
+    def trusted_clock(self) -> Clock:
+        """Trusted runtime clock; source payloads cannot choose the decision time."""
+        with self._memory:
+            try:
+                utc, mono = self._clock()
+                utc, mono = number(utc), number(mono)
+                if utc < 0 or mono < 0:
+                    raise NativeProtocolError('invalid_clock')
+                if self._last_clock is not None and (utc < self._last_clock[0] or mono < self._last_clock[1]):
+                    self._clock_bad = True
+                self._last_clock = (utc, mono)
+            except (ValueError, TypeError, OSError):
+                self._clock_bad = True
+                utc, mono = self._last_clock or (number(self._snapshot['now']), 0.0)
+            return Clock(utc=utc, monotonic=mono, boot_id=str(obj(self._snapshot['status'])['boot_id']))
+
+    def refresh(self, *, publish: bool = False) -> bool:
+        """Recompute eligibility on idle time without creating an observation/report."""
+        with self._memory:
+            clock = self.trusted_clock()
+            state = deepcopy(self._snapshot)
+            previous_second = int(number(state['now']))
+            state['now'] = clock.utc
+            room = obj(state['room'])
+            stale = self._clock_bad
+            if self._room_seen_mono is not None:
+                age = max(clock.utc - number(room['observed']),
+                          self._room_initial_age + clock.monotonic - self._room_seen_mono)
+                stale = stale or not 0 <= age <= self._source_max_age
+            if stale and room['value'] is not None:
+                room['quality'] = 'stale'
+            source = 'clock_invalid' if self._clock_bad else ('stale' if stale else obj(state['diagnostics'])['source'])
+            changed = room['quality'] != obj(self._snapshot['room'])['quality'] or source != obj(self._snapshot['diagnostics'])['source']
+            obj(state['diagnostics'])['source'] = source
+            shot = obj(state['oneShot'])
+            if shot['state'] == 'armed' and shot['expires'] is not None and clock.utc >= number(shot['expires']):
+                shot['state'] = 'expired'
+                changed = True
+            policy = self._voltage_policy()
+            prior_voltage = self._voltage_state
+            self._voltage_state = evaluate_voltage(policy, VoltageFrame() if self._clock_bad else self._voltage_frame, clock, prior_voltage)
+            if prior_voltage is not None and (self._voltage_state.status, self._voltage_state.eligible,
+                    self._voltage_state.affected_phases) != (prior_voltage.status, prior_voltage.eligible, prior_voltage.affected_phases):
+                changed = True
+            state['voltage'] = voltage_view(self._voltage_state, policy)
+            prior_power = self._kws_state
+            self._kws_state = project_kws(KWSFrame() if self._clock_bad else self._kws_frame, clock, prior_power)
+            if prior_power is not None and (self._kws_state.stage, self._kws_state.power.kw, self._kws_state.counter is None) != (
+                    prior_power.stage, prior_power.power.kw, prior_power.counter is None):
+                changed = True
+            state['power'] = kws_view(self._kws_state)
+            if stale and obj(state['status'])['mode'] != 'MANUAL_PAUSE':
+                obj(state['status'])['mode'] = 'SAFE_HOLD'
+            changed = changed or obj(state['status'])['mode'] != obj(self._snapshot['status'])['mode']
+            if changed:
+                self._advance(state)
+                self._serial += 1
+                self._pending_stop = self._opened
+            elif publish and int(clock.utc) != previous_second:
+                state['seq'] = integer(state['seq']) + 1
+                obj(state['status'])['status_seq'] = state['seq']
+                changed = True
+            self._snapshot = state
+            self._snapshot['demand_eligible'] = self._demand_eligible()
+            return changed
+
+    def _voltage_policy(self) -> VoltagePolicy:
+        values = VOLTAGE_DEFAULTS | self._settings_values
+        return VoltagePolicy(*(number(values[key]) for key in VOLTAGE_DEFAULTS))
+
+    def accept_voltage(self, frame: VoltageFrame) -> bool:
+        """SDK-authenticated synthetic upstream-voltage frame, never a service command."""
+        if not isinstance(frame, VoltageFrame):
+            raise NativeProtocolError('invalid_voltage_frame')
+        with self._memory:
+            if not self._opened:
+                return False
+            self._voltage_frame = frame
+            self.refresh()
+            state = deepcopy(self._snapshot)
+            self._advance(state)
+            self._snapshot = state
+            self._serial += 1
+            self._pending_stop = True
+            return self._voltage_state is not None and self._voltage_state.eligible
+
+    def accept_power(self, frame: KWSFrame) -> bool:
+        """Qualified Tuya Local fixture observations, one total-counter lineage only."""
+        if not isinstance(frame, KWSFrame):
+            raise NativeProtocolError('invalid_power_frame')
+        with self._memory:
+            if not self._opened:
+                return False
+            clock = self.trusted_clock()
+            current = project_kws(frame, clock, self._kws_state)
+            left = self._counter_left
+            if self._clock_bad or current.counter is None:
+                self._counter_left = None
+            elif (left is not None and left.meter_id == frame.meter_id
+                    and left.provider == frame.provider and left.verification == frame.verification):
+                old_total = next((r for r in left.readings if r.quantity == 'imported_energy' and r.phase == 'total'), None)
+                new_total = next((r for r in frame.readings if r.quantity == 'imported_energy' and r.phase == 'total'), None)
+                if old_total is not None and new_total is not None and new_total != old_total:
+                    try:
+                        span = kws_counter_energy(left, frame, clock,
+                            'synthetic.kws.' + clock.boot_id + '.' + str(self._counter_epoch))
+                        if len(self._energy_pending) >= 256:
+                            raise ValueError('Bounded energy queue full')
+                        self._energy_pending.append(span)
+                        if span.category == 'unknown':
+                            self._counter_epoch += 1
+                    except ValueError:
+                        self._counter_epoch += 1
+                        self._energy_unavailable = True
+                self._counter_left = frame
+            else:
+                self._counter_left = frame if current.counter is not None and not self._clock_bad else None
+            self._kws_frame = frame
+            self._kws_state = current
+            self.refresh()
+            state = deepcopy(self._snapshot)
+            self._advance(state)
+            self._snapshot = state
+            self._serial += 1
+            self._pending_stop = True
+            return current.power.kw is not None
+
+    @staticmethod
+    def _read_energy(raw: JSON) -> list[EnergySlice]:
+        if not isinstance(raw, list) or len(raw) > 4096:
+            raise StoreError('Invalid synthetic energy ledger')
+        spans: list[EnergySlice] = []
+        identities: set[str] = set()
+        for item in raw:
+            try:
+                value = decode_contract(encode(item))
+            except ValueError as exc:
+                raise StoreError('Invalid synthetic energy envelope') from exc
+            if not isinstance(value, EnergySlice) or value.identity in identities:
+                raise StoreError('Invalid synthetic energy contribution')
+            if any(s.stream == value.stream and s.start < value.end and value.start < s.end for s in spans):
+                raise StoreError('Overlapping synthetic meter contributions')
+            spans.append(value)
+            identities.add(value.identity)
+        return spans
+
+    def flush_evidence(self) -> bool:
+        """Separate executor work; archive availability never gates STOP/settings."""
+        with self._memory:
+            pending = list(self._energy_pending)
+        if not pending:
+            return not self._energy_unavailable
+        try:
+            with self.evidence.transaction() as con:
+                ledger = self._read_energy(self.evidence.read_from(con, 'kws_energy'))
+                identities = {s.identity for s in ledger}
+                ledger.extend(s for s in pending if s.identity not in identities)
+                raw: JSON = [decode(encode_contract(s)) for s in ledger]
+                self._read_energy(raw)
+                self.evidence.write(con, 'kws_energy', raw)
+            verified = self._read_energy(self.evidence.read('kws_energy'))
+            if verified != ledger:
+                raise StoreError('Energy readback not confirmed')
+            with self._memory:
+                self._energy_ledger = ledger
+                self._energy_pending = [s for s in self._energy_pending if s not in pending]
+                self._energy_unavailable = False
+            return True
+        except StoreError:
+            self._energy_unavailable = True
+            return False
+
+    def _boiler_energy(self) -> dict[str, JSON]:
+        return {'source': 'tuya_local_kws_total_counter', 'known_kwh': sum(s.kwh or 0 for s in self._energy_ledger),
+                'unknown_s': sum(s.end - s.start for s in self._energy_ledger if s.category == 'unknown'),
+                'interval_count': len(self._energy_ledger), 'pending': len(self._energy_pending),
+                'quality': 'unavailable' if self._energy_unavailable else 'qualified_intervals' if self._energy_ledger else 'unknown',
+                'scope': 'qualified_counter_intervals_only', 'physical_authority': False}
+
+    def _demand_eligible(self) -> bool:
+        return (self.enabled and self._opened and not self._clock_bad and not self._store_failed
+                and obj(self._snapshot['room'])['quality'] == 'valid' and self._snapshot['grid'] is True
+                and obj(self._snapshot['status'])['mode'] not in ('SAFE_HOLD', 'RECOVERING', 'MANUAL_PAUSE')
+                and self._voltage_state is not None and self._voltage_state.eligible)
+
     def safety_permit(self) -> HeatPermit:
         """Reuse accepted eligibility guards with unconditional synthetic SHADOW policy."""
         view = obj(self._snapshot['status'])
         boot = str(view['boot_id'])
-        clock = Clock(utc=number(self._snapshot['now']), monotonic=0, boot_id=boot)
+        clock = self.trusted_clock()
         state = ControlState(boot_id=boot, owner_epoch=integer(view['owner_epoch']),
                              manual_paused=view['mode'] == 'MANUAL_PAUSE')
         source = self._adapter.snapshot(clock, state, 1, integer(self._model['revision']), connected=self._opened)
@@ -210,10 +461,14 @@ class NativeBackend:
             self._serial += 1
             self._pending_stop = True
 
-    def accept_source(self, event: SourceEvent, clock: Clock) -> bool:
+    def accept_source(self, event: SourceEvent, clock: Clock | None = None) -> bool:
         """Only typed, own synthetic observations; no body-supplied provenance privilege."""
         with self._memory:
-            if clock.boot_id != obj(self._snapshot['status'])['boot_id']:
+            if clock is not None and clock.boot_id != obj(self._snapshot['status'])['boot_id']:
+                return False
+            clock = self.trusted_clock()
+            if self._clock_bad:
+                self.refresh()
                 return False
             try:
                 accepted = self._adapter.ingest(event)
@@ -234,15 +489,18 @@ class NativeBackend:
             if obj(state['status'])['mode'] != 'MANUAL_PAUSE':
                 obj(state['status'])['mode'] = 'SHADOW' if self.enabled else 'SAFE_HOLD'
             self._snapshot = state
+            self._room_seen_mono = clock.monotonic
+            self._room_initial_age = clock.utc - reading.observed_at
             self._serial += 1
             self._pending_stop = True
             return True
 
     def _can_change(self, is_admin: bool) -> bool:
+        self.refresh()
         room = obj(self._snapshot['room'])
         age = number(self._snapshot['now']) - number(room['observed'])
         return (is_admin is True and self.enabled and self._opened
-                and not self._store_failed and not self._pending_stop
+                and not self._store_failed and not self._pending_stop and not self._clock_bad
                 and room['quality'] == 'valid' and 0 <= age <= self._source_max_age
                 and obj(self._snapshot['status'])['mode'] not in ('SAFE_HOLD', 'RECOVERING'))
 
@@ -336,6 +594,8 @@ class NativeBackend:
                     return False
                 self._pending_stop = False
                 self._store_failed = False
+                self._snapshot['seq'] = integer(self._snapshot['seq']) + 1
+                obj(self._snapshot['status'])['status_seq'] = self._snapshot['seq']
                 return True
         except (StoreError, NativeProtocolError):
             self._store_failed = True
@@ -370,6 +630,7 @@ class NativeBackend:
         return body
 
     def dispatch(self, operation: str, payload: JSON, is_admin: bool = False) -> JSON:
+        self.refresh()
         body = self._validate(operation, payload)
         mutation = operation in ('settings/save', 'control', 'model')
         try:
@@ -395,10 +656,13 @@ class NativeBackend:
         if operation in ('overview', 'energy', 'history'):
             fixture = obj(self.evidence.read('fixture'))
             if operation == 'energy':
-                return deepcopy(fixture['intervals'])
+                self._energy_ledger = self._read_energy(self.evidence.read('kws_energy'))
+                return [{'start': s.start, 'end': s.end, 'kwh': s.kwh, 'category': s.category,
+                         'price': None, 'method': 'counter_difference'} for s in self._energy_ledger]
             if operation == 'overview':
                 overview = {key: deepcopy(fixture[key]) for key in ('original', 'latest', 'cycleEnergy', 'timeline', 'metrics')}
                 overview.update({'model': deepcopy(self._model), 'enabled': self.enabled,
+                               'boilerEnergy': self._boiler_energy(), 'energy_scope': 'approved_fixture_only',
                                'gates': self._gates(), 'physical_authority': False})
                 return overview
             return self._history(body, fixture)
@@ -418,6 +682,7 @@ class NativeBackend:
             if not settings_valid(body.get('values')):
                 return self._receipt(request, 'denied')
         result: JSON
+        saved_values: JSON = None
         with self._memory:
             serial, state = self._serial, deepcopy(self._snapshot)
         with self.critical.transaction() as con:
@@ -438,7 +703,8 @@ class NativeBackend:
                 revision = integer(saved['revision'], 1)
                 if body['expected_revision'] != revision:
                     return self._receipt(request, 'conflict', revision)
-                saved = {'revision': revision + 1, 'values': body['values'], 'lastRequest': request}
+                saved_values = {key: obj(saved['values'])[key] for key in VOLTAGE_DEFAULTS} | obj(body['values'])
+                saved = {'revision': revision + 1, 'values': saved_values, 'lastRequest': request}
                 self.critical.write(con, 'settings', saved)
                 result = self._receipt(request, 'saved', revision + 1)
                 values = obj(body['values'])
@@ -462,14 +728,17 @@ class NativeBackend:
         # A separate connection proves the committed readback, never a frontend cache.
         if operation == 'settings/save':
             readback = obj(self.critical.read('settings'))
-            if readback['revision'] != obj(result)['revision'] or readback['values'] != body['values']:
+            if readback['revision'] != obj(result)['revision'] or readback['values'] != saved_values:
                 self._store_failed = True
                 return self._receipt(request, 'unavailable')
         with self._memory:
+            self.refresh()
             if serial != self._serial:
                 return self._receipt(request, 'unavailable')
             self._snapshot = state
             self._serial += 1
+            if operation == 'settings/save':
+                self._settings_values = obj(saved_values)
             if operation == 'model':
                 self._model = obj(obj(result)['model'])
             return result
@@ -478,6 +747,8 @@ class NativeBackend:
         if kind not in ('resume', 'arm', 'cancel', 'expire', 'unknown', 'consume'):
             raise NativeProtocolError('invalid_control')
         shot = obj(state['oneShot'])
+        if kind in ('arm', 'consume') and not self._demand_eligible():
+            return self._receipt(request, 'denied')
         if kind == 'resume':
             obj(state['status'])['mode'] = 'RECOVERING'
             state['notices'] = [notice for notice in cast(list[JSON], state['notices'])

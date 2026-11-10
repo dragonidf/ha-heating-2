@@ -406,6 +406,14 @@ export class NativeAPI implements OperatorAPI {
       ].includes(kind)
     )
       throw Error("Некоректна дія");
+    if (
+      (kind === "arm" || kind === "consume") &&
+      (this.feed.value.demand_eligible !== true ||
+        this.feed.value.voltage?.eligible !== true)
+    )
+      throw Error(
+        "Запит нагріву заблоковано вхідною напругою або іншими захистами.",
+      );
     const id = this.requestId();
     const receipt = readReceipt({
       version: [2, 0],

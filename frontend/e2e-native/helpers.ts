@@ -35,23 +35,31 @@ export async function backendStatus(page: Page): Promise<Snapshot> {
     });
   });
 }
-export async function sourceEvent(page: Page, envelope: unknown) {
-  await page.evaluate(async (envelope) => {
-    const app = document.querySelector("home-assistant") as HTMLElement & {
-      hass: {
-        panels: Record<string, { config: { entry_id: string } }>;
-        callWS<T>(message: Record<string, unknown>): Promise<T>;
+export async function sourceEvent(
+  page: Page,
+  envelope: unknown,
+  kind?: "voltage",
+) {
+  await page.evaluate(
+    async ({ envelope, kind }) => {
+      const app = document.querySelector("home-assistant") as HTMLElement & {
+        hass: {
+          panels: Record<string, { config: { entry_id: string } }>;
+          callWS<T>(message: Record<string, unknown>): Promise<T>;
+        };
       };
-    };
-    await app.hass.callWS({
-      type: "fire_event",
-      event_type: "heating_ai_synthetic_sample",
-      event_data: {
-        entry_id: app.hass.panels["heating-ai"]!.config.entry_id,
-        envelope,
-      },
-    });
-  }, envelope);
+      await app.hass.callWS({
+        type: "fire_event",
+        event_type: "heating_ai_synthetic_sample",
+        event_data: {
+          entry_id: app.hass.panels["heating-ai"]!.config.entry_id,
+          envelope,
+          ...(kind ? { kind } : {}),
+        },
+      });
+    },
+    { envelope, kind },
+  );
 }
 export async function qualifySource(page: Page, sequence: number) {
   const state = await backendStatus(page);
@@ -59,6 +67,90 @@ export async function qualifySource(page: Page, sequence: number) {
   await expect
     .poll(async () => (await backendStatus(page)).permitted)
     .toBe(true);
+}
+export function syntheticVoltage(
+  at: number,
+  sequence: number,
+  values: readonly [number, number, number] = [230, 230, 230],
+  offlinePhase?: string,
+) {
+  return {
+    phases: (["L1", "L2", "L3"] as const).map((phase, index) => ({
+      phase,
+      source_id: `synthetic.input.${phase}`,
+      value_v: values[index],
+      last_reported: at,
+      received_at: at,
+      sequence,
+      phase_verified: true,
+      online: phase !== offlinePhase,
+    })),
+    mapping_verified: true,
+    grid_available: true,
+    protection_trip: false,
+    protection_last_reported: at,
+    protection_qualified: true,
+  };
+}
+export async function voltageEvent(
+  page: Page,
+  sequence: number,
+  values: readonly [number, number, number] = [230, 230, 230],
+  offlinePhase?: string,
+) {
+  const state = await backendStatus(page);
+  await sourceEvent(
+    page,
+    syntheticVoltage(state.now, sequence, values, offlinePhase),
+    "voltage",
+  );
+}
+export async function qualifyVoltage(page: Page) {
+  await page.evaluate(async () => {
+    const app = document.querySelector("home-assistant") as HTMLElement & {
+      hass: {
+        panels: Record<string, { config: { entry_id: string } }>;
+        callWS<T>(message: Record<string, unknown>): Promise<T>;
+      };
+    };
+    const common = {
+      entry_id: app.hass.panels["heating-ai"]!.config.entry_id,
+      version: [2, 0],
+    };
+    const settings = await app.hass.callWS<import("../src/types").Persisted>({
+      type: "heating_ai/settings/get",
+      ...common,
+    });
+    const state = await app.hass.callWS<Snapshot>({
+      type: "heating_ai/status",
+      ...common,
+    });
+    const receipt = await app.hass.callWS<import("../src/types").APIReceipt>({
+      type: "heating_ai/settings/save",
+      ...common,
+      boot_id: state.status.boot_id,
+      generation: state.generation,
+      owner_epoch: state.status.owner_epoch,
+      request_id: `synthetic.voltage.setup.${crypto.randomUUID()}`,
+      expected_revision: settings.revision,
+      values: { ...settings.values, stable_recovery_s: 0 },
+    });
+    if (receipt.status !== "saved")
+      throw Error("Synthetic voltage setup CAS failed");
+    const readback = await app.hass.callWS<import("../src/types").Persisted>({
+      type: "heating_ai/settings/get",
+      ...common,
+    });
+    if (
+      readback.revision !== receipt.persisted_revision ||
+      readback.values.stable_recovery_s !== 0
+    )
+      throw Error("Synthetic voltage setup readback failed");
+  });
+  await voltageEvent(page, 1);
+  await expect
+    .poll(async () => (await backendStatus(page)).voltage?.status)
+    .toBe("NORMAL");
 }
 /** Resolve each shadow boundary; a document-only selector cannot scope the native panel. */
 export function shadowContext(element: Element): {

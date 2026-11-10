@@ -1,4 +1,6 @@
 import { finite, object, persisted, readStatus } from "./contracts";
+import { validateVoltageSettings, voltageKeys } from "./voltage";
+import type { VoltageView, PowerView } from "./types";
 import type { OperatorView } from "./operator";
 import type { EnergyInterval, HistoryPage, Point, Snapshot } from "./types";
 const integer = (v: unknown): v is number =>
@@ -14,18 +16,98 @@ export function bounded(v: unknown, bytes = 262144): unknown {
     throw Error("Завеликий пакет");
   return v;
 }
+export function readVoltage(value: unknown): VoltageView {
+  const v = object(value),
+    ages = object(v.ages),
+    limits = object(v.limits);
+  const phases = ["L1", "L2", "L3"];
+  const age = (value: unknown) =>
+    value === null || (finite(value) && value >= 0);
+  if (
+    !["LOW", "HIGH", "MISSING_OR_STALE", "STABILIZING", "NORMAL"].includes(
+      v.status as string,
+    ) ||
+    v.eligible !== (v.status === "NORMAL") ||
+    !Array.isArray(v.affected_phases) ||
+    new Set(v.affected_phases).size !== v.affected_phases.length ||
+    !v.affected_phases.every((phase) => phases.includes(phase as string)) ||
+    !text(v.reason) ||
+    Object.keys(ages).sort().join() !== phases.join() ||
+    !Object.values(ages).every(age) ||
+    !Array.isArray(v.phases) ||
+    v.phases.length !== 3 ||
+    v.phases.some((raw: unknown, index: number) => {
+      const p = object(raw);
+      return (
+        p.phase !== phases[index] ||
+        !(p.voltage_v === null || (finite(p.voltage_v) && p.voltage_v >= 0)) ||
+        !age(p.age_s) ||
+        p.age_s !== ages[phases[index]!] ||
+        ![null, true, false].includes(p.online as null) ||
+        typeof p.qualified !== "boolean" ||
+        (p.qualified &&
+          (p.voltage_v === null || p.age_s === null || p.online !== true))
+      );
+    }) ||
+    Object.keys(limits).sort().join() !== [...voltageKeys].sort().join() ||
+    validateVoltageSettings(limits).length ||
+    v.source_role !== "grid_input_voltage" ||
+    v.source_provider !== "zigbee2mqtt_input220" ||
+    v.physical_authority !== false ||
+    v.scope !== "synthetic_only"
+  )
+    throw Error("Недовірений стан вхідної напруги");
+  return structuredClone(v as unknown as VoltageView);
+}
+export function readPower(value: unknown): PowerView {
+  const p = object(value),
+    phases = ["L1", "L2", "L3"];
+  const nonnegative = (v: unknown) => v === null || (finite(v) && v >= 0);
+  if (
+    p.source_role !== "boiler_power_energy" ||
+    p.source_provider !== "tuya_local_kws" ||
+    p.cloud_duplicate_policy !== "excluded_no_fallback" ||
+    !["OFF", "PUMP_ONLY", "~3kW", "~6kW", "~9kW", "UNKNOWN"].includes(
+      p.stage as string,
+    ) ||
+    (p.stage !== "UNKNOWN" && p.total_active_w === null) ||
+    !nonnegative(p.total_active_w) ||
+    !nonnegative(p.total_imported_kwh) ||
+    !Array.isArray(p.phases) ||
+    p.phases.length !== 3 ||
+    p.phases.some((raw: unknown, index: number) => {
+      const phase = object(raw);
+      return (
+        phase.phase !== phases[index] ||
+        !nonnegative(phase.active_w) ||
+        !nonnegative(phase.age_s)
+      );
+    }) ||
+    !text(p.reason) ||
+    p.physical_authority !== false ||
+    p.physical_heat !== null ||
+    p.scope !== "synthetic_only"
+  )
+    throw Error("Недовірені дані KWS Tuya Local");
+  return structuredClone(p as unknown as PowerView);
+}
 export function readSnapshot(value: unknown): Snapshot {
   const s = object(bounded(value)),
     room = object(s.room),
     fan = object(s.fan),
     shot = object(s.oneShot),
     diag = object(s.diagnostics);
+  if (s.power !== undefined) readPower(s.power);
+  const voltage = s.voltage === undefined ? undefined : readVoltage(s.voltage);
   const status = readStatus({
     version: [2, 0],
     type: "StatusView",
     data: s.status,
   });
   if (
+    (s.demand_eligible !== undefined &&
+      (typeof s.demand_eligible !== "boolean" ||
+        (s.demand_eligible === true && voltage?.eligible !== true))) ||
     s.version !== 1 ||
     !integer(s.seq) ||
     !integer(s.generation) ||

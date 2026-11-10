@@ -36,3 +36,11 @@ Independent slices may be implemented in parallel after this shared contract; da
 WP2C checkpoints1–4 completed locally: actualCore2026.10.4 synthetic62native groups/strictSDK40filesPASS, isolated resources removed. Pure suite now427cases; preceding3.12/3.13 runs and resumed3.12 run98%coveragePASS; all101acceptedPythonassets unchanged. Checkpoint5 source/build frozen:255frontendcasesPASS,28nativebrowsercases defined; actualnativebrowserqualification deferred to ephemeralCI due localinodebudget. Checkpoint6 uses16final-headjobs (14preserved+2realHA), exact86/38canonicalmappings and refreshedsource/artifactSHA. FinalCI/independentreview recordedby oneopenPR, no automaticnextphase.
 
 WP2C implementation qualification:427Python/255frontend/80standalone+28native browser cases,71native assertion groups per disposable instance,5tool regressions; all16jobs passed on the code SHA retained in docs/wp2c/evidence/native-ci.json. Post-browser isolation and teardown passed. Final report,86/38native slices and checksums prepared for final-head CI; independent acceptance remains with ChatGPT, one open unmergedPR22, G1/B01–B08BLOCKED and noWP2D.
+
+# WP2C revision — Issue20 / independent review 2026-11-10
+
+Same PR22, implementation/self-tests only. Preserve427Python/255frontend/108browser/71nativegroups/5tools and quality floors. Tasks remain tracked under Issue20.
+1. Trusted injected UTC/monotonic clock, silent-stream expiry and native timer notifications; fake-clock red regressions, backward-clock failclosed and real isolated HA timeout. Backend/SDK slice.
+2. Pure input220 Zigbee voltage guard and KWS Tuya Local power/energy role contracts; exact boundaries, hysteresis, dwell, mapping/heartbeat loss, asymmetrical calibrated stage bands and cloud duplicate exclusion. Pure test slice; coordinate API before backend integration.
+3. Versioned settings migration/CAS/readback and UI voltage/power indications; retain legacy settings/data, manual STOP/one-shot invariants; focused unit/browser regressions. Frontend/backend coordinated slice.
+4. Integrate synthetic fixtures and isolated native regressions; run focused tests first, then full local checks, refresh report/86–38/source manifests. Publish one final code batch and run full16 CI on final SHA. Keep PR OPEN, no merge/WP2D, G1/B01–B08BLOCKED. No production/private/device access.

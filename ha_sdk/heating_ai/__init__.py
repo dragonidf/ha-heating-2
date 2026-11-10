@@ -2,9 +2,10 @@
 from __future__ import annotations
 import asyncio
 import json
+from datetime import datetime, timedelta
 from pathlib import Path
 import tempfile
-from time import monotonic
+from time import monotonic, time
 from typing import Any, Callable, cast
 import probatio
 from homeassistant.components import frontend, panel_custom, websocket_api
@@ -17,14 +18,16 @@ from homeassistant.core import HomeAssistant, Event, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_time_interval
 from .config_flow import isolated, options
 from .const import ASSETS, DOMAIN, EVENT_SAMPLE, PANEL
-from .core.contracts import Clock
 from .core.offline.codec import decode
 from .core.offline.contracts import SourceEvent
-from .core.ha_native.backend import NativeBackend, NativeProtocolError, number
+from .core.ha_native.backend import NativeBackend, NativeProtocolError
 from .core.ha_native.meter import binding_summary, future_meter_binding
 from .core.ha_native.store import JSON
+from .core.ha_native.voltage import decode_voltage_frame
+from .core.ha_native.kws import decode_kws_frame
 
 READS = ("status", "overview", "energy", "history", "settings/get", "diagnostics", "subscribe")
 MUTATIONS = ("settings/save", "control", "model")
@@ -54,15 +57,30 @@ class Runtime:
                 raise NativeProtocolError("unavailable")
             result = await self.hass.async_add_executor_job(self.backend.dispatch, operation, cast(JSON, payload), admin)
         if operation in MUTATIONS:
+            await self.flush()
+        if operation in MUTATIONS or operation == "status":
             self.notify()
         if operation == "diagnostics" and isinstance(result, dict):
             result["meter_binding"] = cast(JSON, binding_summary(future_meter_binding(self.entry.options.get("meter_source_id", ""))))
         return result
 
     async def flush(self) -> None:
+        before = self.backend.status(False)["seq"]
         await self.hass.async_add_executor_job(self.backend.flush_stop)
+        if self.active and self.backend.status(False)["seq"] != before:
+            self.notify()
+
+    async def flush_evidence(self) -> None:
+        await self.hass.async_add_executor_job(self.backend.flush_evidence)
         if self.active:
             self.notify()
+
+    async def tick(self, now: datetime) -> None:
+        if not self.active:
+            return
+        if self.backend.refresh(publish=True):
+            self.notify()
+        await self.flush()
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not await isolated(hass):
@@ -126,7 +144,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def open_backend() -> NativeBackend:
         root = Path(tempfile.gettempdir()) / ("heating-wp2c-" + entry.entry_id)
         root.mkdir(mode=0o700, exist_ok=True)
-        backend = NativeBackend(root, entry_id=entry.entry_id, enabled=selected["simulation_enabled"])
+        backend = NativeBackend(root, entry_id=entry.entry_id, enabled=selected["simulation_enabled"],
+                                clock=lambda: (time(), monotonic()))
         backend.configure_source(selected["freshness_s"])
         backend.open()
         return backend
@@ -145,19 +164,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if user is None or not user.is_admin:
             return
         try:
-            if set(event.data) != {"entry_id", "envelope"} or len(json.dumps(event.data).encode()) > 65536:
+            if set(event.data) not in ({"entry_id", "envelope"}, {"entry_id", "kind", "envelope"}) or len(json.dumps(event.data).encode()) > 65536:
                 raise ValueError("Invalid source envelope")
-            data = decode(json.dumps(event.data["envelope"], allow_nan=False))
-            if not isinstance(data, SourceEvent):
-                raise ValueError("Expected SourceEvent")
-            state = backend.status(False)
-            view = state["status"]
-            assert isinstance(view, dict)
-            backend.accept_source(data, Clock(utc=number(state["now"]), monotonic=monotonic(), boot_id=str(view["boot_id"])))
+            kind = event.data.get("kind", "room")
+            if kind == "voltage":
+                backend.accept_voltage(decode_voltage_frame(event.data["envelope"]))
+            elif kind == "power":
+                backend.accept_power(decode_kws_frame(event.data["envelope"]))
+            elif kind == "room":
+                data = decode(json.dumps(event.data["envelope"], allow_nan=False))
+                if not isinstance(data, SourceEvent):
+                    raise ValueError("Expected SourceEvent")
+                backend.accept_source(data)
+            else:
+                raise ValueError("Unknown synthetic source kind")
         except (ValueError, TypeError, KeyError, RecursionError):
             backend.invalidate_source("invalid_synthetic_event")
         runtime.notify()
         await runtime.flush()
+        hass.async_create_background_task(runtime.flush_evidence(), "heating_ai meter evidence")
 
     owned_entity_ids: set[str] = set()
 
@@ -181,6 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         backend.close()
         runtime.listeners.clear()
 
+    entry.async_on_unload(async_track_time_interval(hass, runtime.tick, timedelta(seconds=1)))
     entry.async_on_unload(hass.bus.async_listen(EVENT_SAMPLE, source_event))
     entry.async_on_unload(hass.bus.async_listen("entity_registry_updated", registry_event))
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_runtime))

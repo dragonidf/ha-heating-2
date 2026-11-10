@@ -178,6 +178,152 @@ async def isolation() -> dict:
     return {"ha_version": version("homeassistant"), "frontend_version": version("home-assistant-frontend"), "python_version": sys.version.split()[0], "sqlite_version": sqlite3.sqlite_version, "sqlite_source_id": sqlite_source_id, "sqlite_library_sha256": sha256(Path("/opt/wp2c/lib/libsqlite3.so.0").read_bytes()).hexdigest(), "components": components, "interfaces": interfaces, "ipv4_routes": [], "tcp_listeners": listeners, "negative_transport_probes": probes, "count": 8}
 
 
+async def idle_room_expiry(session, admin, common, sample, options, read) -> list[str]:
+    """Require an unsolicited HA timer update during a silent source stream."""
+    await options(True, {"freshness_s": 5})
+    await sample(0)
+    before = await read("status")
+    assert before["permitted"] is True and before["room"]["quality"] == "valid"
+    subscription = await WS.connect(session, json.loads(SECRETS.read_text())["admin_token"])
+    try:
+        await subscription.ok("heating_ai/subscribe", **common)
+        initial = await subscription.connection.receive_json(timeout=5)
+        assert initial["type"] == "event" and initial["event"]["permitted"] is True
+        async with asyncio.timeout(10):
+            while True:
+                # No status request or source event may trigger this transition.
+                message = await subscription.connection.receive_json()
+                if message["type"] == "event" and message["event"]["room"]["quality"] == "stale":
+                    expired = message["event"]
+                    break
+        assert expired["now"] > before["room"]["observed"] + 5
+        assert expired["permitted"] is False
+        assert expired["status"]["mode"] == ("MANUAL_PAUSE" if before["status"]["mode"] == "MANUAL_PAUSE" else "SAFE_HOLD")
+        assert expired["status"]["desired"] == "stop_demand" and expired["status"]["physical_verified"] is False
+        assert expired["room"]["observed"] == before["room"]["observed"]
+        assert expired["room"]["value"] == before["room"]["value"]
+        assert expired["oneShot"] == before["oneShot"]
+        assert expired["status"]["boot_id"] == before["status"]["boot_id"] and expired["seq"] > before["seq"]
+        await subscription.ok("unsubscribe_events", subscription=1)
+    finally:
+        await subscription.connection.close()
+    await sample(1)
+    recovered = await read("status")
+    assert recovered["permitted"] is True and recovered["room"]["quality"] == "valid"
+    assert recovered["status"]["desired"] == "stop_demand" and recovered["oneShot"] == before["oneShot"]
+    return ["native_idle_room_stream_expires_without_status_poll", "native_timer_expiry_preserves_report_and_one_shot", "native_new_room_report_restores_eligibility_without_heat"]
+
+
+async def report_voltage(admin, common, read, sequence, volts=(230, 230, 230), *, missing=None, online=True, grid=True):
+    now = (await read("status"))["now"]
+    frame = {"phases": [{"phase": phase, "source_id": "synthetic.input220." + phase,
+             "value_v": value, "last_reported": now, "received_at": now, "sequence": sequence,
+             "phase_verified": True, "online": online}
+            for phase, value in zip(("L1", "L2", "L3"), volts) if phase != missing],
+             "mapping_verified": True, "grid_available": grid, "protection_trip": False,
+             "protection_last_reported": now, "protection_qualified": True}
+    await admin.ok("fire_event", event_type="heating_ai_synthetic_sample",
+                   event_data={"entry_id": common["entry_id"], "kind": "voltage", "envelope": frame})
+    await asyncio.sleep(0.1)
+    return await read("status")
+
+
+async def voltage_guards(session, admin, common, mutate, read, sample) -> list[str]:
+    """Only fictional upstream voltage reports; never a meter/device service call."""
+    checks = []
+    policy = {"min_voltage_v": 190, "max_voltage_v": 250, "hysteresis_v": 5,
+              "stable_recovery_s": 1, "voltage_max_age_s": 5}
+    saved = await read("settings/get")
+    receipt = await mutate("settings/save", request_id="native-voltage-limits",
+                           expected_revision=saved["revision"], values=saved["values"] | policy)
+    assert receipt["status"] == "saved"
+    persisted = await read("settings/get")
+    assert all(persisted["values"][key] == value for key, value in policy.items())
+    conflict = await mutate("settings/save", request_id="native-voltage-conflict",
+                            expected_revision=saved["revision"], values=persisted["values"])
+    assert conflict["status"] == "conflict" and (await read("settings/get")) == persisted
+    checks.append("native_voltage_limits_cas_persisted_readback_and_conflict")
+
+    async def report(sequence, volts=(230, 230, 230), *, missing=None, online=True, grid=True):
+        return await report_voltage(admin, common, read, sequence, volts, missing=missing, online=online, grid=grid)
+
+    state = await read("status")
+    assert state["voltage"]["status"] == "MISSING_OR_STALE" and state["demand_eligible"] is False
+    assert (await mutate("control", kind="arm", request_id="native-voltage-missing-arm"))["status"] == "denied"
+    checks.append("native_missing_upstream_voltage_blocks_heating_demand")
+    state = await report(1)
+    assert state["voltage"]["status"] == "STABILIZING" and state["demand_eligible"] is False
+    await asyncio.sleep(1.2)
+    state = await read("status")
+    assert state["voltage"]["status"] == "NORMAL" and state["demand_eligible"] is True
+    assert state["status"]["desired"] == "stop_demand" and state["status"]["physical_verified"] is False
+    checks.append("native_voltage_recovery_dwell_returns_only_eligibility")
+    for sequence, volts, expected, affected in (
+        (2, (189.9, 230, 230), "LOW", "L1"),
+        (3, (230, 250.1, 230), "HIGH", "L2"),
+    ):
+        state = await report(sequence, volts)
+        assert state["voltage"]["status"] == expected and affected in state["voltage"]["affected_phases"]
+        assert state["demand_eligible"] is False and state["status"]["desired"] == "stop_demand"
+        assert (await mutate("control", kind="arm", request_id="native-voltage-" + expected))["status"] == "denied"
+        checks.append("native_voltage_" + expected.lower() + "_blocks_heating_demand")
+    for sequence, changes, label in (
+        (4, {"missing": "L3"}, "missing_phase"),
+        (5, {"online": False}, "zigbee_reported_offline"),
+        (6, {"grid": False}, "upstream_grid_off"),
+    ):
+        state = await report(sequence, **changes)
+        assert state["voltage"]["status"] == "MISSING_OR_STALE" and state["demand_eligible"] is False
+        checks.append("native_voltage_" + label + "_has_no_inverter_or_kws_fallback")
+    await mutate("control", kind="pause", request_id="native-voltage-manual-stop")
+    await report(7)
+    await asyncio.sleep(1.2)
+    state = await read("status")
+    assert state["voltage"]["status"] == "NORMAL" and state["voltage"]["eligible"] is True
+    assert state["status"]["mode"] == "MANUAL_PAUSE" and state["demand_eligible"] is False
+    assert state["status"]["desired"] == "stop_demand" and state["oneShot"]["state"] == "inactive"
+    checks.append("native_voltage_recovery_never_overrides_manual_stop_or_arms_one_shot")
+    # Reading the newly NORMAL guard can queue its durability fence; wait for reconciliation.
+    for _ in range(50):
+        if (await read("status"))["permitted"]:
+            break
+        await asyncio.sleep(0.1)
+    else:
+        raise AssertionError("Voltage recovery was not durably reconciled")
+    receipt = await mutate("control", kind="resume", request_id="native-voltage-explicit-resume")
+    assert receipt["status"] == "accepted_fake"
+    assert (await read("status"))["status"]["mode"] == "RECOVERING"
+    await sample(4)
+    state = await report(8)
+    assert state["demand_eligible"] is True
+    subscription = await WS.connect(session, json.loads(SECRETS.read_text())["admin_token"])
+    try:
+        await subscription.ok("heating_ai/subscribe", **common)
+        initial = await subscription.connection.receive_json(timeout=5)
+        assert initial["event"]["demand_eligible"] is True
+        async with asyncio.timeout(10):
+            while True:
+                message = await subscription.connection.receive_json()
+                if message["type"] == "event" and message["event"]["voltage"]["status"] == "MISSING_OR_STALE":
+                    stale = message["event"]
+                    break
+        assert stale["demand_eligible"] is False and stale["room"]["quality"] == "valid"
+        assert [(row["phase"], row["voltage_v"], row["online"]) for row in stale["voltage"]["phases"]] == [
+            (row["phase"], row["voltage_v"], row["online"]) for row in state["voltage"]["phases"]]
+        assert all(row["age_s"] > 5 for row in stale["voltage"]["phases"])
+        assert stale["status"]["desired"] == "stop_demand" and stale["status"]["physical_verified"] is False
+        await subscription.ok("unsubscribe_events", subscription=1)
+    finally:
+        await subscription.connection.close()
+    checks.append("native_idle_zigbee_voltage_expires_by_timer_without_fabricated_reports")
+    current = await read("settings/get")
+    result = await mutate("settings/save", request_id="native-voltage-test-restore",
+                          expected_revision=current["revision"], values=current["values"] | {"stable_recovery_s": 0, "voltage_max_age_s": 30})
+    assert result["status"] == "saved"
+    await report(9)
+    return checks
+
+
 async def integration(restart: bool = False) -> dict:
     secrets = json.loads(SECRETS.read_text())
     completed: list[str] = []
@@ -251,7 +397,9 @@ async def integration(restart: bool = False) -> dict:
             assert initial["status"]["desired"] == "stop_demand" and initial["status"]["actual"] is None
             assert (await read("settings/get"))["values"] == expected["settings"]
             assert initial["oneShot"]["state"] in ("unknown_outcome", "consumed")
+            assert initial["voltage"]["status"] == "MISSING_OR_STALE" and initial["demand_eligible"] is False
             completed.extend(["restart_new_boot_generation_and_owner_epoch", "restart_preserves_manual_stop", "restart_never_repeats_heat", "restart_settings_readback", "restart_oneshot_no_replay"])
+            completed.append("restart_requires_new_upstream_voltage_evidence")
             await admin.connection.close()
             await reader.connection.close()
             return {"qualification": "PASS_ISOLATED", "checks": completed, "count": len(completed)}
@@ -296,14 +444,21 @@ async def integration(restart: bool = False) -> dict:
         from custom_components.heating_ai.core.offline.contracts import SourceEvent
         from custom_components.heating_ai.core.offline.codec import encode
 
+        samples: dict[tuple[str, int, float | None, float], dict] = {}
+
         async def sample(sequence: int, *, at: float | None = None, value: float = 0) -> None:
             state = await read("status")
-            now = state["now"] if at is None else at
-            reading = Reading(physical_id="synthetic.native.room", source_id="synthetic.native.room", value=value, unit=Unit.CELSIUS, observed_at=now, received_at=now, quality=Quality(status=QualityStatus.VALID, age_s=0, reason="synthetic"), provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
-            envelope = json.loads(encode(SourceEvent("native-" + str(sequence), "synthetic.native.room", sequence, now, reading)))
+            key = (state["status"]["boot_id"], sequence, at, value)
+            if key not in samples:
+                now = state["now"] if at is None else at
+                reading = Reading(physical_id="synthetic.native.room", source_id="synthetic.native.room", value=value, unit=Unit.CELSIUS, observed_at=now, received_at=now, quality=Quality(status=QualityStatus.VALID, age_s=0, reason="synthetic"), provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
+                samples[key] = json.loads(encode(SourceEvent("native-" + str(sequence), "synthetic.native.room", sequence, now, reading)))
+            # A duplicate replays identical bytes; a new sequence obtains fresh trusted time.
+            envelope = samples[key]
             await admin.ok("fire_event", event_type="heating_ai_synthetic_sample", event_data={"entry_id": secrets["entry_id"], "envelope": envelope})
             await asyncio.sleep(0.1)
 
+        completed.extend(await idle_room_expiry(session, admin, common, sample, options, read))
         await options(True, {"freshness_s": 120, "meter_source_id": "synthetic.future.boiler"})
         await options(False)
         await options(True)
@@ -344,6 +499,8 @@ async def integration(restart: bool = False) -> dict:
         conflict = await admin.ok("heating_ai/settings/save", **(body | {"values": values | {"fan": 71}}))
         assert conflict["status"] == "conflict"
         completed.extend(["native_durable_settings_cas_and_readback", "native_idempotent_retry", "native_request_body_conflict"])
+        completed.extend(await voltage_guards(session, admin, common, mutate, read, sample))
+        values = (await read("settings/get"))["values"]
         frozen = json.dumps((await read("overview"))["original"], sort_keys=True)
         assert frozen != "null"
         for index, kind in enumerate(("train", "promote", "freeze", "rollback")):
@@ -438,6 +595,7 @@ async def integration(restart: bool = False) -> dict:
         assert (await read("status"))["permitted"] is False
         completed.append("native_registry_remove_invalidates_source")
         await sample(3)
+        await report_voltage(admin, common, read, 1)
         assert (await mutate("control", kind="arm", request_id="native-arm-restart"))["status"] == "accepted_fake"
         assert (await mutate("control", kind="pause", request_id="native-pause-restart"))["status"] == "accepted_fake"
         await asyncio.sleep(0.2)

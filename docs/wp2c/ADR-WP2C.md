@@ -1,5 +1,7 @@
 # ADR-WP2C — generated, fake-only native HA package
 
+**2026-11-10 revision:** [Source/time clarification](REVISION-2026-11-10.md) supersedes prior source-selection and frozen-clock wording below. KWS Tuya Local is the future boiler evidence role; input220 Zigbee2MQTT alone supplies grid-input voltage. Historical qualification records remain unchanged.
+
 Status: implemented for isolated review; physical gates remain BLOCKED. Authority: Issue20 and APPROVAL-2026-11-04.md. This extends ADR01–07 solely with SDK packaging and synthetic native qualification.
 
 ## Decision

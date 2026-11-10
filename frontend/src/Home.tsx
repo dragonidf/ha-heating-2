@@ -1,3 +1,4 @@
+import { ElectricalEvidence } from "./ElectricalEvidence";
 import { useState } from "react";
 import { Card, Badge, Chart, Dialog, Icon } from "./components";
 import { fmt, time, dateTime, prioritize, energySummary } from "./domain";
@@ -316,6 +317,7 @@ export function Home({
           </Card>
         </div>
       </div>
+      {api.native && <ElectricalEvidence state={state} />}
       <details className="card compact-details">
         <summary>
           Одноразовий запит після відновлення живлення · симуляція
@@ -343,7 +345,13 @@ export function Home({
         </p>
         <div className="button-row">
           <button
-            disabled={!permitted || state.oneShot.state === "unknown_outcome"}
+            disabled={
+              !permitted ||
+              (api.native &&
+                (state.demand_eligible !== true ||
+                  state.voltage?.eligible !== true)) ||
+              state.oneShot.state === "unknown_outcome"
+            }
             onClick={() => intent("arm")}
           >
             Запланувати один раз у симуляції

@@ -1,5 +1,7 @@
 # WP2C public source and provenance
 
+**2026-11-10 revision:** [Source/time clarification](REVISION-2026-11-10.md) supersedes prior source-selection and frozen-clock wording below. KWS Tuya Local is the future boiler evidence role; input220 Zigbee2MQTT alone supplies grid-input voltage. Historical qualification records remain unchanged.
+
 All data fixtures are deterministic synthetic repository examples. No household configuration, account, token, telemetry or original Recorder file is an input.
 
 | Source | Pin / purpose |
