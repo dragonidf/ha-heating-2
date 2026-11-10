@@ -147,6 +147,12 @@ export async function qualifyVoltage(page: Page) {
     )
       throw Error("Synthetic voltage setup readback failed");
   });
+  // Setup changed the authoritative settings revision outside the panel.
+  // Bootstrap its current revision before testing user CAS edits.
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Дім", exact: true }),
+  ).toBeAttached();
   await voltageEvent(page, 1);
   await expect
     .poll(async () => (await backendStatus(page)).voltage?.status)
