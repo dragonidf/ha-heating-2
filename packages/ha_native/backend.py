@@ -118,6 +118,8 @@ class NativeBackend:
         self._effective_room_limit = effective_room_limit
         self._active_room_limit: ActiveRoomLimit | None = None
         self._last_ceiling_intent: dict[str, JSON] | None = None
+        self._last_heat_request: tuple[float | None, bool, bool] | None = None
+        self._issued_thermostat_owner: str | None = None
         self._thermostat_caps: tuple[float | None, float | None, float | None] = (None,None,None)
         self._thermostat_seen: Clock | None = None
         self._thermostat_fresh = False
@@ -153,6 +155,8 @@ class NativeBackend:
         self._activity_active = False
         self._active_room_limit = None
         self._last_ceiling_intent = None
+        self._last_heat_request = None
+        self._issued_thermostat_owner = None
         self._thermostat_caps = (None,None,None)
         self._thermostat_seen = None
         self._thermostat_fresh = False
@@ -568,8 +572,48 @@ class NativeBackend:
                 owns_thermostat=owns_thermostat,manual_stop=evidence.manual_stop or evidence.operator_changed_mode)
             if result is not None:
                 result['owner_epoch'] = owner_epoch
-            self._last_ceiling_intent = result
+            self._last_ceiling_intent = deepcopy(result)
+            self._last_heat_request = (requested_setpoint_c,planner_requests_heat,one_shot)
+            self._issued_thermostat_owner = evidence.owner
             obj(self._snapshot['system_health'])['thermostat_ceiling'] = self._ceiling_view(self.trusted_clock())
+            return result
+
+    def issued_thermostat_request(self, proposal: dict[str, JSON]) -> tuple[float | None, bool, bool] | None:
+        with self._memory:
+            return self._last_heat_request if proposal == self._last_ceiling_intent and self._health_evidence().owner == self._issued_thermostat_owner else None
+
+    def revalidate_thermostat_proposal(self, proposal: dict[str, JSON], *, thermostat_c: float,
+                                     minimum: float, maximum: float, step: float, observed_at: float) -> bool:
+        with self._memory:
+            request = self.issued_thermostat_request(proposal)
+            if request is None:
+                return False
+            wanted, planner, one_shot = request
+            checked = self.heat_setpoint_intent(owner_epoch=integer(proposal.get('owner_epoch')),
+                requested_setpoint_c=wanted,planner_requests_heat=planner,one_shot=one_shot,
+                owns_thermostat=True,thermostat_mode='HEAT',thermostat_fresh=True,thermostat_c=thermostat_c,
+                min_setpoint_c=minimum,max_setpoint_c=maximum,temperature_step_c=step)
+            clock = self.trusted_clock()
+            age = max(0,clock.utc-observed_at)
+            self._thermostat_seen = Clock(utc=observed_at,monotonic=max(0,clock.monotonic-age),boot_id=clock.boot_id)
+            return checked == proposal
+
+    def executor_withdrawal(self, *, owner_epoch: int, thermostat_c: float, minimum: float,
+                            maximum: float, step: float) -> dict[str, JSON] | None:
+        """STOP/preemption only: fixed negative permission, never resume or ON."""
+        with self._memory:
+            self.refresh()
+            evidence = self._health_evidence()
+            if (not self._opened or not self.enabled or self._clock_bad or evidence.owner is None
+                    or evidence.operator_changed_mode or owner_epoch != obj(self._snapshot['status'])['owner_epoch']):
+                return None
+            result = finalize_heat_setpoint(limit=self._active_room_limit,room_c=None,
+                requested_setpoint_c=None,heat_permitted=False,planner_requests_heat=False,
+                thermostat_c=thermostat_c,min_setpoint_c=minimum,max_setpoint_c=maximum,
+                temperature_step_c=step,thermostat_fresh=True,thermostat_mode='HEAT',
+                owns_thermostat=True,manual_stop=False)
+            if result is not None:
+                result['owner_epoch'] = owner_epoch
             return result
 
     def voltage_stop_intent(self, *, owner_epoch: int, owns_thermostat: bool = False,
