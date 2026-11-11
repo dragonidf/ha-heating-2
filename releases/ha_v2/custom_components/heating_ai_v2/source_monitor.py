@@ -6,6 +6,7 @@ are read through HA Core's documented entity lifecycle interfaces.
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 import logging
 import time
 from collections.abc import Callable
@@ -174,7 +175,7 @@ class SourceMonitor:
         """No HA event-loop model loops; reject results for superseded inputs."""
         key = self._input_key
         weather, outages = self.weather, self.outages
-        rows = self.read_rows()
+        rows = deepcopy(self.read_rows())
         try:
             from .shadow_plan import diagnostics
             plan, coast = await asyncio.wait_for(
