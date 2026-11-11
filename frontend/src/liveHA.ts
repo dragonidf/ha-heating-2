@@ -35,14 +35,29 @@ export type BaseBindings = Record<
   string
 >;
 export type FanBindingRole =
-  | "fireplace" | "circulation" | "fan_mode"
-  | "fan_night" | "fan_standard" | "fan_intense"
-  | "fan_backup" | "fan_control" | "recuperator" | "bath";
-export type LiveBindings = BaseBindings & Partial<Record<FanBindingRole, string>>;
+  | "fireplace"
+  | "circulation"
+  | "fan_mode"
+  | "fan_night"
+  | "fan_standard"
+  | "fan_intense"
+  | "fan_backup"
+  | "fan_control"
+  | "recuperator"
+  | "bath";
+export type LiveBindings = BaseBindings &
+  Partial<Record<FanBindingRole, string>>;
 export const optionalRoles: FanBindingRole[] = [
-  "fireplace", "circulation", "fan_mode",
-  "fan_night", "fan_standard", "fan_intense",
-  "fan_backup", "fan_control", "recuperator", "bath",
+  "fireplace",
+  "circulation",
+  "fan_mode",
+  "fan_night",
+  "fan_standard",
+  "fan_intense",
+  "fan_backup",
+  "fan_control",
+  "recuperator",
+  "bath",
 ];
 export interface LiveTelemetry {
   origin: "ha_last_known";
@@ -156,9 +171,14 @@ export class LiveHAAPI implements OperatorAPI {
     kwsTotal: null,
     kwsEnergy: null,
     lastReported: {},
-    fireplaceC: null, fireplaceDeltaC: null,
-    fanActual: null, fanPercent: null, fanMode: null,
-    fanSpeeds: [null, null, null], fanBackupVerified: null, fanControlEnabled: null,
+    fireplaceC: null,
+    fireplaceDeltaC: null,
+    fanActual: null,
+    fanPercent: null,
+    fanMode: null,
+    fanSpeeds: [null, null, null],
+    fanBackupVerified: null,
+    fanControlEnabled: null,
     ventilation: { recuperator: null, bath: null },
   };
   constructor(
@@ -167,7 +187,10 @@ export class LiveHAAPI implements OperatorAPI {
   ) {
     if (
       roles.some((role) => typeof bindings[role] !== "string") ||
-      Object.keys(bindings).some((role) => ![...roles, ...optionalRoles].includes(role as keyof LiveBindings)) ||
+      Object.keys(bindings).some(
+        (role) =>
+          ![...roles, ...optionalRoles].includes(role as keyof LiveBindings),
+      ) ||
       new Set(Object.values(bindings)).size !== Object.keys(bindings).length ||
       roles.some(
         (role) =>
@@ -201,11 +224,20 @@ export class LiveHAAPI implements OperatorAPI {
     };
     const fireplaceC = number(s("fireplace"), "°C", 65);
     const fanActualRaw = s("circulation")?.state;
-    const fanActual = fanActualRaw === "on" || fanActualRaw === "off" ? fanActualRaw : null;
+    const fanActual =
+      fanActualRaw === "on" || fanActualRaw === "off" ? fanActualRaw : null;
     const fanPctRaw = s("circulation")?.attributes.percentage;
-    const fanPercent = typeof fanPctRaw === "number" && Number.isFinite(fanPctRaw) && fanPctRaw >= 0 && fanPctRaw <= 100 ? fanPctRaw : null;
+    const fanPercent =
+      typeof fanPctRaw === "number" &&
+      Number.isFinite(fanPctRaw) &&
+      fanPctRaw >= 0 &&
+      fanPctRaw <= 100
+        ? fanPctRaw
+        : null;
     const fanMode = s("fan_mode")?.state ?? null;
-    const fanSpeeds = (["fan_night", "fan_standard", "fan_intense"] as const).map((role) => number(s(role), "%", 100));
+    const fanSpeeds = (
+      ["fan_night", "fan_standard", "fan_intense"] as const
+    ).map((role) => number(s(role), "%", 100));
     const voltageRoles = ["voltage_l1", "voltage_l2", "voltage_l3"] as const;
     const kwsRoles = ["kws_l1", "kws_l2", "kws_l3"] as const;
     const volts = voltageRoles.map((role) => number(s(role), "V", 400));
@@ -231,7 +263,10 @@ export class LiveHAAPI implements OperatorAPI {
         [...roles, ...optionalRoles].map((role) => [role, stamp(s(role))]),
       ),
       fireplaceC,
-      fireplaceDeltaC: fireplaceC !== null && room !== null ? Math.round((fireplaceC - room) * 100) / 100 : null,
+      fireplaceDeltaC:
+        fireplaceC !== null && room !== null
+          ? Math.round((fireplaceC - room) * 100) / 100
+          : null,
       fanActual,
       fanPercent,
       fanMode,

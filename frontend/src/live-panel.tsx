@@ -1,7 +1,12 @@
 /** Real Home Assistant panel: read-only live state, no fake NativeAPI. */
 import { createRoot, type Root } from "react-dom/client";
 import { LiveApp } from "./liveApp";
-import { LiveHAAPI, optionalRoles, type LiveHass, type LiveBindings } from "./liveHA";
+import {
+  LiveHAAPI,
+  optionalRoles,
+  type LiveHass,
+  type LiveBindings,
+} from "./liveHA";
 import styles from "./styles.css?inline";
 
 const roles: (keyof LiveBindings)[] = [

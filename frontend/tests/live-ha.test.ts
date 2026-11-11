@@ -106,7 +106,8 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     const h = frame("Відсутня мережа");
     h.states["sensor.fireplace"] = s("27.4", "°C");
     h.states["fan.local"] = {
-      ...s("off"), attributes: { percentage: 42 },
+      ...s("off"),
+      attributes: { percentage: 42 },
     };
     h.states["input_select.fan_mode"] = s("Зупинити");
     h.states["input_number.night"] = s("38", "%");
@@ -123,7 +124,10 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     expect(api.telemetry.fanMode).toBe("Зупинити");
     expect(api.telemetry.fanSpeeds).toEqual([38, 42, 45]);
     expect(api.telemetry.fanBackupVerified).toBe(true);
-    expect(api.telemetry.ventilation).toEqual({ recuperator: null, bath: false });
+    expect(api.telemetry.ventilation).toEqual({
+      recuperator: null,
+      bath: false,
+    });
     expect(api.feed.value.permitted).toBe(false);
     expect(api.control("arm", api.session).status).toBe("denied");
   });
