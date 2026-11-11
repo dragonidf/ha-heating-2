@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heating AI 2.0 — read-only shadow",
+        "description": "Select existing Home Assistant entities. No commands will be sent to the thermostat, KWS or boiler.",
+        "data": {
+          "thermostat": "Boiler thermostat",
+          "room": "Living-room temperature",
+          "grid": "Grid present",
+          "voltage_l1": "Upstream phase L1 voltage",
+          "voltage_l2": "Upstream phase L2 voltage",
+          "voltage_l3": "Upstream phase L3 voltage",
+          "kws_l1": "KWS local active power L1 (kW)",
+          "kws_l2": "KWS local active power L2 (kW)",
+          "kws_l3": "KWS local active power L3 (kW)",
+          "kws_energy": "KWS local total energy (kWh)"
+        }
+      }
+    },
+    "error": {
+      "invalid_mapping": "Select ten different existing entities."
+    },
+    "abort": {
+      "already_configured": "Heating AI 2.0 shadow is already configured."
+    }
+  }
+}
