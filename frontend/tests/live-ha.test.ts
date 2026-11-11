@@ -92,6 +92,7 @@ describe("Real HA v2 live bridge (no actuator)", () => {
   it("observes a fireplace and one local fan without bypassing manual stop", () => {
     const selected: LiveBindings = {
       ...bindings,
+      return_probe: "sensor.return_probe",
       fireplace: "sensor.fireplace",
       circulation: "fan.local",
       fan_mode: "input_select.fan_mode",
@@ -104,6 +105,7 @@ describe("Real HA v2 live bridge (no actuator)", () => {
       bath: "switch.bath",
     };
     const h = frame("Відсутня мережа");
+    h.states["sensor.return_probe"] = s("22.1", "°C");
     h.states["sensor.fireplace"] = s("27.4", "°C");
     h.states["fan.local"] = {
       ...s("off"),
@@ -118,6 +120,7 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     h.states["switch.recuperator"] = s("unavailable");
     h.states["switch.bath"] = s("off");
     const api = new LiveHAAPI(selected, h);
+    expect(api.telemetry.returnC).toBe(22.1);
     expect(api.telemetry.fireplaceC).toBe(27.4);
     expect(api.telemetry.fireplaceDeltaC).toBe(6.1);
     expect(api.telemetry.fanActual).toBe("off");

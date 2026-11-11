@@ -13,7 +13,7 @@ ROLES = (
     "voltage_l1", "voltage_l2", "voltage_l3",
     "kws_l1", "kws_l2", "kws_l3", "kws_energy",
 )
-OPTIONAL_ROLES = ("fireplace", "circulation", "fan_mode", "fan_night", "fan_standard", "fan_intense", "fan_backup", "fan_control", "recuperator", "bath",)
+OPTIONAL_ROLES = ("return_probe", "fireplace", "circulation", "fan_mode", "fan_night", "fan_standard", "fan_intense", "fan_backup", "fan_control", "recuperator", "bath",)
 
 _UNITS = {
     "room": "°C",
@@ -55,6 +55,7 @@ def snapshot(rows: Mapping[str, Mapping[str, Any] | None]) -> dict[str, Any]:
     unavailable = [name for name in ROLES
                    if rows.get(name) is None
                    or rows[name].get("state") in ("unavailable", "unknown", None)]
+    return_c = _number(rows.get("return_probe"), "°C", -30, 110)
     fireplace = _number(rows.get("fireplace"), "°C", -30, 65)
     delta = round(fireplace - room, 2) if fireplace is not None and room is not None else None
     fan_state = (rows.get("circulation") or {}).get("state")
@@ -83,6 +84,7 @@ def snapshot(rows: Mapping[str, Mapping[str, Any] | None]) -> dict[str, Any]:
         "kws_total_kw_last_known": total,
         "kws_energy_kwh_last_known": energy,
         "kws_stage": "UNCALIBRATED",
+        "return_c_last_known": return_c,
         "fireplace_c_last_known": fireplace, "fireplace_delta_c_last_known": delta,
         "circulation_last_known": fan_state, "circulation_percentage_last_known": fan_pct,
         "fan_mode_last_known": mode, "fan_speed_percent_last_known": speeds,

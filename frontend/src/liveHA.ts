@@ -37,6 +37,7 @@ export type BaseBindings = Record<
   string
 >;
 export type FanBindingRole =
+  | "return_probe"
   | "fireplace"
   | "circulation"
   | "fan_mode"
@@ -50,6 +51,7 @@ export type FanBindingRole =
 export type LiveBindings = BaseBindings &
   Partial<Record<FanBindingRole, string>>;
 export const optionalRoles: FanBindingRole[] = [
+  "return_probe",
   "fireplace",
   "circulation",
   "fan_mode",
@@ -72,6 +74,7 @@ export interface LiveTelemetry {
   kwsTotal: number | null;
   kwsEnergy: number | null;
   lastReported: Record<string, string | null>;
+  returnC: number | null;
   fireplaceC: number | null;
   fireplaceDeltaC: number | null;
   fanActual: "on" | "off" | null;
@@ -174,6 +177,7 @@ export class LiveHAAPI implements OperatorAPI {
     kwsTotal: null,
     kwsEnergy: null,
     lastReported: {},
+    returnC: null,
     fireplaceC: null,
     fireplaceDeltaC: null,
     fanActual: null,
@@ -230,6 +234,7 @@ export class LiveHAAPI implements OperatorAPI {
       const value = s(role)?.state;
       return value === "on" ? true : value === "off" ? false : null;
     };
+    const returnC = number(s("return_probe"), "°C", 110);
     const fireplaceC = number(s("fireplace"), "°C", 65);
     const fanActualRaw = s("circulation")?.state;
     const fanActual =
@@ -270,6 +275,7 @@ export class LiveHAAPI implements OperatorAPI {
       lastReported: Object.fromEntries(
         [...roles, ...optionalRoles].map((role) => [role, stamp(s(role))]),
       ),
+      returnC,
       fireplaceC,
       fireplaceDeltaC:
         fireplaceC !== null && room !== null

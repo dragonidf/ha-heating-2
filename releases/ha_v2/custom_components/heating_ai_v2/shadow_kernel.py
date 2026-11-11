@@ -42,7 +42,8 @@ def shadow_decision(values: dict[str, Any]) -> dict[str, Any]:
     clock = Clock(utc=utc, monotonic=time.monotonic(), boot_id="ha-v2-shadow")
     stamp = hashlib.sha256(json.dumps(
         {k: values.get(k) for k in (
-            "room_c_last_known", "thermostat_mode_last_known",
+            "room_c_last_known", "return_c_last_known",
+            "thermostat_mode_last_known",
             "grid_last_known", "kws_total_kw_last_known"
         )}, sort_keys=True, default=str,
     ).encode()).hexdigest()
@@ -54,7 +55,7 @@ def shadow_decision(values: dict[str, Any]) -> dict[str, Any]:
         grid_epoch=0, owner_epoch=0,
         captured_at=utc,
         room=_held(values.get("room_c_last_known"), Unit.CELSIUS, "room", utc),
-        return_temperature=None,
+        return_temperature=_held(values.get("return_c_last_known"), Unit.CELSIUS, "return_probe", utc),
         thermostat=None,
         grid_actual=_held(values.get("grid_last_known"), Unit.BOOLEAN, "grid", utc),
         forecast_grid=None,

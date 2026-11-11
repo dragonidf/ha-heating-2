@@ -88,6 +88,15 @@ class ReadOnlyShadowTests(unittest.TestCase):
         self.assertIsNone(snapshot(f)["grid_last_known"])
         self.assertFalse(snapshot(f)["commands_enabled"])
 
+    def test_return_probe_is_observed_without_granting_authority(self):
+        f = frame()
+        f["return_probe"] = {"state": "22.1", "unit": "°C", "last_reported": "today"}
+        view = snapshot(f)
+        self.assertEqual(view["return_c_last_known"], 22.1)
+        self.assertFalse(view["commands_enabled"])
+        f["return_probe"]["state"] = "unavailable"
+        self.assertIsNone(snapshot(f)["return_c_last_known"])
+
     def test_fireplace_fan_modes_and_ventilation_are_read_only(self):
         f = frame()
         f.update({

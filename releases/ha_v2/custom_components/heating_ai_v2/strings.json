@@ -24,7 +24,8 @@
           "fan_backup": "Fan backup-power verified helper",
           "fan_control": "Fan control enabled helper",
           "recuperator": "Recuperator relay (read-only)",
-          "bath": "Bathroom extractor relay (read-only)"
+          "bath": "Bathroom extractor relay (read-only)",
+          "return_probe": "Return line temperature probe (°C) — read-only"
         }
       }
     },

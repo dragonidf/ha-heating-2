@@ -22,6 +22,7 @@ const mapping = {
   kws_l2: "sensor.kws2",
   kws_l3: "sensor.kws3",
   kws_energy: "sensor.kwh",
+  return_probe: "sensor.return_probe",
   fireplace: "sensor.fireplace",
   circulation: "fan.local",
   fan_mode: "input_select.fan_mode",
@@ -49,6 +50,7 @@ function hass(grid = "Наявна мережа"): LiveHass {
       "sensor.kws2": source("0.012", "kW"),
       "sensor.kws3": source("0", "kW"),
       "sensor.kwh": source("160.7", "kWh"),
+      "sensor.return_probe": source("22.1", "°C"),
       "sensor.fireplace": source("27.5", "°C"),
       "fan.local": {
         ...source("off"),
@@ -79,6 +81,7 @@ describe("Actual Home Assistant custom panel mounting", () => {
     panel.hass = hass();
     document.body.appendChild(panel);
     await waitFor(() => {
+      expect(panel.shadowRoot?.textContent).toContain("Зворотна лінія котла");
       expect(panel.shadowRoot?.textContent).toContain("Камін та циркуляція");
       expect(panel.shadowRoot?.textContent).toContain("21,5");
       expect(panel.shadowRoot?.textContent).toContain("Зупинити");

@@ -16,7 +16,7 @@ from custom_components.heating_ai_v2.telemetry import ROLES, OPTIONAL_ROLES
 def fake_state(role: str):
     unit = ("kW" if role in ("kws_l1", "kws_l2", "kws_l3") else
             "kWh" if role == "kws_energy" else
-            "°C" if role in ("room", "fireplace") else
+            "°C" if role in ("room", "fireplace", "return_probe") else
             "V" if role.startswith("voltage_") else
             "%" if role.startswith("fan_") and role in
             ("fan_night", "fan_standard", "fan_intense") else "")
@@ -104,6 +104,7 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         assert runtime.values["kernel"]["intents"] == 0
         assert runtime.values["fan"]["percentage_proposed"] == 0
         assert runtime.values["fan"]["reason"] == "explicit_stop"
+        assert runtime.values["return_c_last_known"] == 21
         assert runtime.values["fireplace_delta_c_last_known"] == 6
         assert runtime.values["fan_speed_percent_last_known"]["fan_standard"] == 42
         # Actual speed is a fan ATTRIBUTE, not a standalone sensor state.
