@@ -7,6 +7,8 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import DOMAIN
@@ -43,7 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.data[DOMAIN]:
         return False
     if set(entry.data) != set(ROLES) or len(set(entry.data.values())) != len(ROLES):
-        return False
+        raise ConfigEntryError("Incomplete or duplicate shadow bindings")
+
+    registry = er.async_get(hass)
+    meter_roles = ("kws_l1", "kws_l2", "kws_l3", "kws_energy")
+    meter = [registry.async_get(entry.data[role]) for role in meter_roles]
+    if (any(row is None or row.platform != "tuya_local" or row.device_id is None
+            for row in meter)
+            or len({row.device_id for row in meter if row is not None}) != 1):
+        raise ConfigEntryError("KWS must be four local channels from ONE device")
 
     runtime = ShadowRuntime(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = runtime
