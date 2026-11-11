@@ -75,7 +75,7 @@ describe("Actual Home Assistant custom panel mounting", () => {
     document.body.appendChild(panel);
     await waitFor(() => {
       expect(panel.shadowRoot?.textContent).toContain("Камін та циркуляція");
-      expect(panel.shadowRoot?.textContent).toContain("21.5");
+      expect(panel.shadowRoot?.textContent).toContain("21,5");
       expect(panel.shadowRoot?.textContent).toContain("Зупинити");
       expect(panel.shadowRoot?.textContent).toContain("Реальні дані");
       expect(panel.shadowRoot?.textContent).not.toContain("Симуляція");
