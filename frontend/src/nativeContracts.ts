@@ -91,12 +91,64 @@ export function readPower(value: unknown): PowerView {
     throw Error("Недовірені дані KWS Tuya Local");
   return structuredClone(p as unknown as PowerView);
 }
+function validateHealth(raw: unknown): void {
+  const h = object(raw);
+  if (
+    h.physical_verified !== false ||
+    h.semantics !== "proposed_only_no_device_ack" ||
+    typeof h.mode !== "string" ||
+    !(h.notification === null || typeof h.notification === "string") ||
+    !Array.isArray(h.components) ||
+    h.components.length !== 6
+  )
+    throw Error("Непридатна діагностика");
+  if (h.proposal !== undefined && h.proposal !== null) {
+    const p = object(h.proposal);
+    if (
+      p.physical_authority !== false ||
+      p.stage !== "proposed" ||
+      typeof p.id !== "string" ||
+      typeof p.action !== "string" ||
+      !(p.mode === undefined || p.mode === "AUTO" || p.mode === "HEAT")
+    )
+      throw Error("Непридатна пропозиція режиму");
+  }
+  const keys = new Set<string>();
+  for (const raw of h.components) {
+    const row = object(raw);
+    if (
+      typeof row.key !== "string" ||
+      keys.has(row.key) ||
+      ![
+        "living_room",
+        "fireplace",
+        "thermostat",
+        "utility",
+        "kws",
+        "controller",
+      ].includes(row.key) ||
+      typeof row.label !== "string" ||
+      typeof row.reason !== "string" ||
+      row.reason.length > 600 ||
+      !["OK", "PROBLEM", "WAITING"].includes(row.status as string) ||
+      !(row.age_s === null || (finite(row.age_s) && row.age_s >= 0)) ||
+      !finite(row.checked_at) ||
+      !finite(row.last_transition) ||
+      row.physical_verified !== false ||
+      typeof row.fallback_action !== "string"
+    )
+      throw Error("Непридатний компонент діагностики");
+    keys.add(row.key);
+  }
+}
+
 export function readSnapshot(value: unknown): Snapshot {
   const s = object(bounded(value)),
     room = object(s.room),
     fan = object(s.fan),
     shot = object(s.oneShot),
     diag = object(s.diagnostics);
+  if (s.system_health !== undefined) validateHealth(s.system_health);
   if (s.power !== undefined) readPower(s.power);
   const voltage = s.voltage === undefined ? undefined : readVoltage(s.voltage);
   const status = readStatus({

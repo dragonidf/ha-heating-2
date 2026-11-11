@@ -1,3 +1,4 @@
+import { SystemHealth } from "./SystemHealth";
 import { ElectricalEvidence } from "./ElectricalEvidence";
 import { useState } from "react";
 import { Card, Badge, Chart, Dialog, Icon } from "./components";
@@ -39,6 +40,7 @@ export function Home({
   return (
     <>
       <h1 className="sr-only">Дім</h1>
+      {state.system_health && <SystemHealth health={state.system_health} />}
       <section className="comfort card" aria-labelledby="comfort-title">
         <div className="comfort-main">
           <div className="eyebrow" id="comfort-title">

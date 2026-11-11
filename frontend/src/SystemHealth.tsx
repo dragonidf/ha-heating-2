@@ -1,0 +1,61 @@
+import type { SystemHealthView } from "./types";
+const actions: Record<string, string> = {
+  NORMAL: "Плановий режим",
+  AUTO_PROPOSED: "Запропоновано резервний AUTO",
+  HEAT_PROPOSED: "Запропоновано повернення HEAT",
+  RECOVERING: "Перевіряємо відновлення",
+  ELECTRICAL_INHIBIT: "Нагрів заблокований електрозахистом",
+  WAITING: "Очікування даних",
+  BLOCKED: "STOP або недоступний власник/контролер",
+};
+export function SystemHealth({ health }: { health: SystemHealthView }) {
+  const problems = health.components.filter((c) => c.status === "PROBLEM");
+  const waiting = health.components.filter((c) => c.status === "WAITING");
+  const highest =
+    problems.find((c) => c.key === "utility") ??
+    problems.find((c) => c.key === "controller") ??
+    problems[0] ??
+    waiting.find((c) => c.key === "utility") ??
+    waiting[0];
+  return (
+    <section className="card" aria-label="Стан системи">
+      {highest && (
+        <p role={problems.length ? "alert" : "status"}>
+          {highest.label}: {highest.reason}
+        </p>
+      )}
+      <details>
+        <summary>
+          <strong>Стан системи</strong> · OK{" "}
+          {health.components.length - problems.length - waiting.length} ·
+          Проблема {problems.length} · Очікування {waiting.length}
+        </summary>
+        <ul>
+          {health.components.map((c) => (
+            <li key={c.key}>
+              <strong>{c.label}</strong>:{" "}
+              {c.status === "PROBLEM"
+                ? "Проблема"
+                : c.status === "WAITING"
+                  ? "Очікування"
+                  : "OK"}{" "}
+              · {c.reason} ·{" "}
+              {c.age_s === null
+                ? "Давність невідома"
+                : `${Math.floor(c.age_s)} с`}{" "}
+              · {actions[c.fallback_action] ?? "Дія не підтверджена"}
+            </li>
+          ))}
+        </ul>
+        <p>
+          Дії лише запропоновані в симуляції. Фізичний стан не підтверджений.
+        </p>
+      </details>
+      {(health.last_notice ?? health.notification) && (
+        <p role="status">
+          Останнє повідомлення: {health.last_notice ?? health.notification}
+        </p>
+      )}
+    </section>
+  );
+}

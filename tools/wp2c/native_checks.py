@@ -214,6 +214,38 @@ async def idle_room_expiry(session, admin, common, sample, options, read) -> lis
     return ["native_idle_room_stream_expires_without_status_poll", "native_timer_expiry_preserves_report_and_one_shot", "native_new_room_report_restores_eligibility_without_heat"]
 
 
+def readiness_details(state, receipt=None):
+    """Allowlisted synthetic-only failure context; no auth, mappings or raw envelopes."""
+    return {"receipt": None if receipt is None else {k: receipt.get(k) for k in ("status", "reason")}, "room_quality": state["room"]["quality"],
+            "room_age_s": state["now"] - state["room"]["observed"],
+            "permitted": state["permitted"], "demand_eligible": state["demand_eligible"],
+            "voltage_status": state["voltage"]["status"], "voltage_eligible": state["voltage"]["eligible"],
+            "mode": state["status"]["mode"], "one_shot": state["oneShot"]["state"],
+            "owner_epoch": state["status"]["owner_epoch"], "seq": state["seq"],
+            "generation": state["generation"], "persistence": state["diagnostics"]["persistence"], "health_mode": state["system_health"]["mode"]}
+
+
+async def wait_status(read, predicate, label, *, timeout=5):
+    """Wait for observable qualification, never retry a command or fabricate reports."""
+    deadline = perf_counter() + timeout
+    first = None
+    while True:
+        remaining = deadline - perf_counter()
+        try:
+            state = await asyncio.wait_for(read("status"), timeout=max(0, remaining))
+        except TimeoutError as exc:
+            raise AssertionError({"check": label, "first": first, "reason": "status_timeout"}) from exc
+        if predicate(state):
+            if first is not None:
+                print(label, json.dumps({"before": first, "after": readiness_details(state)}), file=sys.stderr, flush=True)
+            return state
+        if first is None:
+            first = readiness_details(state)
+        if perf_counter() >= deadline:
+            raise AssertionError({"check": label, "first": first, "last": readiness_details(state)})
+        await asyncio.sleep(0.05)
+
+
 async def report_voltage(admin, common, read, sequence, volts=(230, 230, 230), *, missing=None, online=True, grid=True):
     now = (await read("status"))["now"]
     frame = {"phases": [{"phase": phase, "source_id": "synthetic.input220." + phase,
@@ -467,7 +499,9 @@ async def integration(restart: bool = False) -> dict:
         assert binding["source_id"] == "synthetic.future.boiler" and binding["physical_authority"] is False and binding["bound"] is False
         completed.append("native_partial_options_preserve_unverified_future_meter_selection")
         await sample(0, at=(await read("status"))["now"] - 60)
-        assert (await read("status"))["permitted"] is True
+        state = await wait_status(read, lambda s: s["permitted"] and s["room"]["quality"] == "valid",
+                                  "native-authoritative-source-age")
+        assert state["permitted"] is True, readiness_details(state)
         completed.append("native_partial_options_preserve_authoritative_source_age")
         await options(True, {"freshness_s": 30, "meter_source_id": ""})
         await sample(1)
@@ -584,7 +618,10 @@ async def integration(restart: bool = False) -> dict:
         await mutate("control", kind="pause", request_id="native-stop-reconcile")
         await asyncio.sleep(0.2)
         completed.append("native_stop_memory_first_while_critical_sqlite_locked")
-        await mutate("control", kind="resume", request_id="native-resume-before-registry")
+        await wait_status(read, lambda s: s["permitted"] and s["status"]["mode"] == "MANUAL_PAUSE",
+                          "native-stop-durably-reconciled")
+        receipt = await mutate("control", kind="resume", request_id="native-resume-before-registry")
+        assert receipt["status"] == "accepted_fake", readiness_details(await read("status"), receipt)
         registry_row = rows[0]
         await admin.ok("config/entity_registry/update", entity_id=registry_row["entity_id"], name="Synthetic lifecycle rename")
         await asyncio.sleep(0.1)
@@ -597,7 +634,13 @@ async def integration(restart: bool = False) -> dict:
         completed.append("native_registry_remove_invalidates_source")
         await sample(3)
         await report_voltage(admin, common, read, 1)
-        assert (await mutate("control", kind="arm", request_id="native-arm-restart"))["status"] == "accepted_fake"
+        await wait_status(read, lambda s: s["permitted"] and s["demand_eligible"]
+                          and s["voltage"]["status"] == "NORMAL" and s["voltage"]["eligible"]
+                          and s["room"]["quality"] == "valid" and s["oneShot"]["state"] == "inactive",
+                          "native-arm-restart-qualified")
+        receipt = await mutate("control", kind="arm", request_id="native-arm-restart")
+        state = await read("status")
+        assert receipt["status"] == "accepted_fake", readiness_details(state, receipt)
         assert (await mutate("control", kind="pause", request_id="native-pause-restart"))["status"] == "accepted_fake"
         await asyncio.sleep(0.2)
         state = await read("status")

@@ -167,6 +167,7 @@ export interface PowerView {
   scope: "synthetic_only";
 }
 export interface Snapshot {
+  system_health?: SystemHealthView;
   power?: PowerView;
   voltage?: VoltageView;
   demand_eligible?: boolean;
@@ -228,4 +229,31 @@ export interface Track {
   start: number;
   end: number;
   kind: "heat" | "outage" | "fire";
+}
+
+export interface SystemHealthView {
+  components: readonly {
+    key: string;
+    label: string;
+    status: "OK" | "PROBLEM" | "WAITING";
+    reason: string;
+    age_s: number | null;
+    severity: string;
+    checked_at: number;
+    last_transition: number;
+    physical_verified: false;
+    fallback_action: string;
+  }[];
+  mode: string;
+  notification: string | null;
+  physical_verified: false;
+  semantics: "proposed_only_no_device_ack";
+  last_notice?: string | null;
+  proposal?: {
+    id: string;
+    mode?: "AUTO" | "HEAT";
+    action: string;
+    stage: "proposed";
+    physical_authority: false;
+  } | null;
 }
