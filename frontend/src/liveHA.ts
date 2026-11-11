@@ -108,9 +108,23 @@ export interface CoastSummary {
   hours: number;
   qualified: false;
 }
+export interface VirtualPlanSummary {
+  status: "VIRTUAL_CONDITIONAL" | "BLOCKED_INPUTS";
+  reason: string;
+  powerKw: number | null;
+  nominalEnergyKwh: number | null;
+  projectedMinC: number | null;
+  horizonHours: number;
+  segmentCount: number;
+  segments: { start: number; end: number }[];
+  truncated: boolean;
+  qualified: false;
+  commandsSent: 0;
+}
 export interface LiveTelemetry {
   coast: CoastSummary;
   sources: SourceSummary;
+  plan: VirtualPlanSummary;
   origin: "ha_last_known";
   room: number | null;
   thermostatMode: string | null;
@@ -214,12 +228,25 @@ export class LiveHAAPI implements OperatorAPI {
   readonly model = { revision: 0, candidate: false, frozen: true };
   readonly view = emptyView(Date.now() / 1000);
   readonly dataErrors = [
-    "Архів, планувальник та налаштування Heating AI 2.0 ще не перенесені.",
+    "Архів оригінальних прогнозів та керування Heating AI 2.0 ще не перенесено.",
   ];
   readonly scenario = undefined;
   private currentHass: LiveHass;
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
+    plan: {
+      status: "BLOCKED_INPUTS",
+      reason: "planner_not_ready",
+      powerKw: null,
+      nominalEnergyKwh: null,
+      projectedMinC: null,
+      horizonHours: 0,
+      segmentCount: 0,
+      segments: [],
+      truncated: false,
+      qualified: false,
+      commandsSent: 0,
+    },
     coast: {
       status: "UNAVAILABLE",
       min: null,
@@ -331,11 +358,12 @@ export class LiveHAAPI implements OperatorAPI {
       : null;
     const thermostat = s("thermostat");
     const target = thermostat?.attributes.temperature;
-    const summary = this.entryId
+    const statusAttrs = this.entryId
       ? Object.values(hass.states ?? {}).find(
           (v) => v?.attributes.v2_entry_id === this.entryId,
-        )?.attributes.provider_summary
-      : null;
+        )?.attributes
+      : undefined;
+    const summary = statusAttrs?.provider_summary ?? null;
     const p =
       summary && typeof summary === "object" && !Array.isArray(summary)
         ? (summary as Record<string, unknown>)
@@ -344,10 +372,7 @@ export class LiveHAAPI implements OperatorAPI {
       typeof x === "number" && Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
     const safeTime = (x: unknown) =>
       typeof x === "number" && Number.isFinite(x) && x > 0 ? x : null;
-    const coastRaw = summary && typeof summary === "object"
-      ? Object.values(hass.states ?? {}).find(
-          (v) => v?.attributes.v2_entry_id === this.entryId,
-        )?.attributes.coast_preview : null;
+    const coastRaw = statusAttrs?.coast_preview ?? null;
     const coastValue = coastRaw && typeof coastRaw === "object" &&
       !Array.isArray(coastRaw) ? coastRaw as Record<string, unknown> : {};
     const coastNumber = (x: unknown) => typeof x === "number" &&
@@ -359,6 +384,47 @@ export class LiveHAAPI implements OperatorAPI {
       end: coastNumber(coastValue.temperature_end_c),
       hours: coastNumber(coastValue.hours_covered) ?? 0,
       qualified: false,
+    };
+    const candidate = statusAttrs?.virtual_plan;
+    const planRaw =
+      candidate && typeof candidate === "object" && !Array.isArray(candidate)
+        ? (candidate as Record<string, unknown>)
+        : {};
+    const segmentsRaw = planRaw.segments;
+    const segments = Array.isArray(segmentsRaw)
+      ? segmentsRaw.slice(0, 12).flatMap((item) => {
+          if (!item || typeof item !== "object") return [];
+          const v = item as Record<string, unknown>;
+          return typeof v.start === "number" &&
+            typeof v.end === "number" &&
+            Number.isFinite(v.start) &&
+            Number.isFinite(v.end) &&
+            v.start > 0 &&
+            v.end > v.start &&
+            v.conditional === true
+            ? [{ start: v.start, end: v.end }]
+            : [];
+        })
+      : [];
+    const planStatus =
+      planRaw.status === "VIRTUAL_CONDITIONAL"
+        ? "VIRTUAL_CONDITIONAL"
+        : "BLOCKED_INPUTS";
+    const plan: VirtualPlanSummary = {
+      status: planStatus,
+      reason:
+        typeof planRaw.reason === "string" && planRaw.reason.length < 128
+          ? planRaw.reason
+          : "planner_unavailable",
+      powerKw: coastNumber(planRaw.scenario_power_kw),
+      nominalEnergyKwh: coastNumber(planRaw.nominal_energy_kwh),
+      projectedMinC: coastNumber(planRaw.projected_min_c),
+      horizonHours: coastNumber(planRaw.horizon_hours) ?? 0,
+      segmentCount: safeCount(planRaw.segment_count),
+      segments: planStatus === "VIRTUAL_CONDITIONAL" ? segments : [],
+      truncated: planRaw.segments_truncated === true,
+      qualified: false,
+      commandsSent: 0,
     };
     const sources: SourceSummary = {
       weatherStatus:
@@ -380,6 +446,7 @@ export class LiveHAAPI implements OperatorAPI {
       origin: "ha_last_known",
       sources,
       coast,
+      plan,
       room,
       thermostatMode: thermostat?.state ?? null,
       thermostatSetpoint:
