@@ -44,3 +44,11 @@ One newly qualified synthetic room temperature sample after an eligible source-f
 3. Implement/review/test the distinct one-writer thermostat transport, permissions, command/ACK/readback, outage/rollback and watchdog arbitration in isolated/staging. No such transport exists here; no real physical command is possible.
 4. Validate a controller-only handoff: quiesce the old heating writer plus external watchdog/fan writers under an approved owner/cutover/rollback plan. Never stop the shared AppDaemon add-on or unrelated apps. Rehearse private data/history/state migration and recovery; no production backup/install/change is authorized by this PR.
 5. Qualify Core2026.11.0 native lifecycle/event/auth/browser compatibility, then separately authorized shadow/staging and physical acceptance gates. G1 remains BLOCKED; deployment/cutover requires separate authorization and independent review.
+
+## PR32 focused CI compatibility correction
+
+The strict SDK file allowlist now explicitly includes passive.py, while retaining the exact list and all existing AST/service/external-transport/token restrictions. No climate/fan/switch platform or unexpected file is allowed.
+
+The native expiry fixture now uses the coherent synthetic pair freshness_s=5/recovery_dwell_s=2. On the same actual options form it first submits5/15 and requires form/invalid_options, unchanged boot/generation and unchanged measurement-age/dwell/activity policy; it then submits the valid pair atomically and verifies the resulting5/2 ready policy. Pure timing regressions also reject5/15,5/5 and5/-1. Explicit persisted dwell is deliberately preserved: changing age alone to an incompatible value is a validation error, not permission to silently replace an operator's dwell. No options-flow defect was established, so config_flow.py and all safety/source/controller code are unchanged.
+
+Focused local verification:5 tests PASS (four boundary tests plus the timing-policy regression). No manual full CI trigger. Final automatic CI evidence is recorded in the PR description/checks. Physical qualification and2026.11.0 acceptance blockers remain unchanged.

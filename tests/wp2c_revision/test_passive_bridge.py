@@ -159,8 +159,11 @@ class PassiveBridgeTests(unittest.TestCase):
         self.assertFalse(self.backend.status(True)['demand_eligible'])
 
     def test_timing_validation_and_configuration_are_separate(self):
-        for age,dwell,window in ((30,30,3660),(30,31,3660),(30,0,3660),(301,15,3660),(30,15,59)):
+        for age,dwell,window in ((5,15,3660),(5,5,3660),(5,-1,3660),(30,30,3660),(30,31,3660),(30,0,3660),(301,15,3660),(30,15,59)):
             with self.assertRaises(ValueError):SourceTimingPolicy(age,window,dwell)
+        paired = SourceTimingPolicy(5,3660,2)
+        self.assertEqual(paired.measurement_authorization_age_s,5)
+        self.assertEqual(paired.recovery_dwell_s,2)
         self.backend.configure_timing(SourceTimingPolicy(60,120,10))
         view=self.backend.status(True)['source_freshness']
         self.assertEqual(view['measurement_authorization_age_s'],60)

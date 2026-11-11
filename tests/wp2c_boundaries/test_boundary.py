@@ -26,7 +26,7 @@ class NativeBoundaryTests(unittest.TestCase):
         self.assertEqual(set(manifest['dependencies']),{'frontend','http','websocket_api','panel_custom'})
         self.assertTrue(manifest['single_config_entry'])
     def test_only_read_only_entities_are_packaged(self):
-        self.assertEqual(sorted(p.name for p in ROOT.glob('*.py')),['__init__.py','config_flow.py','const.py','sensor.py'])
+        self.assertEqual(sorted(p.name for p in ROOT.glob('*.py')),['__init__.py','config_flow.py','const.py','passive.py','sensor.py'])
         sensor=(ROOT/'sensor.py').read_text()
         self.assertIn('_attr_entity_registry_enabled_default = False',sensor)
         self.assertIn('"physical_verified": False',sensor)

@@ -180,7 +180,11 @@ async def isolation() -> dict:
 
 async def idle_room_expiry(session, admin, common, sample, options, read) -> list[str]:
     """Require an unsolicited HA timer update during a silent source stream."""
-    await options(True, {"freshness_s": 5})
+    await options(True, {"freshness_s": 5, "recovery_dwell_s": 2},
+                  invalid_extra={"freshness_s": 5, "recovery_dwell_s": 15})
+    policy = (await read("status"))["source_freshness"]
+    assert policy["measurement_authorization_age_s"] == 5 and policy["recovery_dwell_s"] == 2
+    assert policy["recovery_policy_ready"] is True
     await sample(0)
     before = await read("status")
     assert before["permitted"] is True and before["room"]["quality"] == "valid"
@@ -403,10 +407,22 @@ async def integration(restart: bool = False) -> dict:
             state = await read("status")
             return await read(operation, who, boot_id=state["status"]["boot_id"], generation=state["generation"], owner_epoch=state["status"]["owner_epoch"], **extra)
 
-        async def options(enabled: bool, extra: dict | None = None) -> None:
+        async def options(enabled: bool, extra: dict | None = None, *, invalid_extra: dict | None = None) -> None:
+            previous = await read("status") if invalid_extra is not None else None
             code, flow = await http(session, "POST", "/api/config/config_entries/options/flow", {"handler": secrets["entry_id"]}, secrets["admin_token"])
             assert code == 200 and isinstance(flow, dict)
-            code, result = await http(session, "POST", "/api/config/config_entries/options/flow/" + flow["flow_id"], {"simulation_enabled": enabled} | (extra or {}), secrets["admin_token"])
+            code, result = await http(session, "POST", "/api/config/config_entries/options/flow/" + flow["flow_id"], {"simulation_enabled": enabled} | (invalid_extra if invalid_extra is not None else extra or {}), secrets["admin_token"])
+            if invalid_extra is not None:
+                assert code == 200 and isinstance(result, dict) and result["type"] == "form"
+                assert result["errors"]["base"] == "invalid_options"
+                current = await read("status")
+                assert previous is not None
+                assert current["generation"] == previous["generation"]
+                assert current["status"]["boot_id"] == previous["status"]["boot_id"]
+                for key in ("measurement_authorization_age_s", "recovery_dwell_s", "activity_window_s"):
+                    assert current["source_freshness"][key] == previous["source_freshness"][key]
+                # Correct the same form with one coherent, valid paired update.
+                code, result = await http(session, "POST", "/api/config/config_entries/options/flow/" + flow["flow_id"], {"simulation_enabled": enabled} | (extra or {}), secrets["admin_token"])
             assert code == 200 and isinstance(result, dict) and result["type"] == "create_entry", "Native options flow failed"
             await asyncio.sleep(0.3)
             await wait_loaded()
