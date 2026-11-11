@@ -18,7 +18,6 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 
 from .const import DOMAIN
 from .telemetry import ROLES, snapshot
-from .shadow_kernel import shadow_decision
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +45,7 @@ class ShadowRuntime:
             } if state is not None else None)
         self.values = snapshot(rows)
         try:
+            from .shadow_kernel import shadow_decision
             self.values['kernel'] = shadow_decision(self.values)
             self._kernel_fault = False
         except Exception:
