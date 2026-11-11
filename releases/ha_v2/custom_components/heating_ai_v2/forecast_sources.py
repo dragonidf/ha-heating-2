@@ -6,9 +6,9 @@ No service registry, controller intents, fan changes, or helper writes.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from math import isfinite
-from typing import Any, Iterable
+from typing import Any
 
 
 MAX_WEATHER = 72
@@ -42,10 +42,15 @@ def weather_hours(items: Any, received_at: float) -> dict[str, Any]:
         temp = item.get("temperature")
         if (type(temp) not in (int, float) or not isfinite(temp)
                 or not -60 <= temp <= 60 or at <= previous
-                or not received_at - 3600 <= at <= received_at + MAX_HORIZON_S):
+                or not received_at - 21600 <= at <= received_at + MAX_HORIZON_S):
             raise ValueError("Stale, unordered or invalid weather point")
         rows.append({"at": at, "outside_c": float(temp)})
         previous = at
+    # Some providers retain earlier hourly rows over updates. The source issue
+    # time is still unknown, but a stale first row must not invalidate later
+    # valid hours. Require coverage close to the current time and into future.
+    if rows[0]["at"] > received_at + 3600 or rows[-1]["at"] <= received_at:
+        raise ValueError("No near-term future weather coverage")
     return {
         "status": "RECEIVED_ISSUED_UNKNOWN",
         "received_at": received_at,
@@ -76,7 +81,11 @@ def outage_intervals(items: Any, start: float, end: float,
         if not isinstance(summary, str):
             raise ValueError("Calendar entry type unknown")
         # A non-outage event cannot be interpreted as "electricity available".
-        if "відключ" not in summary.casefold() and "outage" not in summary.casefold():
+        lowered = summary.casefold()
+        if (("відключ" not in lowered and "outage" not in lowered)
+                or any(term in lowered for term in
+                       ("скасовано", "cancelled", "canceled", "без відключ",
+                        "no outage", "not outage"))):
             raise ValueError("Calendar event purpose not verified")
         if (type(begin_raw) is date or type(finish_raw) is date):
             raise ValueError("All-day event cannot prove timed outage")

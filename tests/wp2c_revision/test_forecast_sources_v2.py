@@ -43,6 +43,19 @@ class ForecastSourceTests(unittest.TestCase):
                 with self.assertRaises((ValueError, TypeError)):
                     weather_hours(samples, now)
 
+    def test_provider_can_include_last_two_hourly_rows_without_forging_issue(self):
+        now = datetime(2026, 11, 11, 23, 45, tzinfo=timezone.utc).timestamp()
+        weather = [
+            {"datetime": "2026-11-11T22:00:00Z", "temperature": 2.6},
+            {"datetime": "2026-11-11T23:00:00Z", "temperature": 2.3},
+            {"datetime": "2026-11-12T00:00:00Z", "temperature": 2.2},
+        ]
+        result = weather_hours(weather, now)
+        self.assertEqual(result["status"], "RECEIVED_ISSUED_UNKNOWN")
+        self.assertEqual(len(result["hours"]), 3)
+        with self.assertRaises(ValueError):
+            weather_hours(weather[:-1], now)
+
     def test_real_outage_events_are_never_positive_power_availability(self):
         now = datetime(2026, 11, 11, 21, tzinfo=timezone.utc).timestamp()
         end = now + 48 * 3600
@@ -72,6 +85,9 @@ class ForecastSourceTests(unittest.TestCase):
         now = datetime(2026, 11, 11, 21, tzinfo=timezone.utc).timestamp()
         end = now + 24 * 3600
         rows = [
+            {"summary": "Без відключення, графік скасовано",
+             "start": "2026-11-11T22:00:00Z",
+             "end": "2026-11-11T23:00:00Z"},
             {"summary": "Зустріч", "start": "2026-11-11T22:00:00Z",
              "end": "2026-11-11T23:00:00Z"},
             {"summary": "Відключення", "start": "2026-11-11T22:00:00",

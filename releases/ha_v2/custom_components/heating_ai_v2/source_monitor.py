@@ -40,22 +40,42 @@ class SourceMonitor:
         self._faults: set[str] = set()
 
     def start(self) -> None:
-        """Register ONE subscription to a selected WeatherEntity if present."""
+        """Discover providers. Later ticks also recover from HA reloads."""
+        self._bind_sources()
+
+    @callback
+    def _bind_sources(self) -> None:
         if self._closed:
             return
-        if entity_id := self.bindings.get("weather_forecast"):
-            component = self.hass.data.get(WEATHER_ENTITIES)
-            if component is not None:
-                entity = component.get_entity(entity_id)
-                if entity is not None:
-                    self._weather_entity = entity
-                    self._unsub = entity.async_subscribe_forecast(
+        def find(component_id: str, role: str) -> Any:
+            entity_id = self.bindings.get(role)
+            component = self.hass.data.get(component_id)
+            return (component.get_entity(entity_id)
+                    if entity_id and component is not None else None)
+
+        weather = find(WEATHER_ENTITIES, "weather_forecast")
+        if weather is not self._weather_entity:
+            if self._unsub is not None:
+                self._unsub()
+                self._unsub = None
+            self._weather_entity = weather
+            self.weather = None
+            self._next_pull = 0.0
+            if weather is not None:
+                try:
+                    self._unsub = weather.async_subscribe_forecast(
                         "hourly", self._weather_listener
                     )
-        if entity_id := self.bindings.get("outage_calendar"):
-            component = self.hass.data.get(CALENDAR_ENTITIES)
-            if component is not None:
-                self._calendar_entity = component.get_entity(entity_id)
+                    self._faults.discard("weather")
+                except (ValueError, TypeError, RuntimeError):
+                    self._weather_entity = None
+                    self._warn_once("weather")
+
+        calendar = find(CALENDAR_ENTITIES, "outage_calendar")
+        if calendar is not self._calendar_entity:
+            self._calendar_entity = calendar
+            self.outages = None
+            self._next_pull = 0.0
 
     @callback
     def _weather_listener(self, points: list[dict[str, Any]] | None) -> None:
@@ -79,6 +99,7 @@ class SourceMonitor:
         """Coalesce all 60-s ticks into at most one provider read per 30 min."""
         if self._closed or (self._task is not None and not self._task.done()):
             return
+        self._bind_sources()
         if self._weather_entity is None and self._calendar_entity is None:
             return
         now = time.monotonic()

@@ -205,8 +205,28 @@ async def providers_case():
     for _ in range(300):
         monitor.schedule()
     assert len(callbacks) == 1, "No growing provider subscriptions"
-    await monitor.close()
+
+    # Provider integration unload/reload swaps the entity object. The v2
+    # observer must release its old callback and bind exactly one new one.
+    fresh_callback = []
+    fresh_unsub = Mock()
+    fresh_weather = SimpleNamespace(
+        async_subscribe_forecast=lambda kind, fn: (
+            fresh_callback.append(fn), fresh_unsub
+        )[1],
+        async_update_listeners=weather_updates,
+    )
+    hass.data[WEATHER_ENTITIES] = SimpleNamespace(
+        get_entity=lambda _id: fresh_weather
+    )
+    monitor.schedule()
+    assert len(fresh_callback) == 1
     unsub.assert_called_once()
+    assert monitor._weather_entity is fresh_weather
+    assert monitor.weather is None
+    assert monitor.brief()["weather_status"] == "UNKNOWN"
+    await monitor.close()
+    fresh_unsub.assert_called_once()
     assert monitor.brief()["weather_status"] == "UNKNOWN"
 
 
