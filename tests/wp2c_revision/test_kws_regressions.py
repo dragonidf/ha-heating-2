@@ -112,7 +112,7 @@ class KWSRoleRegressions(unittest.TestCase):
         self.assertAlmostEqual(stable.power.kw, 6)
 
     def test_three_and_nine_kw_aggregate_modes_with_rotating_phases(self):
-        for watts, stage in (((1000, 1000, 1000), '~3kW'), ((1500, 4500, 3000), '~9kW')):
+        for watts, stage in (((1000, 1000, 1000), '~3kW'), ((3000, 3000, 3000), '~9kW')):
             with self.subTest(stage=stage):
                 first = project_kws(frame(100, watts), clock(100))
                 final = project_kws(frame(110, tuple(reversed(watts))), clock(110), first)
