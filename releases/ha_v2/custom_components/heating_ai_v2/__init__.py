@@ -32,6 +32,7 @@ class ShadowRuntime:
         self.listeners: set[Callable[[], None]] = set()
         self.values: dict[str, Any] = {}
         self._kernel_fault = False
+        self._fan_fault = False
         self._fan_state = None
         self.refresh()
 
@@ -62,14 +63,16 @@ class ShadowRuntime:
             self._fan_state, self.values["fan"] = project(
                 self.values, self._fan_state, monotonic(), dt_util.now().hour
             )
+            self._fan_fault = False
         except Exception:
             self._fan_state = None
             self.values["fan"] = {
                 "percentage_proposed": None, "reason": "fault",
                 "physical_authority": False, "commands_sent": 0,
             }
-            if not self._kernel_fault:
+            if not self._fan_fault:
                 _LOGGER.exception("V2 fan shadow unavailable; no fan commands")
+            self._fan_fault = True
         for notify in tuple(self.listeners):
             notify()
 
