@@ -88,6 +88,41 @@ class ReadOnlyShadowTests(unittest.TestCase):
         self.assertIsNone(snapshot(f)["grid_last_known"])
         self.assertFalse(snapshot(f)["commands_enabled"])
 
+    def test_fireplace_fan_modes_and_ventilation_are_read_only(self):
+        f = frame()
+        f.update({
+            "fireplace": {"state": "27.4", "unit": "°C", "last_reported": "today"},
+            "circulation": {"state": "off", "unit": "", "last_reported": "today",
+                            "attributes": {"percentage": 42}},
+            "fan_mode": {"state": "Зупинити", "unit": "", "last_reported": "today"},
+            "fan_night": {"state": "38", "unit": "%", "last_reported": "today"},
+            "fan_standard": {"state": "42", "unit": "%", "last_reported": "today"},
+            "fan_intense": {"state": "45", "unit": "%", "last_reported": "today"},
+            "fan_backup": {"state": "on", "unit": "", "last_reported": "today"},
+            "fan_control": {"state": "on", "unit": "", "last_reported": "today"},
+            "recuperator": {"state": "unavailable", "unit": "", "last_reported": "today"},
+            "bath": {"state": "off", "unit": "", "last_reported": "today"},
+        })
+        view = snapshot(f)
+        self.assertAlmostEqual(view["fireplace_delta_c_last_known"], 5.8)
+        self.assertEqual(view["circulation_last_known"], "off")
+        self.assertEqual(view["fan_mode_last_known"], "Зупинити")
+        self.assertEqual(view["fan_speed_percent_last_known"], {
+            "fan_night": 38., "fan_standard": 42., "fan_intense": 45.,
+        })
+        self.assertTrue(view["fan_backup_verified_last_known"])
+        self.assertIsNone(view["ventilation_last_known"]["recuperator"])
+        self.assertIs(view["ventilation_last_known"]["bath"], False)
+        self.assertFalse(view["fireplace_heat_proven"])
+        self.assertFalse(view["fan_commands_enabled"])
+
+    def test_missing_fireplace_never_invents_flame_or_fan_demand(self):
+        view = snapshot(frame())
+        self.assertIsNone(view["fireplace_delta_c_last_known"])
+        self.assertIsNone(view["fan_mode_last_known"])
+        self.assertIsNone(view["ventilation_last_known"]["bath"])
+        self.assertFalse(view["fan_commands_enabled"])
+
     def test_no_services_transports_automation_or_actuator_code_in_live_shadow(self):
         forbidden = {"async_call", "call_service", "set_temperature", "set_hvac_mode",
                      "turn_on", "turn_off", "async_press", "async_turn_on", "async_turn_off"}
