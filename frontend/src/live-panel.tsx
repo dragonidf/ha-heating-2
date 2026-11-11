@@ -1,6 +1,6 @@
 /** Real Home Assistant panel: read-only live state, no fake NativeAPI. */
 import { createRoot, type Root } from "react-dom/client";
-import { App } from "./App";
+import { LiveApp } from "./liveApp";
 import { LiveHAAPI, type LiveHass, type LiveBindings } from "./liveHA";
 import styles from "./styles.css?inline";
 
@@ -50,7 +50,7 @@ export class HeatingAIV2Panel extends HTMLElement {
       const config = this.currentPanel.config ?? {};
       const bindings = Object.fromEntries(roles.map((role) => [role, config[role]])) as LiveBindings;
       this.api = new LiveHAAPI(bindings, this.currentHass);
-      this.root.render(<App api={this.api} />);
+      this.root.render(<LiveApp api={this.api} />);
     } catch {
       this.root.render(
         <div className="app" role="alert">
