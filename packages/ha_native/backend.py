@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import re
 from copy import deepcopy
+from dataclasses import asdict, replace
 from pathlib import Path
 from threading import RLock
 from typing import Callable, cast
@@ -17,6 +18,7 @@ from packages.offline.contracts import Binding, Registry, SourceEvent, EnergySli
 from packages.offline.codec import encode as encode_contract, decode as decode_contract
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
+from .health import HealthPolicy, HealthInputs, HealthMemory, project_health
 from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
@@ -87,7 +89,8 @@ class NativeBackend:
     """Only trusted SDK code supplies enabled/admin. Payload flags cannot grant either."""
     def __init__(self, root: Path, fixture: dict[str, JSON] | None = None, *,
                  entry_id: str = 'synthetic-entry', enabled: bool = False,
-                 clock: Callable[[], tuple[float, float]] | None = None):
+                 clock: Callable[[], tuple[float, float]] | None = None,
+                 health_policy: HealthPolicy | None = None, health_evidence: Callable[[], HealthInputs] = HealthInputs):
         if type(enabled) is not bool or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', entry_id):
             raise NativeProtocolError('invalid_configuration')
         self.fixture = deepcopy(fixture) if fixture is not None else obj(decode(Path(__file__).with_name('fixture.json').read_text()))
@@ -103,6 +106,10 @@ class NativeBackend:
         self._clock_bad = False
         self._room_seen_mono: float | None = None
         self._room_initial_age = 0.0
+        self._room_report: tuple[float, float, str] | None = None
+        self._health_policy = health_policy or HealthPolicy()
+        self._health_evidence = health_evidence
+        self._health_memory = HealthMemory()
         self._memory = RLock()
         self._serial = 0
         self._source_max_age = 30.0
@@ -128,6 +135,7 @@ class NativeBackend:
         self._last_clock = None
         self._clock_bad = False
         self._room_seen_mono = None
+        self._room_report = None
         self._voltage_frame = VoltageFrame()
         self._voltage_state = None
         self._kws_frame = KWSFrame()
@@ -185,6 +193,10 @@ class NativeBackend:
             self.critical.write(con, 'snapshot', state)
             self._model = obj(self.critical.read_from(con, 'model'))
         self._snapshot = state
+        raw_health = state.get('health_memory')
+        if raw_health is not None and not isinstance(raw_health, dict):
+            raise StoreError('Invalid durable health memory')
+        self._health_memory = HealthMemory() if raw_health is None else HealthMemory.from_record(cast(dict[str, object], raw_health))
         self._serial += 1
         self._adapter = self._source_adapter(self._source_max_age)
         self._adapter.connection(integer(state['generation']))
@@ -283,6 +295,27 @@ class NativeBackend:
             if stale and obj(state['status'])['mode'] != 'MANUAL_PAUSE':
                 obj(state['status'])['mode'] = 'SAFE_HOLD'
             changed = changed or obj(state['status'])['mode'] != obj(self._snapshot['status'])['mode']
+            evidence = self._health_evidence()
+            room_age = None if self._room_report is None else max(clock.utc - self._room_report[0], clock.monotonic - self._room_report[1])
+            health_inputs = replace(evidence, room_age_s=room_age,
+                room_report_verified=self._room_report is not None,
+                room_valid=room['quality'] == 'valid', room_report_id=self._room_report[2] if self._room_report is not None else None,
+                electrical_eligible=self._voltage_state.eligible,
+                electrical_reason='Напруга поза межами' if self._voltage_state.status in ('LOW', 'HIGH') else 'Мережа та KWS кваліфіковані' if self._voltage_state.eligible else 'Очікування мережі/KWS або свіжих фаз',
+                electrical_fault=self._voltage_state.status in ('LOW', 'HIGH'),
+                power_qualified=self._kws_state.power.kw is not None and self._kws_state.counter is not None and not self._energy_unavailable,
+                clock_ok=self._opened and not self._clock_bad, persistence_ok=not self._store_failed,
+                plan_ok=evidence.plan_ok and obj(state['diagnostics'])['worker'] == 'ready',
+                manual_stop=evidence.manual_stop or obj(state['status'])['mode'] == 'MANUAL_PAUSE',
+                one_shot_blocked=evidence.one_shot_blocked or shot['state'] in ('unknown_outcome', 'consumed', 'expired'))
+            previous_memory = asdict(self._health_memory)
+            health, self._health_memory = project_health(health_inputs, now=clock.utc, mono=clock.monotonic,
+                boot=clock.boot_id, policy=self._health_policy, memory=self._health_memory)
+            record = asdict(self._health_memory)
+            changed = changed or any(v != previous_memory[k] for k, v in record.items() if k != 'last_mono')
+            record['transitions'] = {k: list(v) for k, v in self._health_memory.transitions.items()}
+            state['system_health'] = cast(JSON, health)
+            state['health_memory'] = cast(JSON, record)
             if changed:
                 self._advance(state)
                 self._serial += 1
@@ -489,6 +522,14 @@ class NativeBackend:
                 return False
             try:
                 accepted = self._adapter.ingest(event)
+                # Explicit qualified reports/heartbeats are distinct from a value change.
+                if (accepted and event.entity == 'synthetic.native.room' and event.author == 'sensor'
+                        and event.reading.quality.status.value == 'valid'
+                        and event.reading.provenance.independent
+                        and event.reading.provenance.kind.value == 'direct'
+                        and 0 <= clock.utc - event.received_at <= self._source_max_age):
+                    self._room_report = (event.received_at, clock.monotonic - (clock.utc - event.received_at),
+                        clock.boot_id + ':' + event.identity)
                 reading = self._adapter.select('room', clock, connected=self._opened)
             except ValueError:
                 self.invalidate_source('invalid_event')
