@@ -3,31 +3,31 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
 from .telemetry import ROLES
 
 
-def mapping_schema() -> vol.Schema:
+def mapping_schema() -> probatio.Schema:
     fields: dict[Any, Any] = {}
     for role in ROLES:
         domain = "climate" if role == "thermostat" else (
             "binary_sensor" if role == "grid" else "sensor"
         )
-        fields[vol.Required(role)] = selector.EntitySelector(
+        fields[probatio.Required(role)] = selector.EntitySelector(
             selector.EntitySelectorConfig(domain=domain)
         )
-    return vol.Schema(fields)
+    return probatio.Schema(fields)
 
 
 class HeatingAIV2Flow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             if (set(user_input) != set(ROLES)
