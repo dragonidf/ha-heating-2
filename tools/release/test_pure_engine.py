@@ -108,6 +108,14 @@ def main() -> None:
             for i in range(6)
         ],
     }
+    assert coast.recently_reported(
+        {"last_reported": "2026-11-11T21:00:00+00:00"},
+        1794430800.0,
+    )
+    assert not coast.recently_reported(
+        {"last_reported": "2026-11-11T21:00:00+00:00"},
+        1794430800.0 + 5 * 3600,
+    )
     diagnostic = coast.preview(21.5, 24.0, legacy, weather, now)
     assert diagnostic["status"] == "UNQUALIFIED_CONDITIONAL_COAST"
     assert diagnostic["model_calibration"] == "NOT_PARITY_VERIFIED"
