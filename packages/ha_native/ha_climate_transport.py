@@ -99,7 +99,7 @@ class LiveClimateTransport:
         except (AttributeError, ValueError, OverflowError, OSError):
             return None
 
-    def _snapshot(self, order: ClimateOrder, *, before: bool) -> tuple[str, float | None] | None:
+    def _snapshot(self, order: ClimateOrder, *, before: bool) -> tuple[str, float] | None:
         state = self.hass.states.get(self.entity_id)
         if state is None or state.state != "heat":
             return None
