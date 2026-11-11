@@ -99,8 +99,7 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
           {t.returnC === null ? "—" : t.returnC.toFixed(1) + " °C"}
         </p>
         <p className="helper">
-          Останнє значення HA. Поки не кваліфіковано як незалежний
-          safety-доказ.
+          Останнє значення HA. Поки не кваліфіковано як незалежний safety-доказ.
         </p>
       </Card>
       <Card title="Камін та циркуляція">
@@ -210,7 +209,8 @@ export function LiveHistory({ api }: { api: LiveHAAPI }) {
         if (active) {
           setHistory({
             loading: false,
-            error: "Неможливо прочитати реальну історію HA Recorder. Спробуйте коротший період.",
+            error:
+              "Неможливо прочитати реальну історію HA Recorder. Спробуйте коротший період.",
             points: [],
           });
         }
@@ -230,11 +230,13 @@ export function LiveHistory({ api }: { api: LiveHAAPI }) {
       </div>
       <Card title="Температура вітальні · факт">
         <div className="segmented" aria-label="Період історії">
-          {([
-            [1, "24 год"],
-            [7, "7 днів"],
-            [30, "30 днів"],
-          ] as const).map(([length, label]) => (
+          {(
+            [
+              [1, "24 год"],
+              [7, "7 днів"],
+              [30, "30 днів"],
+            ] as const
+          ).map(([length, label]) => (
             <button
               key={length}
               aria-pressed={days === length}
@@ -249,7 +251,9 @@ export function LiveHistory({ api }: { api: LiveHAAPI }) {
         ) : history.error ? (
           <p role="alert">{history.error}</p>
         ) : history.points.length === 0 ? (
-          <p>За цей період HA Recorder не має підтверджених записів температури.</p>
+          <p>
+            За цей період HA Recorder не має підтверджених записів температури.
+          </p>
         ) : (
           <>
             <Chart
@@ -276,8 +280,8 @@ export function LiveHistory({ api }: { api: LiveHAAPI }) {
       <Card title="Міграцію історії не завершено">
         <p>
           Завчасні 12-годинні прогнози старого Heating AI, архів його рішень і
-          енергобюджет ще не перенесено. Показані вище дані Recorder не замінюють
-          незмінних оригінальних прогнозів.
+          енергобюджет ще не перенесено. Показані вище дані Recorder не
+          замінюють незмінних оригінальних прогнозів.
         </p>
       </Card>
     </>

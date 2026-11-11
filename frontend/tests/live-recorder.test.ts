@@ -7,16 +7,20 @@ const sample = (s: string, lu: number) => ({ s, lu });
 
 describe("HA 2026 Recorder read-only history", () => {
   it("accepts only the requested source, preserves gaps, no phantom zero", () => {
-    const points = recorderPoints({
-      [entity]: [
-        sample("21.1", scope.start + 100),
-        sample("21.2", scope.start + 310),
-        sample("unavailable", scope.start + 400),
-        sample("22.4", scope.start + 600),
-        sample("23.1", scope.start + 7000),
-      ],
-      "sensor.unrelated": [sample("999", scope.start + 100)],
-    }, entity, scope);
+    const points = recorderPoints(
+      {
+        [entity]: [
+          sample("21.1", scope.start + 100),
+          sample("21.2", scope.start + 310),
+          sample("unavailable", scope.start + 400),
+          sample("22.4", scope.start + 600),
+          sample("23.1", scope.start + 7000),
+        ],
+        "sensor.unrelated": [sample("999", scope.start + 100)],
+      },
+      entity,
+      scope,
+    );
     expect(points.map((p) => p.value)).toEqual([21.1, 21.2, null, 22.4, 23.1]);
     expect(points[1]?.coverage?.from).toBe(points[0]?.at);
     expect(points[3]?.coverage?.from).toBe(points[3]?.at);
@@ -37,10 +41,20 @@ describe("HA 2026 Recorder read-only history", () => {
 
   it("rejects wrong response schemas and an unbounded source", () => {
     expect(() => recorderPoints([], entity, scope)).toThrow();
-    expect(() => recorderPoints({ [entity]: "error" }, entity, scope)).toThrow();
-    expect(() => recorderPoints({
-      [entity]: Array.from({ length: 4097 }, () => sample("21", scope.start)),
-    }, entity, scope)).toThrow("Забагато");
+    expect(() =>
+      recorderPoints({ [entity]: "error" }, entity, scope),
+    ).toThrow();
+    expect(() =>
+      recorderPoints(
+        {
+          [entity]: Array.from({ length: 4097 }, () =>
+            sample("21", scope.start),
+          ),
+        },
+        entity,
+        scope,
+      ),
+    ).toThrow("Забагато");
   });
 
   it("sends a single authenticated read-only HA request", async () => {
@@ -63,10 +77,14 @@ describe("HA 2026 Recorder read-only history", () => {
 
   it("fails closed when recorder unavailable or period exceeds bound", async () => {
     const now = Date.now() / 1000;
-    await expect(fetchRoomRecorder({}, entity, { start: now - 1000, end: now }))
-      .rejects.toThrow();
-    await expect(fetchRoomRecorder({ callWS: async () => ({}) }, entity, {
-      start: now - 50 * 86400, end: now,
-    })).rejects.toThrow("завеликий");
+    await expect(
+      fetchRoomRecorder({}, entity, { start: now - 1000, end: now }),
+    ).rejects.toThrow();
+    await expect(
+      fetchRoomRecorder({ callWS: async () => ({}) }, entity, {
+        start: now - 50 * 86400,
+        end: now,
+      }),
+    ).rejects.toThrow("завеликий");
   });
 });

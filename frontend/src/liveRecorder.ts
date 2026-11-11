@@ -48,13 +48,9 @@ export function recorderPoints(
     if (at === null || at < scope.start || at > scope.end) continue;
     const state = record.s ?? record.state;
     const parsed =
-      typeof state === "string" && state.trim() !== ""
-        ? Number(state)
-        : NaN;
+      typeof state === "string" && state.trim() !== "" ? Number(state) : NaN;
     const value =
-      Number.isFinite(parsed) && parsed >= -30 && parsed <= 65
-        ? parsed
-        : null;
+      Number.isFinite(parsed) && parsed >= -30 && parsed <= 65 ? parsed : null;
     raw.push({ at, value });
   }
   raw.sort((a, b) => a.at - b.at);
