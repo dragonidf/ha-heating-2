@@ -25,10 +25,13 @@ POLL_SECONDS = 1800
 
 class SourceMonitor:
     def __init__(self, hass: HomeAssistant, bindings: dict[str, str],
-                 notify: Callable[[], None]) -> None:
+                 notify: Callable[[], None],
+                 read_rows: Callable[[], dict[str, dict[str, Any] | None]]) -> None:
         self.hass = hass
         self.bindings = bindings
         self.notify = notify
+        self.read_rows = read_rows
+        self.plan: dict[str, Any] | None = None
         self.weather: dict[str, Any] | None = None
         self.outages: dict[str, Any] | None = None
         self._weather_entity: Any = None
@@ -60,6 +63,7 @@ class SourceMonitor:
                 self._unsub = None
             self._weather_entity = weather
             self.weather = None
+            self.plan = None
             self._next_pull = 0.0
             if weather is not None:
                 try:
@@ -75,6 +79,7 @@ class SourceMonitor:
         if calendar is not self._calendar_entity:
             self._calendar_entity = calendar
             self.outages = None
+            self.plan = None
             self._next_pull = 0.0
 
     @callback
@@ -87,6 +92,7 @@ class SourceMonitor:
         except (ValueError, TypeError, OverflowError):
             self.weather = None
             self._warn_once("weather")
+        self.plan = None
         self.notify()
 
     def _warn_once(self, source: str) -> None:
@@ -136,7 +142,24 @@ class SourceMonitor:
                 self.outages = None
                 self._warn_once("calendar")
         if not self._closed:
-            self.notify()
+            try:
+                from .shadow_plan import conditional_plan
+                self.plan = await asyncio.wait_for(
+                    self.hass.async_add_executor_job(
+                        conditional_plan, self.read_rows(),
+                        self.weather, self.outages, time.time(),
+                    ),
+                    timeout=25,
+                )
+                self._faults.discard("planner")
+            except Exception:
+                self.plan = {
+                    "status": "BLOCKED_INPUTS", "reason": "planner_fault",
+                    "proposal_is_command": False, "commands_sent": 0,
+                }
+                self._warn_once("planner")
+            if not self._closed:
+                self.notify()
 
     def brief(self) -> dict[str, Any]:
         return source_summary(self.weather, self.outages, time.time())
@@ -154,4 +177,4 @@ class SourceMonitor:
             except asyncio.CancelledError:
                 pass
         self._task = None
-        self.weather = self.outages = None
+        self.weather = self.outages = self.plan = None
