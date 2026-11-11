@@ -1,8 +1,9 @@
 /** Actual HA observations in the approved three-tab shell. No fake history. */
-import type { Snapshot } from "./types";
+import { useEffect, useMemo, useState } from "react";
+import type { Point, Snapshot } from "./types";
 import type { LiveHAAPI } from "./liveHA";
-import { Card } from "./components";
-import { fmt } from "./domain";
+import { Card, Chart } from "./components";
+import { fmt, kyivRange, shiftDate } from "./domain";
 
 const kw = (v: number | null) => (v === null ? "—" : v.toFixed(2) + " кВт");
 const volt = (v: number | null) => (v === null ? "—" : v.toFixed(1) + " В");
@@ -155,23 +156,118 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
     </>
   );
 }
-export function LiveHistory() {
+function todayKyiv(): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const value = (key: string) => parts.find((item) => item.type === key)?.value;
+  return [value("year"), value("month"), value("day")].join("-");
+}
+type HistoryWindow = { start: number; end: number };
+type RecorderHistory = {
+  loading: boolean;
+  error: string | null;
+  points: Point[];
+};
+export function LiveHistory({ api }: { api: LiveHAAPI }) {
+  const [days, setDays] = useState<1 | 7 | 30>(7);
+  const scope = useMemo<HistoryWindow>(() => {
+    const now = Date.now() / 1000;
+    return {
+      start:
+        days === 1
+          ? now - 86400
+          : kyivRange(shiftDate(todayKyiv(), 1 - days), todayKyiv()).start,
+      end: now,
+    };
+  }, [days]);
+  const [history, setHistory] = useState<RecorderHistory>({
+    loading: true,
+    error: null,
+    points: [],
+  });
+  useEffect(() => {
+    let active = true;
+    setHistory({ loading: true, error: null, points: [] });
+    void api.loadRoomHistory(scope).then(
+      (points) => {
+        if (active) setHistory({ loading: false, error: null, points });
+      },
+      () => {
+        if (active) {
+          setHistory({
+            loading: false,
+            error: "Неможливо прочитати реальну історію HA Recorder. Спробуйте коротший період.",
+            points: [],
+          });
+        }
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [api, scope]);
   return (
     <>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Оригінали, факт та енергобюджет</p>
+          <p className="eyebrow">Реальні виміри · HA Recorder</p>
           <h1>Історія</h1>
         </div>
       </div>
+      <Card title="Температура вітальні · факт">
+        <div className="segmented" aria-label="Період історії">
+          {([
+            [1, "24 год"],
+            [7, "7 днів"],
+            [30, "30 днів"],
+          ] as const).map(([length, label]) => (
+            <button
+              key={length}
+              aria-pressed={days === length}
+              onClick={() => setDays(length)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {history.loading ? (
+          <p role="status">Читаємо фактичні записи Recorder…</p>
+        ) : history.error ? (
+          <p role="alert">{history.error}</p>
+        ) : history.points.length === 0 ? (
+          <p>За цей період HA Recorder не має підтверджених записів температури.</p>
+        ) : (
+          <>
+            <Chart
+              actual={history.points}
+              scope={scope}
+              now={scope.end}
+              label="Історія фактичної температури HA"
+              original={[]}
+              forecast={[]}
+              initialLatest={false}
+              forecastLabel="Прогноз не імпортовано"
+              events={[]}
+              tracks={false}
+              comfort={false}
+            />
+            <p className="helper">
+              Записи HA: {history.points.length}. Розриви між повідомленнями
+              понад 90 хв не з’єднуємо. Це історія станів HA, а не незалежне
+              підтвердження фізичного вимірювання.
+            </p>
+          </>
+        )}
+      </Card>
       <Card title="Міграцію історії не завершено">
         <p>
-          Реальні дані старого Heating AI та незмінні оригінальні прогнози ще не
-          перенесені до нового архіву.
-        </p>
-        <p>
-          До підтвердження безперервності лічильників і прогнозів тут не
-          показуються фальшиві графіки, суми чи «економія».
+          Завчасні 12-годинні прогнози старого Heating AI, архів його рішень і
+          енергобюджет ще не перенесено. Показані вище дані Recorder не замінюють
+          незмінних оригінальних прогнозів.
         </p>
       </Card>
     </>
