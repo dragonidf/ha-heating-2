@@ -106,6 +106,8 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         assert runtime.values["fan"]["reason"] == "explicit_stop"
         assert runtime.values["fireplace_delta_c_last_known"] == 6
         assert runtime.values["fan_speed_percent_last_known"]["fan_standard"] == 42
+        # Actual speed is a fan ATTRIBUTE, not a standalone sensor state.
+        assert runtime.values["circulation_percentage_last_known"] == 42
         assert len(runtime.listeners) == 0
         assert watched.call_count == 1 and timed.call_count == 1
         assert entry.async_on_unload.call_count == 2
