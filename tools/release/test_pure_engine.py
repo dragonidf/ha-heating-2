@@ -190,6 +190,8 @@ def main() -> None:
     # and missing weather hours must never fabricate an executable plan.
     for changed_rows, changed_weather in (
         ({**rows, "night_upper": None}, wx),
+        ({**rows, "day_target": record("21.5", "°F")}, wx),
+        ({**rows, "room": record("21.5", "°F")}, wx),
         ({**rows, "power_model": record("AUTO")}, wx),
         ({**rows, "stored_heat": {**rows["stored_heat"], "last_reported":
             "2026-11-10T00:00:00+00:00"}}, wx),
