@@ -192,13 +192,66 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
         </p>
       </Card>
       <Card title="План нагріву">
-        <p>
-          Обчислення Heating AI 2.0 поки не підключене до реальних прогнозів та
-          історії.
-        </p>
+        {t.plan.status === "VIRTUAL_CONDITIONAL" ? (
+          <>
+            <p>
+              <strong>Умовний сценарій на {t.plan.horizonHours.toFixed(1)} год</strong>
+              {" · "}
+              {t.plan.powerKw === null
+                ? "режим котла невідомий"
+                : "наявний режим " + t.plan.powerKw.toFixed(0) + " кВт"}
+            </p>
+            <p>
+              Номінальна енергія за сценарієм:{" "}
+              {t.plan.nominalEnergyKwh === null
+                ? "—"
+                : t.plan.nominalEnergyKwh.toFixed(2) + " кВт·год"}
+              {" · "}
+              Розрахунковий мінімум:{" "}
+              {t.plan.projectedMinC === null
+                ? "—"
+                : t.plan.projectedMinC.toFixed(1) + " °C"}
+            </p>
+            <p>Можливих інтервалів: {t.plan.segmentCount}</p>
+            {t.plan.segments.length > 0 && (
+              <ul>
+                {t.plan.segments.slice(0, 6).map((segment, index) => (
+                  <li key={index}>
+                    {new Date(segment.start * 1000).toLocaleString("uk-UA", {
+                      timeZone: "Europe/Kyiv",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      day: "2-digit",
+                      month: "2-digit",
+                    })}
+                    {" – "}
+                    {new Date(segment.end * 1000).toLocaleTimeString("uk-UA", {
+                      timeZone: "Europe/Kyiv",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {" · умовно"}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {t.plan.truncated && (
+              <p className="helper">
+                Показано лише найближчі інтервали, решта прихована.
+              </p>
+            )}
+          </>
+        ) : (
+          <p>
+            Умовний план недоступний: бракує актуальних даних, прив’язок
+            налаштувань або допустимого погодного горизонту.
+          </p>
+        )}
         <p className="helper">
-          Майбутні сеанси, графік і прогноз економії не підміняються
-          демонстраційними даними.
+          Розрахунок використовує наявний оптимізатор, але стара теплова модель
+          не пройшла кваліфікацію, а час випуску погоди й майбутня наявність
+          мережі не підтверджені. Умовні сеанси не виконуються; енергія
+          номінальна, не виміряна. Автоматичні команди заборонені.
         </p>
       </Card>
     </>
