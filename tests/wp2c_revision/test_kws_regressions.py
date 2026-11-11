@@ -74,13 +74,13 @@ class KWSRoleRegressions(unittest.TestCase):
         recovered = project_kws(frame(122, signature(6000).phase_w), clock(122), recovering)
         self.assertEqual(recovered.stage, signature(6000).stage)
 
-    def test_same_total_with_permuted_asymmetric_phases_does_not_prove_the_same_stage(self):
+    def test_same_total_with_permuted_asymmetric_phases_preserves_stage(self):
         local = self.stable(6000)
         watts = signature(6000).phase_w
         self.assertEqual(sum(watts), sum(reversed(watts)))
         contradictory = project_kws(frame(111, tuple(reversed(watts))), clock(111), local)
-        self.assertEqual(contradictory.stage, 'UNKNOWN')
-        self.assertNotEqual(contradictory.stage, signature(6000).stage)
+        self.assertEqual(contradictory.stage, signature(6000).stage)
+        self.assertAlmostEqual(contradictory.power.kw, local.power.kw)
 
     def test_short_high_stage_spike_then_return_requires_fresh_stable_evidence(self):
         local = self.stable(3000)
@@ -100,3 +100,44 @@ class KWSRoleRegressions(unittest.TestCase):
         state = project_kws(missing, clock(111), local)
         self.assertIsNone(state.power.kw)
         self.assertEqual(state.stage, 'UNKNOWN')
+
+    def test_six_kw_rotating_allocations_share_aggregate_band_and_dwell(self):
+        first = project_kws(frame(100, (1500, 1500, 3000)), clock(100))
+        self.assertEqual(first.stage, 'UNKNOWN')
+        self.assertAlmostEqual(first.power.kw, 6)
+        pending = project_kws(frame(109, (3000, 1500, 1500)), clock(109), first)
+        self.assertEqual(pending.stage, 'UNKNOWN')
+        stable = project_kws(frame(110, (1500, 3000, 1500)), clock(110), pending)
+        self.assertEqual(stable.stage, '~6kW')
+        self.assertAlmostEqual(stable.power.kw, 6)
+
+    def test_three_and_nine_kw_aggregate_modes_with_rotating_phases(self):
+        for watts, stage in (((1000, 1000, 1000), '~3kW'), ((3000, 3000, 3000), '~9kW')):
+            with self.subTest(stage=stage):
+                first = project_kws(frame(100, watts), clock(100))
+                final = project_kws(frame(110, tuple(reversed(watts))), clock(110), first)
+                self.assertEqual(final.stage, stage)
+                self.assertAlmostEqual(final.power.kw, sum(watts) / 1000)
+
+    def test_valid_intermediate_watts_remain_unknown_and_reset_dwell(self):
+        first = project_kws(frame(100, (1500, 1500, 3000)), clock(100))
+        middle = project_kws(frame(105, (1500, 1500, 1500)), clock(105), first)
+        self.assertAlmostEqual(middle.power.kw, 4.5)
+        self.assertEqual(middle.stage, 'UNKNOWN')
+        returned = project_kws(frame(109, (3000, 1500, 1500)), clock(109), middle)
+        self.assertEqual(returned.stage, 'UNKNOWN')
+        pending = project_kws(frame(118, (1500, 3000, 1500)), clock(118), returned)
+        self.assertEqual(pending.stage, 'UNKNOWN')
+        final = project_kws(frame(119, (1500, 1500, 3000)), clock(119), pending)
+        self.assertEqual(final.stage, '~6kW')
+
+    def test_stale_off_and_pump_readings_never_authorize_a_stage(self):
+        for watts in ((0, 0, 0), (40, 20, 10)):
+            with self.subTest(watts=watts):
+                cached = frame(100, watts)
+                first = project_kws(cached, clock(100))
+                stable = project_kws(cached, clock(110), first)
+                self.assertIn(stable.stage, ('OFF', 'PUMP_ONLY'))
+                stale = project_kws(cached, clock(131), stable)
+                self.assertIsNone(stale.power.kw)
+                self.assertEqual(stale.stage, 'UNKNOWN')

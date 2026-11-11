@@ -36,8 +36,9 @@ class StageSignature:
                 number(value, nonnegative=True)
 
     def matches(self, watts: tuple[float, ...], extra: float = 0) -> bool:
-        return all(abs(v - expected) <= tolerance + extra
-                   for v, expected, tolerance in zip(watts, self.phase_w, self.tolerance_w))
+        # Legacy triples encode a total-band centre/radius, not fixed phase allocation.
+        # Keep the conservative largest tolerance as the aggregate band radius.
+        return abs(sum(watts) - sum(self.phase_w)) <= max(self.tolerance_w) + extra
 
 
 @dataclass(frozen=True, slots=True)
