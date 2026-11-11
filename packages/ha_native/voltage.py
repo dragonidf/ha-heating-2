@@ -312,7 +312,19 @@ def synthetic_voltage_withdrawal(state: VoltageState, *, thermostat_c: float | N
     Require at least one full supported step below that sensor, aligned to the
     validated minimum. A diagnostic never claims contact opening/device OFF.
     """
-    if state.eligible or manual_stop or not owns_thermostat:
+    if state.eligible:
+        return None
+    return synthetic_heat_withdrawal(thermostat_c=thermostat_c, min_setpoint_c=min_setpoint_c,
+        max_setpoint_c=max_setpoint_c, temperature_step_c=temperature_step_c,
+        thermostat_fresh=thermostat_fresh, owns_thermostat=owns_thermostat, manual_stop=manual_stop)
+
+
+def synthetic_heat_withdrawal(*, thermostat_c: float | None, min_setpoint_c: float | None,
+                              max_setpoint_c: float | None, temperature_step_c: float | None,
+                              thermostat_fresh: bool, owns_thermostat: bool,
+                              manual_stop: bool) -> dict[str, JSON] | None:
+    """Shared proposed contact withdrawal; never a physical OFF acknowledgement."""
+    if manual_stop or not owns_thermostat:
         return None
     diagnostic: dict[str, JSON] = {'action': 'cannot_confirm_withdrawal',
         'reason': 'thermostat_temperature_missing_or_stale',

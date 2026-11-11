@@ -11,6 +11,9 @@ const actions: Record<string, string> = {
 };
 export function SystemHealth({ health }: { health: SystemHealthView }) {
   const f = health.source_freshness;
+  const ceiling = health.thermostat_ceiling;
+  const temperature = (v: number | null) =>
+    v === null ? "невідомо" : `${v}°C`;
   const age = (v: number | null) =>
     v === null ? "давність невідома" : `${Math.floor(v)} с`;
   const quality = (v: string) =>
@@ -104,6 +107,50 @@ export function SystemHealth({ health }: { health: SystemHealthView }) {
             BLOCKED; запис HA не є виміром пристрою.
           </p>
         ))}
+        {ceiling && (
+          <div aria-label="Резервний максимум термостата">
+            <strong>Резервний максимум термостата</strong>
+            <p>
+              Активна верхня межа вітальні: {temperature(ceiling.room_upper_c)}{" "}
+              · режим:{" "}
+              {{
+                day: "День",
+                night: "Ніч",
+                allowed_hours: "Дозволені години",
+                override: "Ефективне перевизначення",
+              }[ceiling.source_mode ?? ""] ??
+                ceiling.source_mode ??
+                "невідомо"}
+            </p>
+            <p>
+              Запас: {temperature(ceiling.reserve_margin_c)} · розрахункова
+              межа: {temperature(ceiling.ceiling_raw_c)} · допустимий максимум
+              setpoint: {temperature(ceiling.proposed_ceiling_c)}
+            </p>
+            <p>
+              Запропонований setpoint:{" "}
+              {temperature(ceiling.proposed_setpoint_c)} · фізичне застосування
+              та ACK не підтверджені.
+            </p>
+            <p>
+              {ceiling.thermostat_fresh
+                ? "Свіжість термостата підтверджена в симуляції"
+                : "Очікуємо свіжі дані термостата"}{" "}
+              ·
+              {ceiling.action === "withdraw_demand"
+                ? "Запропоновано зняття запиту нагріву"
+                : ceiling.action === "request_heat"
+                  ? "Запит планувальника обмежений резервним максимумом"
+                  : "Нагрів не підтверджений"}
+            </p>
+            {ceiling.reason === "room_target_or_upper_reached" && (
+              <p>Досягнута ціль вітальні.</p>
+            )}
+            {ceiling.thermostat_mode === "AUTO" && (
+              <p>Тижневий AUTO не підкоряється цій межі ручного HEAT.</p>
+            )}
+          </div>
+        )}
         <p>
           Дії лише запропоновані в симуляції. Фізичний стан не підтверджений.
         </p>

@@ -21,6 +21,7 @@ from .store import JSON as JSON, NativeStore, StoreError, decode, encode
 from .health import HealthPolicy, HealthInputs, HealthMemory, project_health, SourceTimingPolicy
 from .source_activity import SourceActivity, DeviceReport
 from .passive_bridge import IntegrationReport
+from .thermostat import ActiveRoomLimit, supported_ceiling, finalize_heat_setpoint
 from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
@@ -92,6 +93,7 @@ class NativeBackend:
     def __init__(self, root: Path, fixture: dict[str, JSON] | None = None, *,
                  entry_id: str = 'synthetic-entry', enabled: bool = False,
                  clock: Callable[[], tuple[float, float]] | None = None,
+                 effective_room_limit: Callable[[], ActiveRoomLimit | None] = lambda: None,
                  activity_window_s: float = 3660, health_policy: HealthPolicy | None = None, health_evidence: Callable[[], HealthInputs] = HealthInputs):
         if type(enabled) is not bool or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', entry_id):
             raise NativeProtocolError('invalid_configuration')
@@ -113,6 +115,13 @@ class NativeBackend:
         self._health_evidence = health_evidence
         self._activity = SourceActivity(activity_window_s)
         self._activity_active = False
+        self._effective_room_limit = effective_room_limit
+        self._active_room_limit: ActiveRoomLimit | None = None
+        self._last_ceiling_intent: dict[str, JSON] | None = None
+        self._thermostat_caps: tuple[float | None, float | None, float | None] = (None,None,None)
+        self._thermostat_seen: Clock | None = None
+        self._thermostat_fresh = False
+        self._thermostat_mode = 'UNKNOWN'
         self._health_memory = HealthMemory()
         self._memory = RLock()
         self._serial = 0
@@ -142,6 +151,12 @@ class NativeBackend:
         self._room_report = None
         self._activity = SourceActivity(self._activity.window_s)
         self._activity_active = False
+        self._active_room_limit = None
+        self._last_ceiling_intent = None
+        self._thermostat_caps = (None,None,None)
+        self._thermostat_seen = None
+        self._thermostat_fresh = False
+        self._thermostat_mode = 'UNKNOWN'
         self._voltage_frame = VoltageFrame()
         self._voltage_state = None
         self._kws_frame = KWSFrame()
@@ -285,6 +300,17 @@ class NativeBackend:
             source = 'clock_invalid' if self._clock_bad else ('stale' if stale else obj(state['diagnostics'])['source'])
             changed = room['quality'] != obj(self._snapshot['room'])['quality'] or source != obj(self._snapshot['diagnostics'])['source']
             obj(state['diagnostics'])['source'] = source
+            try:
+                active_limit = self._effective_room_limit()
+                if active_limit is not None and not isinstance(active_limit, ActiveRoomLimit):
+                    active_limit = None
+            except (ValueError, TypeError, OSError):
+                active_limit = None
+            if active_limit != self._active_room_limit:
+                self._active_room_limit = active_limit
+                self._last_ceiling_intent = None
+                changed = True
+
             shot = obj(state['oneShot'])
             if shot['state'] == 'armed' and shot['expires'] is not None and clock.utc >= number(shot['expires']):
                 shot['state'] = 'expired'
@@ -354,6 +380,7 @@ class NativeBackend:
                 obj(state['status'])['status_seq'] = state['seq']
                 changed = True
             self._snapshot = state
+            obj(self._snapshot['system_health'])['thermostat_ceiling'] = self._ceiling_view(clock)
             self._snapshot['demand_eligible'] = self._demand_eligible()
             return changed
 
@@ -477,6 +504,73 @@ class NativeBackend:
                 and self._voltage_state is not None and self._voltage_state.eligible
                 and obj(self._snapshot.get('source_freshness', {})).get('return_veto') is not True
                 and (not self._activity_active or obj(self._snapshot['source_freshness'])['temperature_quality'] == 'OK'))
+
+    def _ceiling_view(self, clock: Clock) -> dict[str, JSON]:
+        from decimal import Decimal
+        limit = self._active_room_limit
+        fresh = (self._thermostat_fresh and self._thermostat_seen is not None
+                 and self._thermostat_seen.boot_id == clock.boot_id
+                 and 0 <= clock.utc-self._thermostat_seen.utc <= 30
+                 and 0 <= clock.monotonic-self._thermostat_seen.monotonic <= 30 and not self._clock_bad)
+        intent = self._last_ceiling_intent if fresh else None
+        if intent is not None and (intent.get('owner_epoch') != obj(self._snapshot['status'])['owner_epoch']
+                or obj(self._snapshot['status'])['mode'] == 'MANUAL_PAUSE'
+                or intent.get('action') == 'request_heat' and (self._pending_stop or not self._demand_eligible()
+                    or self._health_memory.operator_latched)):
+            intent = None
+        return dict(source_mode=limit.source_mode if limit is not None else None,
+            room_upper_c=limit.upper_c if limit is not None else None,
+            reserve_margin_c=limit.reserve_margin_c if limit is not None else None,
+            ceiling_raw_c=float(Decimal(str(limit.upper_c))+Decimal(str(limit.reserve_margin_c))) if limit is not None and limit.qualified else None,
+            proposed_ceiling_c=supported_ceiling(limit,*self._thermostat_caps),
+            proposed_setpoint_c=intent.get('setpoint_c') if intent is not None else None,
+            action=intent.get('action','none') if intent is not None else 'none',
+            reason=intent.get('reason','unqualified') if intent is not None else 'effective_limits_or_thermostat_unqualified',
+            thermostat_fresh=fresh, thermostat_mode=self._thermostat_mode,
+            stage='proposed' if intent is not None else 'none', acknowledged_setpoint_c=None,
+            physical_ack=False, physical_authority=False, scope='synthetic_only')
+
+    def heat_setpoint_intent(self, *, owner_epoch: int, requested_setpoint_c: float | None,
+                            planner_requests_heat: bool = False, one_shot: bool = False,
+                            owns_thermostat: bool = False, thermostat_mode: str = 'UNKNOWN',
+                            thermostat_fresh: bool = False, thermostat_c: float | None = None,
+                            min_setpoint_c: float | None = None, max_setpoint_c: float | None = None,
+                            temperature_step_c: float | None = None) -> dict[str, JSON] | None:
+        """Final synthetic-only setpoint; provider is the actual effective planner limit."""
+        with self._memory:
+            self.refresh()
+            view = obj(self._snapshot['status'])
+            if (not self.enabled or not self._opened or self._clock_bad or type(owner_epoch) is not int or owner_epoch != view['owner_epoch']
+                    or owns_thermostat is not True or view['mode'] == 'MANUAL_PAUSE'):
+                self._last_ceiling_intent = None
+                return None
+            evidence = self._health_evidence()
+            shot = obj(self._snapshot['oneShot'])
+            room = obj(self._snapshot['room'])
+            allowed = (self._can_change(True) and self._demand_eligible() and evidence.plan_ok
+                and evidence.owner is not None and not self._health_memory.operator_latched
+                and not evidence.manual_stop and not evidence.operator_changed_mode
+                and not evidence.one_shot_blocked and shot['state'] not in ('unknown_outcome','consumed','expired')
+                and (not one_shot or shot['state'] == 'armed'))
+            if owner_epoch != obj(self._snapshot['status'])['owner_epoch']:
+                self._last_ceiling_intent = None
+                return None
+            self._thermostat_caps = (min_setpoint_c,max_setpoint_c,temperature_step_c)
+            self._thermostat_seen = self.trusted_clock()
+            self._thermostat_fresh = thermostat_fresh is True
+            self._thermostat_mode = thermostat_mode if thermostat_mode in ('HEAT','AUTO','OFF','UNKNOWN') else 'UNKNOWN'
+            result = finalize_heat_setpoint(limit=self._active_room_limit,
+                room_c=number(room['value']) if room['quality']=='valid' else None,
+                requested_setpoint_c=requested_setpoint_c,heat_permitted=allowed,
+                planner_requests_heat=planner_requests_heat,thermostat_c=thermostat_c,
+                min_setpoint_c=min_setpoint_c,max_setpoint_c=max_setpoint_c,temperature_step_c=temperature_step_c,
+                thermostat_fresh=thermostat_fresh,thermostat_mode=thermostat_mode,
+                owns_thermostat=owns_thermostat,manual_stop=evidence.manual_stop or evidence.operator_changed_mode)
+            if result is not None:
+                result['owner_epoch'] = owner_epoch
+            self._last_ceiling_intent = result
+            obj(self._snapshot['system_health'])['thermostat_ceiling'] = self._ceiling_view(self.trusted_clock())
+            return result
 
     def voltage_stop_intent(self, *, owner_epoch: int, owns_thermostat: bool = False,
                             thermostat_fresh: bool = False, thermostat_c: float | None = None,
