@@ -65,6 +65,16 @@ export type FanBindingRole =
 export type LiveBindings = BaseBindings &
   Partial<Record<FanBindingRole, string>>;
 export const optionalRoles: FanBindingRole[] = [
+  "day_target",
+  "night_target",
+  "day_upper",
+  "night_upper",
+  "sleep_start",
+  "sleep_end",
+  "heating_start",
+  "heating_end",
+  "strategy",
+  "power_model",
   "return_probe",
   "weather_forecast",
   "legacy_model",
