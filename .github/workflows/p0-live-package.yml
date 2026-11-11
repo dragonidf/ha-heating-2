@@ -9,6 +9,7 @@ on:
       - 'frontend/vite.live.config.ts'
       - 'frontend/tests/live-ha.test.ts'
       - 'releases/ha_v2/**'
+      - 'tools/release/**'
       - '.github/workflows/p0-live-package.yml'
   workflow_dispatch:
 permissions:
@@ -53,6 +54,14 @@ jobs:
           shutil.copytree('releases/ha_v2/custom_components/heating_ai_v2',dest,
                           ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
           shutil.copytree('frontend/dist-live/assets', dest/'assets')
+          import subprocess
+          subprocess.run(['python','tools/release/build_v2_engine.py',
+                          '--output',str(dest/'engine')],check=True)
+          assert (dest/'engine'/'SOURCE-SHA256.json').is_file()
+          assert (dest/'engine'/'control'/'kernel.py').is_file()
+          assert (dest/'engine'/'planner'/'__init__.py').is_file()
+          assert not (dest/'engine'/'ha_fake').exists()
+          assert not (dest/'engine'/'simulator').exists()
           assert (dest/'assets'/'livePanel.js').is_file()
           assert (dest/'manifest.json').is_file()
           manifest=json.loads((dest/'manifest.json').read_text())
