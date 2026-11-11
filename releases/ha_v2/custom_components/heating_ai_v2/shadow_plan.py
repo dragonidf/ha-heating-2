@@ -47,8 +47,8 @@ def _blocked(reason: str) -> dict[str, Any]:
     }
 
 
-def _scalar(row: Any, lo: float, hi: float) -> float | None:
-    if not isinstance(row, dict):
+def _scalar(row: Any, lo: float, hi: float, unit: str | None = None) -> float | None:
+    if not isinstance(row, dict) or (unit is not None and row.get("unit") != unit):
         return None
     try:
         val = float(row["state"])
@@ -126,7 +126,7 @@ def conditional_plan(
     if any(value is None for value in values.values()):
         return _blocked("settings_not_bound")
     nums = {
-        name: _scalar(values[name], 10, 32)
+        name: _scalar(values[name], 10, 32, "°C")
         for name in ("day_target", "night_target", "day_upper", "night_upper")
     }
     if (any(v is None for v in nums.values())
@@ -146,8 +146,8 @@ def conditional_plan(
             or not recently_reported(rows.get("legacy_model"), now)):
         return _blocked("room_stored_or_model_old")
 
-    room = _scalar(rows["room"], -30, 60)
-    stored = _scalar(rows["stored_heat"], -30, 90)
+    room = _scalar(rows["room"], -30, 60, "°C")
+    stored = _scalar(rows["stored_heat"], -30, 90, "°C")
     model_attrs = (rows["legacy_model"] or {}).get("attributes") or {}
     model = _model(model_attrs.get("parameters"))
     if room is None or stored is None or model is None:
@@ -295,7 +295,7 @@ def diagnostics(
     from .shadow_coast import preview
     from .telemetry import _number
     room = (
-        _scalar(rows.get("room"), -30, 60)
+        _scalar(rows.get("room"), -30, 60, "°C")
         if recently_reported(rows.get("room"), now) else None
     )
     stored = (
