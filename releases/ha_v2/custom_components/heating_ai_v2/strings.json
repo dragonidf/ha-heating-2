@@ -29,7 +29,17 @@
           "weather_forecast": "Weather entity (hourly forecast, read-only)",
           "outage_calendar": "Outage calendar (events, read-only)",
           "legacy_model": "Existing Heating AI model sensor (read-only)",
-          "stored_heat": "Estimated stored heat sensor (read-only)"
+          "stored_heat": "Estimated stored heat sensor (read-only)",
+          "day_target": "Daytime target (°C)",
+          "night_target": "Night target (°C)",
+          "day_upper": "Daytime ceiling (°C)",
+          "night_upper": "Night ceiling (°C)",
+          "sleep_start": "Sleep period begins",
+          "sleep_end": "Sleep period ends",
+          "heating_start": "Allowed heating begins",
+          "heating_end": "Allowed heating ends",
+          "strategy": "Heating strategy",
+          "power_model": "Existing fixed-power mode (read-only)"
         }
       }
     },
