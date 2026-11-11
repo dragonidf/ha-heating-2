@@ -14,6 +14,19 @@ from typing import Any
 from .engine.thermal import Coefficients, Forcing, Interval, ThermalState, step
 
 
+def recently_reported(row: dict[str, Any] | None, now: float) -> bool:
+    """HA source may remain cached without a new room/stored report."""
+    stamp = (row or {}).get("last_reported")
+    if not isinstance(stamp, str):
+        return False
+    try:
+        reported = datetime.fromisoformat(stamp)
+        return (reported.tzinfo is not None and
+                0 <= now - reported.timestamp() <= 4 * 3600)
+    except (ValueError, OverflowError, TypeError):
+        return False
+
+
 def _val(value: Any, low: float, high: float) -> float | None:
     if type(value) not in (float, int) or not isfinite(value):
         return None
