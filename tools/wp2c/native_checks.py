@@ -246,6 +246,26 @@ async def wait_status(read, predicate, label, *, timeout=5):
         await asyncio.sleep(0.05)
 
 
+async def save_settings_once(read, save, common, settings, values, request_id):
+    """Reconcile admission before one CAS write; never retry or replace its revision."""
+    before = await wait_status(read, lambda s: s['permitted'] and s['room']['quality'] == 'valid',
+                               'native-settings-durably-admissible')
+    body = common | {'boot_id': before['status']['boot_id'], 'generation': before['generation'],
+                     'owner_epoch': before['status']['owner_epoch'], 'request_id': request_id,
+                     'expected_revision': settings['revision'], 'values': values}
+    receipt = await save(body)
+    stored = await read('settings/get')
+    mismatched = sorted(k for k in set(values) | set(stored['values'])
+                        if k not in values or k not in stored['values'] or values[k] != stored['values'][k])
+    assert receipt['status'] == 'saved' and not mismatched and stored['revision'] == settings['revision'] + 1, {
+        'before': readiness_details(before), 'after': readiness_details(await read('status'), receipt),
+        'expected_revision': settings['revision'], 'stored_revision': stored['revision'],
+        'receipt_revision': receipt.get('revision'), 'mismatched_keys': mismatched,
+        'values_equal': not mismatched,
+    }
+    return receipt, body
+
+
 async def report_voltage(admin, common, read, sequence, volts=(230, 230, 230), *, missing=None, online=True, grid=True):
     now = (await read("status"))["now"]
     frame = {"phases": [{"phase": phase, "source_id": "synthetic.input220." + phase,
@@ -526,10 +546,9 @@ async def integration(restart: bool = False) -> dict:
         completed.append("native_read_only_user_cannot_mutate")
         settings = await read("settings/get")
         values = settings["values"] | {"day": 22 if settings["values"]["day"] != 22 else 23}
-        before = await read("status")
-        body = common | {"boot_id": before["status"]["boot_id"], "generation": before["generation"], "owner_epoch": before["status"]["owner_epoch"], "request_id": "native-save-" + str(settings["revision"]), "expected_revision": settings["revision"], "values": values}
-        receipt = await admin.ok("heating_ai/settings/save", **body)
-        assert receipt["status"] == "saved" and (await read("settings/get"))["values"] == values
+        receipt, body = await save_settings_once(read,
+            lambda payload: admin.ok("heating_ai/settings/save", **payload), common, settings, values,
+            "native-save-" + str(settings["revision"]))
         assert await admin.ok("heating_ai/settings/save", **body) == receipt
         conflict = await admin.ok("heating_ai/settings/save", **(body | {"values": values | {"fan": 71}}))
         assert conflict["status"] == "conflict"
