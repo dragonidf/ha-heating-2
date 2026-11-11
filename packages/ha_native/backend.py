@@ -17,7 +17,7 @@ from packages.offline.contracts import Binding, Registry, SourceEvent, EnergySli
 from packages.offline.codec import encode as encode_contract, decode as decode_contract
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
-from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view
+from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
 
@@ -413,6 +413,21 @@ class NativeBackend:
                 and obj(self._snapshot['room'])['quality'] == 'valid' and self._snapshot['grid'] is True
                 and obj(self._snapshot['status'])['mode'] not in ('SAFE_HOLD', 'RECOVERING', 'MANUAL_PAUSE')
                 and self._voltage_state is not None and self._voltage_state.eligible)
+
+    def voltage_stop_intent(self, *, owner_epoch: int, owns_thermostat: bool = False,
+                            thermostat_fresh: bool = False) -> dict[str, JSON] | None:
+        """Internal synthetic intent only; no device route or inferred real ownership."""
+        with self._memory:
+            self.refresh()
+            view = obj(self._snapshot['status'])
+            if (not self.enabled or not self._opened or self._clock_bad
+                    or owner_epoch != view['owner_epoch'] or self._voltage_state is None):
+                return None
+            room = obj(self._snapshot['room'])
+            return synthetic_voltage_withdrawal(self._voltage_state,
+                room_c=cast(float | None, room['value']), room_fresh=room['quality'] == 'valid',
+                thermostat_fresh=thermostat_fresh, owns_thermostat=owns_thermostat,
+                manual_stop=view['mode'] == 'MANUAL_PAUSE')
 
     def safety_permit(self) -> HeatPermit:
         """Reuse accepted eligibility guards with unconditional synthetic SHADOW policy."""

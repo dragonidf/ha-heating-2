@@ -221,7 +221,8 @@ async def report_voltage(admin, common, read, sequence, volts=(230, 230, 230), *
              "phase_verified": True, "online": online}
             for phase, value in zip(("L1", "L2", "L3"), volts) if phase != missing],
              "mapping_verified": True, "grid_available": grid, "protection_trip": False,
-             "protection_last_reported": now, "protection_qualified": True}
+             "protection_last_reported": now, "protection_qualified": True,
+             "feed": {"reported_at": now, "utility_ready": True, "kws_online": True, "output_ready": True, "qualified": True}}
     await admin.ok("fire_event", event_type="heating_ai_synthetic_sample",
                    event_data={"entry_id": common["entry_id"], "kind": "voltage", "envelope": frame})
     await asyncio.sleep(0.1)

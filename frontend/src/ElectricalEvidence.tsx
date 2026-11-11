@@ -22,7 +22,12 @@ export function ElectricalEvidence({ state }: { state: Snapshot }) {
         }
       >
         <p>
-          {labels[voltage?.status ?? "MISSING_OR_STALE"]}.{" "}
+          {voltage?.reason.includes("kws")
+            ? "Очікування KWS"
+            : voltage?.status === "LOW" || voltage?.status === "HIGH"
+              ? "Напруга поза межами"
+              : labels[voltage?.status ?? "MISSING_OR_STALE"]}
+          .{" "}
           {voltage?.reason ??
             "Немає кваліфікованих синтетичних звітів вхідних фаз."}
         </p>

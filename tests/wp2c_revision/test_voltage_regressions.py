@@ -4,7 +4,7 @@ import unittest
 
 from packages.contracts import Clock
 from packages.ha_native.voltage import (
-    VoltageFrame, VoltagePhase, VoltagePolicy, evaluate_voltage,
+    SyntheticFeedReadiness, VoltageFrame, VoltagePhase, VoltagePolicy, evaluate_voltage,
 )
 
 
@@ -18,7 +18,7 @@ def frame(at, values=(230, 230, 230), **changes):
                    for phase, value in zip(('L1', 'L2', 'L3'), values))
     return VoltageFrame(phases=phases, mapping_verified=True, grid_available=True,
                         protection_trip=False, protection_last_reported=at,
-                        protection_qualified=True, **changes)
+                        protection_qualified=True, feed=SyntheticFeedReadiness(at, True, True, True, True), **changes)
 
 
 class VoltageRecoveryRegressions(unittest.TestCase):

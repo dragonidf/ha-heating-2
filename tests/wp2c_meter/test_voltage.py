@@ -4,7 +4,7 @@ import unittest
 
 from packages.contracts import Clock, ContractError, QualityStatus, SourceKind
 from packages.ha_native.voltage import (
-    VoltageFrame, VoltagePhase, VoltagePolicy, decode_voltage_frame,
+    SyntheticFeedReadiness, VoltageFrame, VoltagePhase, VoltagePolicy, decode_voltage_frame,
     evaluate_voltage, voltage_view,
 )
 
@@ -18,7 +18,7 @@ def frame(at=100, volts=(230, 230, 230), **changes):
                                phase_verified=True, online=True)
                    for p, v in zip(("L1", "L2", "L3"), volts))
     values = dict(phases=phases, mapping_verified=True, grid_available=True,
-                  protection_trip=False, protection_last_reported=at, protection_qualified=True)
+                  protection_trip=False, protection_last_reported=at, protection_qualified=True, feed=SyntheticFeedReadiness(at, True, True, True, True))
     values.update(changes)
     return VoltageFrame(**values)
 
@@ -163,7 +163,7 @@ class VoltageTests(unittest.TestCase):
                       last_reported=p.last_reported,received_at=p.received_at,sequence=p.sequence,
                       phase_verified=True,online=True) for p in frame().phases],
                       mapping_verified=True,grid_available=True,protection_trip=False,
-                      protection_last_reported=100,protection_qualified=True)
+                      protection_last_reported=100,protection_qualified=True, feed=dict(reported_at=100, utility_ready=True, kws_online=True, output_ready=True, qualified=True))
         f = decode_voltage_frame(payload)
         self.assertEqual(f, frame())
         view = voltage_view(evaluate_voltage(VoltagePolicy(), f, clock()), VoltagePolicy())

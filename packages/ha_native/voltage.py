@@ -72,6 +72,22 @@ class VoltagePhase:
 
 
 @dataclass(frozen=True, slots=True)
+class SyntheticFeedReadiness:
+    """Test-only separate utility/KWS output evidence; never inferred from ON/power."""
+    reported_at: float
+    utility_ready: bool | None = None
+    kws_online: bool | None = None
+    output_ready: bool | None = None
+    qualified: bool = False
+
+    def __post_init__(self) -> None:
+        number(self.reported_at, nonnegative=True)
+        require(type(self.qualified) is bool, "Invalid synthetic feed qualification")
+        for flag in (self.utility_ready, self.kws_online, self.output_ready):
+            require(flag is None or type(flag) is bool, "Invalid synthetic readiness")
+
+
+@dataclass(frozen=True, slots=True)
 class VoltageFrame:
     phases: tuple[VoltagePhase, ...] = ()
     mapping_verified: bool = False
@@ -79,6 +95,7 @@ class VoltageFrame:
     protection_trip: bool | None = None
     protection_last_reported: float | None = None
     protection_qualified: bool = False
+    feed: SyntheticFeedReadiness | None = None
 
     def __post_init__(self) -> None:
         require(type(self.phases) is tuple and len(self.phases) <= 3
@@ -86,6 +103,7 @@ class VoltageFrame:
         require(len({p.phase for p in self.phases}) == len(self.phases)
                 and len({p.source_id for p in self.phases}) == len(self.phases),
                 "Ambiguous voltage phase/source mapping")
+        require(self.feed is None or isinstance(self.feed, SyntheticFeedReadiness), "Invalid feed evidence")
         for flag in (self.mapping_verified, self.protection_qualified):
             require(type(flag) is bool, "Invalid voltage verification flag")
         for availability in (self.grid_available, self.protection_trip):
@@ -109,6 +127,7 @@ class VoltageState:
     frame: VoltageFrame
     protection_age_s: float | None
     qualified_phases: tuple[VoltagePhaseName, ...]
+    feed_age_s: float | None = None
 
 
 def evaluate_voltage(policy: VoltagePolicy, frame: VoltageFrame, clock: Clock,
@@ -162,6 +181,23 @@ def evaluate_voltage(policy: VoltagePolicy, frame: VoltageFrame, clock: Clock,
             and frame.protection_last_reported == prior.frame.protection_last_reported
             and prior.protection_age_s is not None):
         protection_age = max(protection_age, prior.protection_age_s + max(0, elapsed))
+    feed = frame.feed
+    feed_age = None if feed is None else clock.utc - feed.reported_at
+    if (same_boot and prior is not None and feed is not None and prior.frame.feed is not None
+            and feed.reported_at == prior.frame.feed.reported_at and prior.feed_age_s is not None):
+        feed_age = max(cast(float, feed_age), prior.feed_age_s + max(0, elapsed))
+    feed_valid = (feed is not None and feed.qualified and feed_age is not None
+                  and 0 <= feed_age <= policy.voltage_max_age_s)
+    if (feed_valid and prior is not None and same_boot and prior.frame.feed is not None
+            and feed is not None):
+        feed_valid = (feed.reported_at >= prior.frame.feed.reported_at
+                      and (feed.reported_at != prior.frame.feed.reported_at or feed == prior.frame.feed))
+    if not feed_valid or feed is None:
+        reasons.append("kws_readiness_unknown_or_stale")
+    elif feed.utility_ready is not True:
+        reasons.append("utility_supply_unqualified")
+    elif feed.kws_online is not True or feed.output_ready is not True:
+        reasons.append("waiting_kws")
     if rollback:
         reasons.append("clock_rollback")
     if not frame.mapping_verified:
@@ -192,6 +228,8 @@ def evaluate_voltage(policy: VoltagePolicy, frame: VoltageFrame, clock: Clock,
         continuity = (same_boot and prior is not None and prior.policy == policy
                       and all(v is not None and 0 <= v + elapsed <= policy.voltage_max_age_s
                               for _, v in prior.ages)
+                      and prior.feed_age_s is not None
+                      and 0 <= prior.feed_age_s + elapsed <= policy.voltage_max_age_s
                       and prior.protection_age_s is not None
                       and 0 <= prior.protection_age_s + elapsed <= policy.voltage_max_age_s)
         if continuity and prior is not None and prior.eligible:
@@ -207,7 +245,7 @@ def evaluate_voltage(policy: VoltagePolicy, frame: VoltageFrame, clock: Clock,
             status = "NORMAL" if eligible else "STABILIZING"
             reason = "stable_recovery_complete" if eligible else "recovery_dwell" if inward else "outside_recovery_band"
     return VoltageState(status, eligible, affected, tuple(ages), reason, since, clock.boot_id,
-                        clock.utc, clock.monotonic, policy, frame, protection_age, tuple(qualified))
+                        clock.utc, clock.monotonic, policy, frame, protection_age, tuple(qualified), feed_age)
 
 
 def voltage_view(state: VoltageState, policy: VoltagePolicy) -> dict[str, JSON]:
@@ -239,7 +277,7 @@ def _object(value: object, allowed: set[str], required: set[str]) -> dict[str, o
 def decode_voltage_frame(raw: object) -> VoltageFrame:
     """Strict fixture JSON boundary; incoming report fields never imply real authority."""
     value = _object(raw, {"phases", "mapping_verified", "grid_available", "protection_trip",
-                         "protection_last_reported", "protection_qualified"}, {"phases"})
+                         "protection_last_reported", "protection_qualified", "feed"}, {"phases"})
     rows = value["phases"]
     require(type(rows) is list and len(cast(list[object], rows)) <= 3, "Invalid voltage source list")
     phases = []
@@ -253,7 +291,27 @@ def decode_voltage_frame(raw: object) -> VoltageFrame:
             QualityStatus(cast(str, p.get("quality", "valid"))), cast(str, p.get("provider", INPUT_PROVIDER)),
             cast(bool, p.get("phase_verified", False)), cast(bool | None, p.get("online")),
             SourceKind(cast(str, p.get("origin", "direct"))), cast(Literal["V"], p.get("unit", "V"))))
+    feed = None
+    if value.get("feed") is not None:
+        f = _object(value["feed"], {"reported_at", "utility_ready", "kws_online", "output_ready", "qualified"}, {"reported_at"})
+        feed = SyntheticFeedReadiness(cast(float, f["reported_at"]), cast(bool | None, f.get("utility_ready")),
+            cast(bool | None, f.get("kws_online")), cast(bool | None, f.get("output_ready")), cast(bool, f.get("qualified", False)))
     return VoltageFrame(tuple(phases), cast(bool, value.get("mapping_verified", False)),
                         cast(bool | None, value.get("grid_available")), cast(bool | None, value.get("protection_trip")),
                         cast(float | None, value.get("protection_last_reported")),
-                        cast(bool, value.get("protection_qualified", False)))
+                        cast(bool, value.get("protection_qualified", False)), feed)
+
+
+def synthetic_voltage_withdrawal(state: VoltageState, *, room_c: float | None,
+                                 room_fresh: bool, thermostat_fresh: bool,
+                                 owns_thermostat: bool, manual_stop: bool) -> dict[str, JSON] | None:
+    """Non-actuating owned-request fence; known voltage faults never select AUTO.
+
+    No action is inferred when STOP/ownership/temperature evidence is missing.
+    Hardware setpoint bounds and real output readiness remain commissioning blockers.
+    """
+    if state.eligible or manual_stop or not owns_thermostat or not room_fresh or not thermostat_fresh or room_c is None:
+        return None
+    number(room_c)
+    return {"mode": "HEAT", "setpoint_c": room_c - 1, "action": "withdraw_demand",
+            "physical_authority": False, "scope": "synthetic_only"}
