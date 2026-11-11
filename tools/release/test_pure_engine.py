@@ -127,6 +127,79 @@ def main() -> None:
     assert coast.preview(21.5, 24, legacy, None, now)["status"] == "UNAVAILABLE"
     assert coast.preview(21.5, 24, legacy, weather, now + 8640)["status"] == "UNAVAILABLE"
 
+    # The accepted real planner is executed against bounded HA-shaped inputs.
+    from datetime import datetime, timedelta, timezone
+    planner = importlib.import_module("custom_components.heating_ai_v2.shadow_plan")
+    start = datetime(2026, 11, 11, 23, 0, tzinfo=timezone.utc).timestamp()
+    stamp = datetime.fromtimestamp(start, timezone.utc).isoformat()
+    def record(state, unit=""):
+        return {"state": state, "unit": unit, "last_reported": stamp}
+    rows = {
+        "room": record("20.5", "°C"),
+        "stored_heat": record("22.0", "°C"),
+        "legacy_model": {
+            **record("Синтетична перевірка"),
+            "attributes": {"parameters": legacy},
+        },
+        "grid": record("Наявна мережа"),
+        "day_target": record("21.5", "°C"),
+        "night_target": record("21.0", "°C"),
+        "day_upper": record("22.0", "°C"),
+        "night_upper": record("21.5", "°C"),
+        "sleep_start": record("23:00:00"),
+        "sleep_end": record("06:30:00"),
+        "heating_start": record("23:00:00"),
+        "heating_end": record("07:00:00"),
+        "strategy": record("Тільки в дозволені години"),
+        "power_model": record("fixed_6"),
+    }
+    wx = {
+        "received_at": start, "status": "RECEIVED_ISSUED_UNKNOWN",
+        "hours": [
+            {"at": start - 3600 + i * 3600, "outside_c": 2.0}
+            for i in range(26)
+        ],
+    }
+    outage = {
+        "received_at": start, "status": "OUTAGE_EVENTS_ONLY",
+        "coverage_known": False,
+        "outages": [{"start": start + 2.5 * 3600,
+                     "end": start + 9.5 * 3600}],
+    }
+    virtual = planner.conditional_plan(rows, wx, outage, start)
+    assert virtual["status"] == "VIRTUAL_CONDITIONAL", virtual
+    assert virtual["scenario_power_kw"] == 6.0
+    assert virtual["commands_sent"] == 0
+    assert virtual["proposal_is_command"] is False
+    assert virtual["model_qualified"] is False
+    assert virtual["physical_limits_qualified"] is False
+    assert virtual["weather_issued_known"] is False
+    assert virtual["grid_forecast_qualified"] is False
+    assert 0 <= virtual["segment_count"]
+    assert len(virtual["segments"]) <= 12
+    assert virtual["work"] <= 50000
+    for session in virtual["segments"]:
+        assert session["conditional"] is True
+        assert not (
+            session["start"] < outage["outages"][0]["end"]
+            and session["end"] > outage["outages"][0]["start"]
+        ), session
+    assert planner.conditional_plan(rows, wx, outage, start) == virtual
+
+    # Unknown forecast, unbound config, uncalibrated AUTO, stale stored heat
+    # and missing weather hours must never fabricate an executable plan.
+    for changed_rows, changed_weather in (
+        ({**rows, "night_upper": None}, wx),
+        ({**rows, "power_model": record("AUTO")}, wx),
+        ({**rows, "stored_heat": {**rows["stored_heat"], "last_reported":
+            "2026-11-10T00:00:00+00:00"}}, wx),
+        (rows, None),
+    ):
+        result = planner.conditional_plan(changed_rows, changed_weather, outage, start)
+        assert result["status"] == "BLOCKED_INPUTS", result
+        assert result["commands_sent"] == 0
+        assert result["segments"] == []
+
     # Restart/load cannot keep old source ledger or invent a positive intent.
     assert mod.shadow_decision({})["intents"] == 0
     print("PASS: accepted pure source SHA256 parity, 54 real-state variations, no HEAT")
