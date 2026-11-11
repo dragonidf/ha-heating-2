@@ -1,4 +1,4 @@
-"""Use only real HA frontend states. No demo data and no actuator transport."""
+/** Use only real HA frontend states. No demo data and no actuator transport. */
 import { SnapshotFeed } from "./mock";
 import { emptyView } from "./operator";
 import type { OperatorAPI, Control, ModelAction } from "./operator";
