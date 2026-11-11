@@ -43,22 +43,24 @@ def main() -> None:
     assert callable(mod.shadow_decision)
     for grid in (True, False, None):
         for room in (20.5, None):
-            for power in (0.0, 6.22, None):
-                values = {
-                    "grid_last_known": grid,
-                    "room_c_last_known": room,
-                    "kws_total_kw_last_known": power,
-                    "thermostat_mode_last_known": "heat",
-                }
-                response = mod.shadow_decision(values)
-                assert response["kernel"] == "accepted_control", response
-                assert response["mode"] == "shadow", response
-                assert response["reason"] == "shadow", response
-                assert response["permit"] is False
-                assert response["intents"] == 0
-                assert response["actual_commands_sent"] == 0
-                assert response["physical_authority"] is False
-                assert len(response["unverified_sources"]) == 5
+            for return_c in (22.1, 109.9, None):
+                for power in (0.0, 6.22, None):
+                    values = {
+                        "grid_last_known": grid,
+                        "room_c_last_known": room,
+                        "return_c_last_known": return_c,
+                        "kws_total_kw_last_known": power,
+                        "thermostat_mode_last_known": "heat",
+                    }
+                    response = mod.shadow_decision(values)
+                    assert response["kernel"] == "accepted_control", response
+                    assert response["mode"] == "shadow", response
+                    assert response["reason"] == "shadow", response
+                    assert response["permit"] is False
+                    assert response["intents"] == 0
+                    assert response["actual_commands_sent"] == 0
+                    assert response["physical_authority"] is False
+                    assert len(response["unverified_sources"]) == 5
 
     fan = importlib.import_module("custom_components.heating_ai_v2.fan_shadow")
     values = {
@@ -92,7 +94,7 @@ def main() -> None:
 
     # Restart/load cannot keep old source ledger or invent a positive intent.
     assert mod.shadow_decision({})["intents"] == 0
-    print("PASS: accepted pure source SHA256 parity, 18 real-state variations, no HEAT")
+    print("PASS: accepted pure source SHA256 parity, 54 real-state variations, no HEAT")
 
 
 if __name__ == "__main__":
