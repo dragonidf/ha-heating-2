@@ -49,7 +49,7 @@ def snapshot(rows: Mapping[str, Mapping[str, Any] | None]) -> dict[str, Any]:
     tstate = (rows.get("thermostat") or {}).get("state")
     tmode = tstate if tstate in ("heat", "auto", "off") else None
     grid = (rows.get("grid") or {}).get("state")
-    grid_ok = True if grid == "on" else False if grid == "off" else None
+    grid_ok = True if grid == "Наявна мережа" else False if grid == "Відсутня мережа" else None
     unavailable = [name for name in ROLES
                    if rows.get(name) is None
                    or rows[name].get("state") in ("unavailable", "unknown", None)]

@@ -16,7 +16,7 @@ def mapping_schema() -> probatio.Schema:
     fields: dict[Any, Any] = {}
     for role in ROLES:
         domain = "climate" if role == "thermostat" else (
-            "binary_sensor" if role == "grid" else "sensor"
+            "input_select" if role == "grid" else "sensor"
         )
         fields[probatio.Required(role)] = selector.EntitySelector(
             selector.EntitySelectorConfig(domain=domain)

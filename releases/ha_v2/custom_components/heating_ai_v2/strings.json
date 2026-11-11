@@ -7,7 +7,7 @@
         "data": {
           "thermostat": "Boiler thermostat",
           "room": "Living-room temperature",
-          "grid": "Grid present",
+          "grid": "Grid status helper (input_select)",
           "voltage_l1": "Upstream phase L1 voltage",
           "voltage_l2": "Upstream phase L2 voltage",
           "voltage_l3": "Upstream phase L3 voltage",

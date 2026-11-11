@@ -15,7 +15,7 @@ def frame():
     return {
         "thermostat": {"state": "heat", "unit": "", "last_reported": "today"},
         "room": {"state": "21.6", "unit": "°C", "last_reported": "today"},
-        "grid": {"state": "on", "unit": "", "last_reported": "today"},
+        "grid": {"state": "Наявна мережа", "unit": "", "last_reported": "today"},
         **{r: {"state": "230", "unit": "V", "last_reported": "today"}
            for r in ("voltage_l1", "voltage_l2", "voltage_l3")},
         **{r: {"state": "0.0", "unit": "kW", "last_reported": "hours_ago"}
@@ -78,10 +78,15 @@ class ReadOnlyShadowTests(unittest.TestCase):
         self.assertTrue(v["grid_last_known"])
         self.assertEqual(v["voltages_v_last_known"]["voltage_l1"], 230)
         self.assertFalse(v["commands_enabled"])
-        f["grid"]["state"] = "off"
+        f["grid"]["state"] = "Відсутня мережа"
         self.assertFalse(snapshot(f)["grid_last_known"])
+        # The upstream meter may retain a non-zero voltage even while utility is absent.
+        self.assertEqual(snapshot(f)["voltages_v_last_known"]["voltage_l1"], 230)
         f["grid"]["state"] = "unavailable"
         self.assertIsNone(snapshot(f)["grid_last_known"])
+        f["grid"]["state"] = "on"  # A Boolean state is not this input_select contract.
+        self.assertIsNone(snapshot(f)["grid_last_known"])
+        self.assertFalse(snapshot(f)["commands_enabled"])
 
     def test_no_services_transports_automation_or_actuator_code_in_live_shadow(self):
         forbidden = {"async_call", "call_service", "set_temperature", "set_hvac_mode",
