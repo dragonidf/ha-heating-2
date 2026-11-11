@@ -4,7 +4,7 @@ This is a **separate** Home Assistant custom integration, `heating_ai_v2`, outsi
 
 ## Installation *after code review and approval*
 
-1. Back up the Home Assistant configuration. Copy only the folder `releases/ha_v2/custom_components/heating_ai_v2` into HA's `/config/custom_components/heating_ai_v2`; restart HA. No install has been performed by this PR.
+1. Back up Home Assistant. **Use the reviewed CI ZIP artifact**, which contains the compiled UI and vendored verified engine. Extract only `custom_components/heating_ai_v2` into HA's `/config/custom_components/heating_ai_v2`, then restart HA. **Do not copy the source-tree folder alone:** it lacks required `assets/livePanel.js` and `engine/SOURCE-SHA256.json`. No install has been performed by this PR.
 2. Settings → Devices & Services → Add Integration → **Heating AI 2.0 — read-only shadow**. Select the existing entities for the thermostat, living-room temperature, authoritative **input_select utility status helper** (\`Наявна мережа\` / \`Відсутня мережа\`), and **upstream** voltage sensors for three phases, direct KWS local L1/L2/L3 active power (each **kW**) and KWS local **total** energy (kWh).
 3. The integration checks that the four KWS entities belong to **one** device on the `tuya_local` integration. The input_select is the ONLY authoritative Boolean grid-state input. Voltage sensors are last-known values and cannot override grid absence or an unknown helper state. It does not need cloud entities or any old derived helpers. If the selected upstream voltage source is downstream of KWS or inverter, that is **not** a commissioned voltage safety feed; shadow will display it but never grant heating.
 4. **Phase assignment:** physical phase **1 → A, 2 → B, 3 → C** for both incoming input-220 voltages and local KWS power. Bind by the real channel, not by a reversed card caption. These incoming voltage values can remain cached after blackout; ONLY the existing input_select helper determines grid present/absent.
@@ -24,3 +24,9 @@ This is a **separate** Home Assistant custom integration, `heating_ai_v2`, outsi
 ## Safety tests
 
 `python -m unittest tests.wp2c_revision.test_live_shadow_v2 -v` should pass with no Home Assistant dependency. The existing sealed synthetic package remains immutable and retains all of its original boundary tests. Passing these unit checks is **not** proof that HA 2026.11 integration setup completed; the physical-install stage must verify that separately.
+
+## Stability and safety
+
+- The v2 observation keeps bounded in-memory fan state only. Restarts do not re-arm heating or automatically replay pending fan commands. Persistent errors log once per fault episode instead of flooding the logger. There is exactly one periodic safety observer (60s), cleaned up on entry unload.
+- `fan.tsirkuliatsiia_povitria_lokal` should be bound as the **single** circulation fan; its cloud alias refers to the same physical device and is not an independent witness. Existing `Зупинити` mode must be preserved, not overwritten by v2 setup.
+- This release remains read-only, not the full P0/P1 controller. Shadow running state and manual cutover are separate acceptance gates; the legacy fan and boiler automations remain active until supervised ownership transfer.
