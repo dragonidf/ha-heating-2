@@ -1,5 +1,6 @@
 /** Use only real HA frontend states. No demo data and no actuator transport. */
 import { SnapshotFeed } from "./mock";
+import { fetchRoomRecorder } from "./liveRecorder";
 import { emptyView } from "./operator";
 import type { OperatorAPI, Control, ModelAction } from "./operator";
 import type {
@@ -20,6 +21,7 @@ export interface LiveState {
 export interface LiveHass {
   states: Record<string, LiveState | undefined>;
   connected?: boolean;
+  callWS?: (message: Record<string, unknown>) => Promise<unknown>;
 }
 export type BaseBindings = Record<
   | "thermostat"
@@ -160,6 +162,7 @@ export class LiveHAAPI implements OperatorAPI {
     "Архів, планувальник та налаштування Heating AI 2.0 ще не перенесені.",
   ];
   readonly scenario = undefined;
+  private currentHass: LiveHass;
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
     room: null,
@@ -199,9 +202,14 @@ export class LiveHAAPI implements OperatorAPI {
     ) {
       throw Error("Невалідна прив'язка до реальних сутностей HA");
     }
+    this.currentHass = hass;
     this.updateHass(hass);
   }
+  async loadRoomHistory(scope: { start: number; end: number }) {
+    return fetchRoomRecorder(this.currentHass, this.bindings.room, scope);
+  }
   updateHass(hass: LiveHass) {
+    this.currentHass = hass;
     const s = (role: keyof LiveBindings) => {
       const entityId = this.bindings[role];
       return entityId ? hass.states?.[entityId] : undefined;
