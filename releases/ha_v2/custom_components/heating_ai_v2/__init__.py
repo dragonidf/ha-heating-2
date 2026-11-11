@@ -46,6 +46,8 @@ class ShadowRuntime:
                 "state": state.state,
                 "unit": state.attributes.get("unit_of_measurement", ""),
                 "last_reported": state.last_reported.isoformat(),
+                "attributes": ({"percentage": state.attributes.get("percentage")}
+                               if role == "circulation" else {}),
             } if state is not None else None)
         self.values = snapshot(rows)
         try:
