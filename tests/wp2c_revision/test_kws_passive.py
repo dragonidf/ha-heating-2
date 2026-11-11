@@ -127,7 +127,7 @@ class PassiveKWSStateTests(unittest.TestCase):
         for changes in (dict(last_changed=101), dict(last_updated=101),
                         dict(value=-1), dict(value=float("nan"))):
             with self.subTest(changes=changes), self.assertRaises(ContractError):
-                state("L1", "kW", 0, **changes)
+                state("L1", "kW", **{"value": 0, **changes})
         bridge = KWSPassiveStateBridge(bindings())
         self.assertFalse(bridge.observe(state("L1", "kW", 0, at=101), clock(100)))
 
