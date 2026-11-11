@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -12,10 +14,13 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 
 from .const import DOMAIN
 from .telemetry import ROLES, snapshot
+from .shadow_kernel import shadow_decision
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ShadowRuntime:
@@ -25,6 +30,7 @@ class ShadowRuntime:
         self.hass, self.entry = hass, entry
         self.listeners: set[Callable[[], None]] = set()
         self.values: dict[str, Any] = {}
+        self._kernel_fault = False
         self.refresh()
 
     @callback
@@ -39,6 +45,15 @@ class ShadowRuntime:
                 "last_reported": state.last_reported.isoformat(),
             } if state is not None else None)
         self.values = snapshot(rows)
+        try:
+            self.values['kernel'] = shadow_decision(self.values)
+            self._kernel_fault = False
+        except Exception:
+            self.values['kernel'] = {'mode': 'FAULT', 'permit': False,
+                                     'intents': 0, 'physical_authority': False}
+            if not self._kernel_fault:
+                _LOGGER.exception('V2 shadow kernel failed; no physical command authority')
+            self._kernel_fault = True
         for notify in tuple(self.listeners):
             notify()
 
@@ -62,6 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assets = Path(__file__).parent / 'assets'
     if not (assets / 'livePanel.js').is_file():
         raise ConfigEntryNotReady('Missing reviewed live UI bundle')
+    if not (Path(__file__).parent / 'engine' / 'SOURCE-SHA256.json').is_file():
+        raise ConfigEntryNotReady('Missing accepted deterministic control engine')
 
     runtime = ShadowRuntime(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = runtime
@@ -70,9 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def changed(event: Any) -> None:
         runtime.refresh()
 
-    entry.async_on_unload(async_track_state_change_event(
-        hass, [entry.data[role] for role in ROLES], changed
-    ))
+    forwarded = False
+    panel_registered = False
     try:
         if not hass.data[DOMAIN].get('_static'):
             await hass.http.async_register_static_paths([
@@ -80,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ])
             hass.data[DOMAIN]['_static'] = True
         await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+        forwarded = True
         panel_custom.async_register_panel(
             hass, frontend_url_path='heating-ai-v2',
             webcomponent_name='heating-ai-v2-panel',
@@ -88,7 +105,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             config={**dict(entry.data), 'entry_id': entry.entry_id},
             require_admin=True,
         )
+        panel_registered = True
+        entry.async_on_unload(async_track_state_change_event(
+            hass, [entry.data[role] for role in ROLES], changed
+        ))
+        entry.async_on_unload(async_track_time_interval(
+            hass, lambda _now: runtime.refresh(), timedelta(seconds=60),
+            name='heating_ai_v2_shadow_monitor'
+        ))
     except Exception:
+        if panel_registered:
+            frontend.async_remove_panel(hass, 'heating-ai-v2', warn_if_unknown=False)
+        if forwarded:
+            await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
         runtime.listeners.clear()
         hass.data[DOMAIN].pop(entry.entry_id, None)
         raise
