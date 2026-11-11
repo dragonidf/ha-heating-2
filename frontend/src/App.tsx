@@ -3,6 +3,8 @@ import { Home } from "./Home";
 import { History } from "./History";
 import { Settings } from "./Settings";
 import { DemoAPI } from "./mock";
+import { LiveHAAPI } from "./liveHA";
+import { LiveHome, LiveHistory, LiveSettings } from "./livePages";
 import { BrowserStore } from "./storage";
 import { useSettings } from "./useSettings";
 import { Icon, Badge } from "./components";
@@ -19,6 +21,7 @@ export function App({
 }
 function OperatorApp({ api }: { api: OperatorAPI }) {
   const demo = api instanceof DemoAPI ? api : null;
+  const live = api instanceof LiveHAAPI ? api : null;
   const mainRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!demo) return;
@@ -75,7 +78,7 @@ function OperatorApp({ api }: { api: OperatorAPI }) {
             </strong>
             <span className="brand-caption">Комфорт під контролем</span>
           </div>
-          <Badge tone="control">Симуляція</Badge>
+          <Badge tone="control">{live ? "Реальні HA-дані · без керування" : "Симуляція"}</Badge>
         </div>
         <nav className="main-nav" aria-label="Основні вкладки">
           {(
@@ -109,13 +112,13 @@ function OperatorApp({ api }: { api: OperatorAPI }) {
         <span>
           {state.connected
             ? api.native
-              ? "Home Assistant · ізольована симуляція"
+              ? live ? "Home Assistant · реальні датчики" : "Home Assistant · ізольована симуляція"
               : "Локальна симуляція"
             : "Немає зв’язку · останні дані"}
         </span>
         <span>{dateTime(state.status.snapshot_at)}</span>
         {!state.connected && (
-          <button onClick={() => void reconnect()}>Відновити симуляцію</button>
+          <button onClick={() => void reconnect()}>{live ? "Оновити дані" : "Відновити симуляцію"}</button>
         )}
       </div>
       <main id="main" ref={mainRef} tabIndex={-1}>
@@ -125,13 +128,13 @@ function OperatorApp({ api }: { api: OperatorAPI }) {
             {error}
           </p>
         ))}
-        {api.native && !state.permitted && (
+        {!live && api.native && !state.permitted && (
           <div className="notice safety" role="status">
             Лише читання. Симуляція вимкнена або немає дозволу адміністратора.
             Фізичне керування заблоковане. G1/B01–B08 BLOCKED.
           </div>
         )}
-        {controller.error && (
+        {!live && controller.error && (
           <div className="notice safety" role="alert">
             <p>Збережені налаштування не прочитані. Зміни заблоковано.</p>
             <button onClick={() => void controller.load()}>
@@ -139,7 +142,10 @@ function OperatorApp({ api }: { api: OperatorAPI }) {
             </button>
           </div>
         )}
-        {tab === "home" ? (
+        {live ? (
+          tab === "home" ? <LiveHome api={live} state={state} /> :
+          tab === "history" ? <LiveHistory /> : <LiveSettings api={live} />
+        ) : tab === "home" ? (
           <Home
             state={state}
             api={api}
