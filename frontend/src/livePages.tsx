@@ -104,7 +104,7 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
         <p>
           {t.coast.status === "UNQUALIFIED_CONDITIONAL_COAST" &&
           t.coast.min !== null
-            ? "Мінімум " + t.coast.min.toFixed(1) + " °C за " +
+            ? "Мінімум " + fmt(t.coast.min) + " °C за " +
               t.coast.hours.toFixed(1) + " год"
             : "Бракує даних погоди або моделі для сценарію"}
         </p>
