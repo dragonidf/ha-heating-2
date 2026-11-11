@@ -187,10 +187,12 @@ async def providers_case():
         async_add_executor_job=lambda fn, *args: asyncio.to_thread(fn, *args),
     )
     observed = []
+    plan_rows = {"room": {"state": "20.0", "unit": "°C"}}
     monitor = SourceMonitor(
         hass, {"weather_forecast": "weather.test", "outage_calendar": "calendar.test"},
-        lambda: observed.append(True), lambda: {},
+        lambda: observed.append(True), lambda: plan_rows,
     )
+    monitor.note_inputs(plan_rows)
     monitor.start()
     monitor.schedule()
     assert monitor._task is not None
@@ -201,6 +203,17 @@ async def providers_case():
     assert result["weather_issued_at"] is None
     assert result["outages_upcoming_count"] == 1
     assert result["normal_grid_forecast_qualified"] is False
+    assert monitor.plan is not None
+    assert monitor.plan["status"] == "BLOCKED_INPUTS"
+    assert monitor.plan["commands_sent"] == 0
+    # Changed temperature/settings invalidate previously computed suggestions.
+    plan_rows["room"] = {"state": "20.5", "unit": "°C"}
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is None and monitor.coast is None
+    monitor._next_replan = 0.0
+    monitor.schedule()
+    assert monitor._task is not None
+    await monitor._task
     assert monitor.plan is not None
     assert monitor.plan["status"] == "BLOCKED_INPUTS"
     assert monitor.plan["commands_sent"] == 0
