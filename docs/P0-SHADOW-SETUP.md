@@ -16,7 +16,7 @@ This is a **separate** Home Assistant custom integration, `heating_ai_v2`, outsi
 
 ## Deliberate limitations
 
-- This is a read-only **integration prototype**, not the functioning Heating AI 2.0 controller. It **does not calculate or execute heating plans**, nor establish trust in a hardware heartbeat. No thermal/electrical safety authorization or physical relay state can be inferred from HA states.
+- This is a read-only **integration prototype**, not the functioning Heating AI 2.0 controller. It **calculates only unqualified hypothetical plans**, never emits executable `Plan` objects or executes heating/fan commands. No thermal/electrical safety authorization or physical relay state can be inferred from HA states.
 - HA last_reported, source availability, KWS cached 0 kW and a successful climate service call (when added in a later reviewed stage) are not physical proof of opened/closed dry contacts.
 - This standalone profile is not the old HACS integration. Do not assume its folder can be installed by pointing the old HACS repository at it; the rollout uses a separate reviewed install route.
 - Next deliverable: bridge the accepted controller/planner/critical owner ledger into the real profile in a **separate explicit command boundary**, OFF by default, and prove an exclusive writer and rollback before any live actuation.
@@ -46,3 +46,49 @@ does not expose the provider's original forecast issuance time. We retain the
 actual v2 receipt time and mark issuance UNKNOWN. The outage calendar gives
 explicit off events, not guaranteed normal-grid coverage outside those events.
 Do not execute the optimizer's physical plan on these inputs before G4/G5/G6.
+
+
+## Real 24h planning scenario — NOT a physical permit
+
+The v2 configuration flow additionally permits binding **existing helpers only**:
+`day_target`, `night_target`, `day_upper`, `night_upper`,
+`sleep_start`, `sleep_end`, `heating_start`, `heating_end`,
+`strategy` (the legacy selector), and `power_model` (existing `fixed_3`,
+`fixed_6`, or `fixed_9` read-only sensor). None of these are created or
+modified by v2. The original mandatory ten roles and optional sources remain
+separate; the weather and outage integrations must also be bound.
+
+The **same accepted pure** `planner.solve` now runs in the native shadow
+profile with **5-minute UTC slots, at most 24h / 288 slots**, based on
+actual hourly weather points, existing household comfort/sleep-hour settings,
+the observed legacy stored-heat estimate and the physical power-mode selector.
+Published calendar OFF windows exclude simulated heating; all other hours have
+**UNKNOWN** future grid, never confirmed grid-ON. Absent forecast hours and
+gaps truncate the horizon. AUTO power and invalid settings **block** the scenario
+instead of silently choosing nominal 9 kW.
+
+The virtual request deliberately uses **unqualified** inherited two-state
+thermal coefficients, simulated stored/return bounds (50°C / 65°C), zero
+future fireplace/ventilation/external heat and an internal zero sentinel for
+unknown **weather issuance time**. These are not physically qualified limits
+or real weather issue timestamps. Every resulting time window is CONDITIONAL.
+The output is diagnostic only: nominal energy is **not metered energy**; no
+"saved kWh", immutable original 12-hour curve, independent hardware evidence
+or actuation is inferred. The new UI displays only up to 6 nearest simulated
+windows and no manual controls.
+
+Provider reads are coalesced (30 minutes minimum), and **planning and coasting
+run together off Home Assistant's event loop in one bounded executor job**.
+Settings/room/model/grid changes invalidate a cached proposal; late results
+computed for old inputs are discarded. A changed input can trigger a
+worker-only recomputation at most once per minute without re-reading the
+weather service. Only one task is active and it is cancelled/unsubscribed on
+integration unload. No forecast arrays, huge curves or unbounded history are
+published to sensor attributes.
+
+**Still required for genuine P0/P1 operation:** validated thermal coefficients,
+qualified independent physical protection inputs, persisted immutable archive
+and energy-accounting ledger, executable planner/dispatcher bridge, exclusive
+thermostat and fan ownership, 7-day/three-cycle production SHADOW verification
+and a supervised rollback rehearsal. No new version has been installed in
+the owner's running Home Assistant.
