@@ -21,7 +21,7 @@ export interface LiveHass {
   states: Record<string, LiveState | undefined>;
   connected?: boolean;
 }
-export type LiveBindings = Record<
+export type BaseBindings = Record<
   | "thermostat"
   | "room"
   | "grid"
@@ -34,6 +34,16 @@ export type LiveBindings = Record<
   | "kws_energy",
   string
 >;
+export type FanBindingRole =
+  | "fireplace" | "circulation" | "fan_mode"
+  | "fan_night" | "fan_standard" | "fan_intense"
+  | "fan_backup" | "fan_control" | "recuperator" | "bath";
+export type LiveBindings = BaseBindings & Partial<Record<FanBindingRole, string>>;
+export const optionalRoles: FanBindingRole[] = [
+  "fireplace", "circulation", "fan_mode",
+  "fan_night", "fan_standard", "fan_intense",
+  "fan_backup", "fan_control", "recuperator", "bath",
+];
 export interface LiveTelemetry {
   origin: "ha_last_known";
   room: number | null;
@@ -45,6 +55,15 @@ export interface LiveTelemetry {
   kwsTotal: number | null;
   kwsEnergy: number | null;
   lastReported: Record<string, string | null>;
+  fireplaceC: number | null;
+  fireplaceDeltaC: number | null;
+  fanActual: "on" | "off" | null;
+  fanPercent: number | null;
+  fanMode: string | null;
+  fanSpeeds: (number | null)[];
+  fanBackupVerified: boolean | null;
+  fanControlEnabled: boolean | null;
+  ventilation: { recuperator: boolean | null; bath: boolean | null };
 }
 const roles: (keyof LiveBindings)[] = [
   "thermostat",
@@ -137,14 +156,19 @@ export class LiveHAAPI implements OperatorAPI {
     kwsTotal: null,
     kwsEnergy: null,
     lastReported: {},
+    fireplaceC: null, fireplaceDeltaC: null,
+    fanActual: null, fanPercent: null, fanMode: null,
+    fanSpeeds: [null, null, null], fanBackupVerified: null, fanControlEnabled: null,
+    ventilation: { recuperator: null, bath: null },
   };
   constructor(
     private readonly bindings: LiveBindings,
     hass: LiveHass,
   ) {
     if (
-      Object.keys(bindings).sort().join() !== [...roles].sort().join() ||
-      new Set(Object.values(bindings)).size !== roles.length ||
+      roles.some((role) => typeof bindings[role] !== "string") ||
+      Object.keys(bindings).some((role) => ![...roles, ...optionalRoles].includes(role as keyof LiveBindings)) ||
+      new Set(Object.values(bindings)).size !== Object.keys(bindings).length ||
       roles.some(
         (role) =>
           typeof bindings[role] !== "string" || !bindings[role].includes("."),
@@ -168,6 +192,17 @@ export class LiveHAAPI implements OperatorAPI {
         : gridState === "Відсутня мережа"
           ? false
           : null;
+    const binary = (role: FanBindingRole) => {
+      const value = s(role)?.state;
+      return value === "on" ? true : value === "off" ? false : null;
+    };
+    const fireplaceC = number(s("fireplace"), "°C", 65);
+    const fanActualRaw = s("circulation")?.state;
+    const fanActual = fanActualRaw === "on" || fanActualRaw === "off" ? fanActualRaw : null;
+    const fanPctRaw = s("circulation")?.attributes.percentage;
+    const fanPercent = typeof fanPctRaw === "number" && Number.isFinite(fanPctRaw) && fanPctRaw >= 0 && fanPctRaw <= 100 ? fanPctRaw : null;
+    const fanMode = s("fan_mode")?.state ?? null;
+    const fanSpeeds = (["fan_night", "fan_standard", "fan_intense"] as const).map((role) => number(s(role), "%", 100));
     const voltageRoles = ["voltage_l1", "voltage_l2", "voltage_l3"] as const;
     const kwsRoles = ["kws_l1", "kws_l2", "kws_l3"] as const;
     const volts = voltageRoles.map((role) => number(s(role), "V", 400));
@@ -190,8 +225,17 @@ export class LiveHAAPI implements OperatorAPI {
       kwsTotal,
       kwsEnergy: number(s("kws_energy"), "kWh", 1e9),
       lastReported: Object.fromEntries(
-        roles.map((role) => [role, stamp(s(role))]),
+        [...roles, ...optionalRoles].map((role) => [role, stamp(s(role))]),
       ),
+      fireplaceC,
+      fireplaceDeltaC: fireplaceC !== null && room !== null ? Math.round((fireplaceC - room) * 100) / 100 : null,
+      fanActual,
+      fanPercent,
+      fanMode,
+      fanSpeeds,
+      fanBackupVerified: binary("fan_backup"),
+      fanControlEnabled: binary("fan_control"),
+      ventilation: { recuperator: binary("recuperator"), bath: binary("bath") },
     };
     const before = this.feed.value;
     const quality =
