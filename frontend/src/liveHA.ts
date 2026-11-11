@@ -420,7 +420,13 @@ export class LiveHAAPI implements OperatorAPI {
       nominalEnergyKwh: coastNumber(planRaw.nominal_energy_kwh),
       projectedMinC: coastNumber(planRaw.projected_min_c),
       horizonHours: coastNumber(planRaw.horizon_hours) ?? 0,
-      segmentCount: safeCount(planRaw.segment_count),
+      segmentCount:
+        typeof planRaw.segment_count === "number" &&
+        Number.isInteger(planRaw.segment_count) &&
+        planRaw.segment_count >= 0 &&
+        planRaw.segment_count <= 256
+          ? planRaw.segment_count
+          : 0,
       segments: planStatus === "VIRTUAL_CONDITIONAL" ? segments : [],
       truncated: planRaw.segments_truncated === true,
       qualified: false,
