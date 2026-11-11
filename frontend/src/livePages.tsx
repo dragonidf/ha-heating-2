@@ -92,6 +92,32 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
           Дані KWS не підтверджують фізичний стан контактів термостата.
         </p>
       </Card>
+      <Card title="Камін та циркуляція">
+        <p>
+          Температура біля каміна: {t.fireplaceC === null ? "—" : t.fireplaceC.toFixed(1) + " °C"}
+          {" · "}
+          Перепад до вітальні: {t.fireplaceDeltaC === null ? "—" : t.fireplaceDeltaC.toFixed(1) + " °C"}
+        </p>
+        <p>
+          Циркуляція: {t.fanActual === "on" ? "увімкнена" : t.fanActual === "off" ? "вимкнена" : "невідомо"}
+          {" · "}
+          Швидкість: {t.fanPercent === null ? "—" : t.fanPercent.toFixed(0) + "%"}
+        </p>
+        <p>
+          Режим: {t.fanMode ?? "невідомий"}
+          {" · "}
+          Ніч / день / інтенсивно: {t.fanSpeeds.map((x) => x === null ? "—" : x.toFixed(0) + "%").join(" / ")}
+        </p>
+        <p className="helper">
+          Ручний режим «Зупинити» зберігає пріоритет. На етапі SHADOW новий контролер не вмикає вентилятор,
+          навіть коли біля каміна тепліше. Резервне живлення потребує незалежного підтвердження.
+        </p>
+        <p>
+          Рекуператор: {t.ventilation.recuperator === null ? "невідомо" : t.ventilation.recuperator ? "увімкнено" : "вимкнено"}
+          {" · "}
+          Витяжка ванної: {t.ventilation.bath === null ? "невідомо" : t.ventilation.bath ? "увімкнено" : "вимкнено"}
+        </p>
+      </Card>
       <Card title="План нагріву">
         <p>
           Обчислення Heating AI 2.0 поки не підключене до реальних прогнозів та
@@ -138,7 +164,7 @@ export function LiveSettings({ api }: { api: LiveHAAPI }) {
         </div>
       </div>
       <Card title="Стан підключення">
-        <p>Підключення: Home Assistant, 10 наявних сутностей.</p>
+        <p>Підключення: Home Assistant, 10 базових сутностей і додаткові джерела каміна/циркуляції за наявності.</p>
         <p>Керування: вимкнене. Реєстрація команд термостату: відсутня.</p>
         <p>
           Термостат: {t.thermostatMode ?? "невідомий режим"}; уставка пристрою{" "}
