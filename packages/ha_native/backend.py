@@ -639,6 +639,8 @@ class NativeBackend:
             raise NativeProtocolError('stale_owner')
 
     def flush_stop(self) -> bool:
+        # Persist derived health/STOP transitions in this same reconciliation pass.
+        self.refresh()
         if not self._pending_stop:
             return True
         with self._memory:
