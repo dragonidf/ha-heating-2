@@ -83,7 +83,7 @@ export function LiveApp({ api }: { api: LiveHAAPI }) {
         {tab === "home" ? (
           <LiveHome api={api} state={state} />
         ) : tab === "history" ? (
-          <LiveHistory />
+          <LiveHistory api={api} />
         ) : (
           <LiveSettings api={api} />
         )}
