@@ -46,7 +46,7 @@ describe("HA 2026 Recorder read-only history", () => {
   it("sends a single authenticated read-only HA request", async () => {
     const now = Date.now() / 1000;
     const window = { start: now - 86400, end: now };
-    const callWS = vi.fn(async () => ({
+    const callWS = vi.fn(async (_request: Record<string, unknown>) => ({
       [entity]: [{ s: "21.5", lu: now - 600 }],
     }));
     const points = await fetchRoomRecorder({ callWS }, entity, window);
