@@ -201,7 +201,11 @@ export class LiveHAAPI implements OperatorAPI {
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
     coast: {
-      status: "UNAVAILABLE", min: null, end: null, hours: 0, qualified: false,
+      status: "UNAVAILABLE",
+      min: null,
+      end: null,
+      hours: 0,
+      qualified: false,
     },
     sources: {
       weatherStatus: "UNKNOWN",
