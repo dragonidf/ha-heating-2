@@ -87,15 +87,19 @@ class ShadowRuntime:
                 _LOGGER.exception("V2 fan shadow unavailable; no fan commands")
             self._fan_fault = True
         try:
-            from .shadow_coast import preview
+            from .shadow_coast import preview, recently_reported
             from .telemetry import _number
+            now = dt_util.utcnow().timestamp()
             model_row = rows.get("legacy_model") or {}
             params = model_row.get("attributes", {}).get("parameters")
+            room = (self.values.get("room_c_last_known")
+                    if recently_reported(rows.get("room"), now) else None)
+            stored = (_number(rows.get("stored_heat"), "°C", -30, 90)
+                      if recently_reported(rows.get("stored_heat"), now) else None)
             self.values["coast"] = preview(
-                self.values.get("room_c_last_known"),
-                _number(rows.get("stored_heat"), "°C", -30, 90),
-                params, self.source_monitor.weather if self.source_monitor else None,
-                dt_util.utcnow().timestamp(),
+                room, stored, params,
+                self.source_monitor.weather if self.source_monitor else None,
+                now,
             )
             self._coast_fault = False
         except Exception:
