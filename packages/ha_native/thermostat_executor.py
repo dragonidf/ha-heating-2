@@ -34,6 +34,7 @@ class MockReadback:
     command_id: str
     mode: str
     target: float
+    received_monotonic: float
     origin: str = 'synthetic_device_readback'
     device_evidence_qualified: bool = False
 
@@ -56,6 +57,7 @@ class IsolatedClimateMock:
         self.generation = 0
         self._bound: ControlState | None = None
         self.calls: list[ThermostatCommand] = []
+        self.returned_at: dict[str,float] = {}
         self.send_gate = asyncio.Event();self.send_gate.set()
         self.sent = asyncio.Event()
         self.reports: asyncio.Queue[MockReadback] = asyncio.Queue()
@@ -107,18 +109,17 @@ class IsolatedClimateMock:
         if not admit():
             return False
         self.calls.append(command);self.sent.set()
-        if self.drop:
-            return True  # Service returned, device outcome still unknown.
-        if self.noop:
-            return True
-        return self.actuator.send(token,generation,Action.HEAT if command.positive else Action.STOP,0,self.clock())
+        sent = True if self.drop or self.noop else self.actuator.send(
+            token,generation,Action.HEAT if command.positive else Action.STOP,0,self.clock())
+        self.returned_at[command.identity]=asyncio.get_running_loop().time()
+        return sent
 
     def device_report(self, command_id: str, *, mode: str, target: float, echo_action: Action,
                       qualified: bool=False, manual: bool=False, writers_known: bool=True,
                       origin: str='synthetic_device_readback') -> None:
         # All observed fields are explicit independent fixture input, never a send echo.
         proof=self.actuator.feedback(echo_action,self.clock(),manual=manual,writers_known=writers_known)
-        self.reports.put_nowait(MockReadback(proof,command_id,mode,target,origin,qualified))
+        self.reports.put_nowait(MockReadback(proof,command_id,mode,target,asyncio.get_running_loop().time(),origin,qualified))
 
 
 class ThermostatExecutor:
@@ -258,11 +259,18 @@ class ThermostatExecutor:
         while True:
             if not self._live(command,proposal):raise RuntimeError('Preempted')
             remaining=min(deadline-asyncio.get_running_loop().time(),self.timeout_s-(self.backend.trusted_clock().monotonic-start.monotonic))
-            if remaining<=0:raise TimeoutError('Readback deadline')
-            done,_=await asyncio.wait({task},timeout=min(.01,remaining))
+            # Drain already-arrived evidence even if a durable SENT write delayed processing.
+            done,_=await asyncio.wait({task},timeout=max(0,min(.01,remaining)))
             if done:
                 if not self._live(command,proposal):raise RuntimeError('Preempted')
-                return task.result()
+                result=task.result()
+                arrived = result.received_monotonic if isinstance(result,MockReadback) else self.transport.returned_at.get(command.identity)
+                now=asyncio.get_running_loop().time()
+                if (arrived is None or not deadline-self.timeout_s <= arrived <= min(now,deadline)
+                        or isinstance(result,MockReadback) and not 0 < result.proof.at-command.issued_at <= self.timeout_s):
+                    raise TimeoutError('Evidence arrived outside deadline')
+                return result
+            if remaining<=0:raise TimeoutError('Readback deadline')
 
     def _echo_valid(self, echo: MockReadback, command: ThermostatCommand) -> bool:
         clock=self.backend.trusted_clock()

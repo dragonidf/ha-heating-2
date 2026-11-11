@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import replace
 from pathlib import Path
 import tempfile
+from threading import Event
 import unittest
 from packages.contracts import Action
 from packages.ha_native.backend import NativeBackend
@@ -281,6 +282,33 @@ class ThermostatExecutorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await asyncio.wait_for(task,2))['status'],'uncertain')
         self.assertTrue(self.executor.status()['uncertain'])
         self.assertEqual(len(self.device.calls),1)
+
+    async def test_on_time_readback_survives_delayed_sent_ledger_processing(self):
+        await self.check_delayed_sent_processing(late=False)
+
+    async def test_late_readback_during_delayed_sent_processing_is_rejected(self):
+        await self.check_delayed_sent_processing(late=True)
+
+    async def check_delayed_sent_processing(self, *, late):
+        p=self.proposal();self.assertTrue(self.executor.activate(self.credential,p))
+        entered,release=Event(),Event()
+        record=self.executor._record
+        def delayed_record(command,status):
+            if status=='sent':
+                entered.set()
+                if not release.wait(1):raise RuntimeError('test release deadline')
+            return record(command,status)
+        self.executor._record=delayed_record
+        task=asyncio.create_task(self.executor.execute(p))
+        try:
+            await self.until(entered.is_set)
+            if late:self.clock.advance(.2)
+            self.echo(self.device.calls[0].identity,target=24.5)
+            if not late:self.clock.advance(.2)  # On-time arrival, deferred processing.
+        finally:
+            release.set()
+        self.assertEqual((await asyncio.wait_for(task,2))['status'],'uncertain' if late else 'echoed_mock')
+        self.assertEqual(self.device.temperature_at,self.clock.utc-.201)
 
     async def test_invalid_persisted_ledger_cannot_activate(self):
         p=self.proposal()
