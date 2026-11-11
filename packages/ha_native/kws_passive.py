@@ -63,6 +63,8 @@ class KWSHAState:
                 "Invalid HA state flags")
         if self.value is not None:
             number(self.value, nonnegative=True)
+        require(not self.available or self.value is not None,
+                "Available HA state requires a numeric value")
 
 
 class KWSPassiveStateBridge:
