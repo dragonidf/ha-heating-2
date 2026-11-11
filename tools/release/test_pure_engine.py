@@ -92,6 +92,33 @@ def main() -> None:
     assert reading["percentage_proposed"] == 0
     assert reading["burning_inferred"] is None
 
+    # The old, unqualified thermal coefficients can produce a DIAGNOSTIC
+    # no-heating scenario, but never a valid heat plan or a missing-data curve.
+    coast = importlib.import_module("custom_components.heating_ai_v2.shadow_coast")
+    now = 1_700_000_000.0
+    legacy = {
+        "floor_air": 0.028, "room_loss": 0.008,
+        "floor_decay": 0.24, "heat_gain": 1.0, "fire_gain": 0.025,
+        "version": 6,
+    }
+    weather = {
+        "received_at": now,
+        "hours": [
+            {"at": now - 3600 + 3600 * i, "outside_c": 3.0}
+            for i in range(6)
+        ],
+    }
+    diagnostic = coast.preview(21.5, 24.0, legacy, weather, now)
+    assert diagnostic["status"] == "UNQUALIFIED_CONDITIONAL_COAST"
+    assert diagnostic["model_calibration"] == "NOT_PARITY_VERIFIED"
+    assert diagnostic["forecast_qualified"] is False
+    assert diagnostic["commands_enabled"] is False
+    assert diagnostic["hours_covered"] >= 3
+    assert diagnostic["temperature_min_c"] is not None
+    assert coast.preview(21.5, 24, None, weather, now)["status"] == "UNAVAILABLE"
+    assert coast.preview(21.5, 24, legacy, None, now)["status"] == "UNAVAILABLE"
+    assert coast.preview(21.5, 24, legacy, weather, now + 8640)["status"] == "UNAVAILABLE"
+
     # Restart/load cannot keep old source ledger or invent a positive intent.
     assert mod.shadow_decision({})["intents"] == 0
     print("PASS: accepted pure source SHA256 parity, 54 real-state variations, no HEAT")
