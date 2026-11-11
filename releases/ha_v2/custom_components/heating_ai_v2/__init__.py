@@ -87,6 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def changed(event: Any) -> None:
         runtime.refresh()
 
+    @callback
+    def tick(_now: Any) -> None:
+        runtime.refresh()
+
     forwarded = False
     panel_registered = False
     try:
@@ -110,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, [entry.data[role] for role in ROLES], changed
         ))
         entry.async_on_unload(async_track_time_interval(
-            hass, lambda _now: runtime.refresh(), timedelta(seconds=60),
+            hass, tick, timedelta(seconds=60),
             name='heating_ai_v2_shadow_monitor'
         ))
     except Exception:
