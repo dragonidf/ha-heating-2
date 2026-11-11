@@ -113,7 +113,7 @@ def _check(path: Path, data: dict, raw: bytes) -> dict:
             "energy_intervals": len(intervals), "energy_gaps": gaps,
             "energy_overlaps": overlaps,
             "temperature_history_cycles": len(data["temperature_history"]),
-            "source_total_unchanged": True, "byte_field_parity": True,
+            "source_total_unchanged": True, "canonical_value_parity": True,
             "forecast_reference_hash_parity": True,
             "sqlite_integrity": "ok",
             "full_G4": "BLOCKED_OTHER_ARCHIVES_FRESH_DELTA_AND_RESTORE",
