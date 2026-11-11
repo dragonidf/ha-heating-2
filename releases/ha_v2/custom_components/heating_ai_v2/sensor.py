@@ -83,6 +83,7 @@ class ShadowSensor(SensorEntity):
             "fan_control_enabled_last_known": values["fan_control_enabled_last_known"],
             "ventilation_last_known": values["ventilation_last_known"],
             "fan_commands_enabled": False,
+            "fan_policy": values.get("fan", {}),
             "unavailable_sources": values["unavailable_sources"],
             "ha_last_reported": values["ha_last_reported"],
         }
