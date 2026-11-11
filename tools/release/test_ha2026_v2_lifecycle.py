@@ -141,11 +141,81 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         assert unsubs[0].call_count == 1 and unsubs[1].call_count == 1
 
 
+async def providers_case():
+    from custom_components.heating_ai_v2.source_monitor import SourceMonitor
+    from homeassistant.components.weather.const import DATA_COMPONENT as WEATHER_ENTITIES
+    from homeassistant.components.calendar.const import DATA_COMPONENT as CALENDAR_ENTITIES
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    callbacks = []
+    unsub = Mock()
+
+    def subscribe(kind, cb):
+        assert kind == "hourly"
+        callbacks.append(cb)
+        return unsub
+
+    async def weather_updates(kinds):
+        assert kinds == {"hourly"}
+        callbacks[0]([
+            {"datetime": (now - timedelta(minutes=30)).isoformat(),
+             "temperature": 2.1},
+            {"datetime": (now + timedelta(minutes=30)).isoformat(),
+             "temperature": 2.3},
+        ])
+
+    async def events(_hass, start, end):
+        assert end > start
+        return [SimpleNamespace(
+            summary="3.1: ❌ Відключення",
+            start=start + timedelta(minutes=40),
+            end=start + timedelta(hours=3),
+        )]
+
+    weather_entity = SimpleNamespace(
+        async_subscribe_forecast=subscribe,
+        async_update_listeners=weather_updates,
+    )
+    calendar_entity = SimpleNamespace(async_get_events=events)
+    hass = SimpleNamespace(
+        data={
+            WEATHER_ENTITIES: SimpleNamespace(get_entity=lambda eid: weather_entity),
+            CALENDAR_ENTITIES: SimpleNamespace(get_entity=lambda eid: calendar_entity),
+        },
+        async_create_task=lambda coro, name: asyncio.create_task(coro, name=name),
+    )
+    observed = []
+    monitor = SourceMonitor(
+        hass, {"weather_forecast": "weather.test", "outage_calendar": "calendar.test"},
+        lambda: observed.append(True),
+    )
+    monitor.start()
+    monitor.schedule()
+    assert monitor._task is not None
+    await monitor._task
+    assert len(observed) >= 2
+    result = monitor.brief()
+    assert result["weather_hours_count"] == 2
+    assert result["weather_issued_at"] is None
+    assert result["outages_upcoming_count"] == 1
+    assert result["normal_grid_forecast_qualified"] is False
+    assert not hasattr(hass, "services"), "Native entities need no service registry"
+    assert monitor._task is not None
+    for _ in range(300):
+        monitor.schedule()
+    assert len(callbacks) == 1, "No growing provider subscriptions"
+    await monitor.close()
+    unsub.assert_called_once()
+    assert monitor.brief()["weather_status"] == "UNKNOWN"
+
+
 async def main():
     await case()
     await case(bad_meter=True)
     await case(fail_panel=True)
-    print("PASS: real HA2026.11 v2 shadow setup/unload, cross-device and failed-panel cleanup")
+    await providers_case()
+    print("PASS: native HA lifecycle + strictly read-only bounded real source monitor")
 
 
 if __name__ == "__main__":
