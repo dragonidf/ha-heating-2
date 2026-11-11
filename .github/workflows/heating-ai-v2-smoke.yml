@@ -37,8 +37,8 @@ jobs:
           from homeassistant.components.sensor import SensorEntity
           form = config_flow.mapping_schema()
           assert len(telemetry.ROLES) == 10
-          assert len(telemetry.OPTIONAL_ROLES) == 15
-          assert len(form.schema) == 25
+          assert len(telemetry.OPTIONAL_ROLES) == 25
+          assert len(form.schema) == 35
           assert issubclass(sensor.ShadowSensor, SensorEntity)
           assert hasattr(integration, 'async_setup_entry')
           assert hasattr(integration, 'async_unload_entry')
