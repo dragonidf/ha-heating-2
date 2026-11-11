@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
+from homeassistant.components import frontend, panel_custom
+from homeassistant.components.http.server import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -42,7 +45,7 @@ class ShadowRuntime:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
-    if hass.data[DOMAIN]:
+    if any(isinstance(row, ShadowRuntime) for row in hass.data[DOMAIN].values()):
         return False
     if set(entry.data) != set(ROLES) or len(set(entry.data.values())) != len(ROLES):
         raise ConfigEntryError("Incomplete or duplicate shadow bindings")
@@ -55,6 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             or len({row.device_id for row in meter if row is not None}) != 1):
         raise ConfigEntryError("KWS must be four local channels from ONE device")
 
+    # This is a packaged UI release, not a loose source-tree installation.
+    assets = Path(__file__).parent / 'assets'
+    if not (assets / 'livePanel.js').is_file():
+        raise ConfigEntryNotReady('Missing reviewed live UI bundle')
+
     runtime = ShadowRuntime(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = runtime
 
@@ -66,7 +74,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, [entry.data[role] for role in ROLES], changed
     ))
     try:
+        if not hass.data[DOMAIN].get('_static'):
+            await hass.http.async_register_static_paths([
+                StaticPathConfig('/heating_ai_v2/assets', str(assets), cache_headers=False)
+            ])
+            hass.data[DOMAIN]['_static'] = True
         await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+        panel_custom.async_register_panel(
+            hass, frontend_url_path='heating-ai-v2',
+            webcomponent_name='heating-ai-v2-panel',
+            sidebar_title='Heating AI 2.0', sidebar_icon='mdi:radiator',
+            module_url='/heating_ai_v2/assets/livePanel.js',
+            config={**dict(entry.data), 'entry_id': entry.entry_id},
+            require_admin=True,
+        )
     except Exception:
         runtime.listeners.clear()
         hass.data[DOMAIN].pop(entry.entry_id, None)
@@ -77,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR]):
         return False
+    frontend.async_remove_panel(hass, 'heating-ai-v2', warn_if_unknown=False)
     runtime: ShadowRuntime | None = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     if runtime is not None:
         runtime.listeners.clear()
