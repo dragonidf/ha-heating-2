@@ -134,6 +134,46 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     expect(api.feed.value.permitted).toBe(false);
     expect(api.control("arm", api.session).status).toBe("denied");
   });
+  it("shows real-backed virtual plan without granting control or physical confidence", () => {
+    const h = frame();
+    h.states["sensor.v2_status"] = {
+      ...s("SHADOW"),
+      attributes: {
+        v2_entry_id: "shadow-entry",
+        virtual_plan: {
+          status: "VIRTUAL_CONDITIONAL",
+          reason: "candidate_only",
+          scenario_power_kw: 6,
+          nominal_energy_kwh: 9.5,
+          projected_min_c: 20.1,
+          horizon_hours: 22,
+          segment_count: 78,
+          segments_truncated: true,
+          segments: [
+            {
+              start: 1794520000,
+              end: 1794521800,
+              conditional: true,
+            },
+          ],
+          commands_sent: 0,
+          physical_limits_qualified: false,
+        },
+      },
+    };
+    const api = new LiveHAAPI(bindings, h, "shadow-entry");
+    expect(api.telemetry.plan.status).toBe("VIRTUAL_CONDITIONAL");
+    expect(api.telemetry.plan.powerKw).toBe(6);
+    expect(api.telemetry.plan.segmentCount).toBe(78);
+    expect(api.telemetry.plan.segments).toHaveLength(1);
+    expect(api.telemetry.plan.qualified).toBe(false);
+    expect(api.telemetry.plan.commandsSent).toBe(0);
+    expect(api.feed.value.permitted).toBe(false);
+    expect(api.control("arm", api.session).status).toBe("denied");
+    const noReport = new LiveHAAPI(bindings, frame(), "shadow-entry");
+    expect(noReport.telemetry.plan.status).toBe("BLOCKED_INPUTS");
+    expect(noReport.telemetry.plan.segments).toEqual([]);
+  });
   it("reflects device updates as observed states only", () => {
     const api = new LiveHAAPI(bindings, frame());
     const old = api.feed.value.seq;
