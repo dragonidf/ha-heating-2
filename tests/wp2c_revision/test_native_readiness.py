@@ -6,11 +6,13 @@ import io
 import sys
 import types
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 # Only the status-wait helper is exercised; the optional HA HTTP client is unused.
 with patch.dict(sys.modules, {'aiohttp': types.ModuleType('aiohttp')}):
-    from tools.wp2c.native_checks import wait_status
+    from tools.wp2c.native_checks import wait_status, save_settings_once
 
 
 def state(permitted=False, mode='SHADOW'):
@@ -52,3 +54,87 @@ class NativeReadinessTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.Event().wait()
         with self.assertRaisesRegex(AssertionError, 'status_timeout'):
             await wait_status(read, lambda s: s['permitted'], 'lost-response', timeout=.01)
+
+
+class NativeSettingsReadinessTests(unittest.IsolatedAsyncioTestCase):
+    async def test_old_age_valid_room_waits_for_health_flush_then_one_cas_write(self):
+        from packages.ha_native.backend import NativeBackend
+        from packages.contracts import Reading, Quality, QualityStatus, Provenance, SourceKind, Unit
+        from packages.offline.contracts import SourceEvent
+        from tests.wp2c_backend.test_backend import fixture, observe
+        from tests.wp2c_backend.test_clock import FakeTime
+        with tempfile.TemporaryDirectory(prefix='heating-wp2c-') as root:
+            clock = FakeTime()
+            backend = NativeBackend(Path(root), fixture(), enabled=True, clock=clock)
+            backend.configure_source(120);backend.open()
+            self.addCleanup(backend.close)
+            observe(backend)
+            clock.advance(60)
+            self.assertTrue(backend.flush_stop())
+            self.assertTrue(backend.status(True)['permitted'])
+            backend.invalidate_source('synthetic-reload')
+            backend.status(True)  # Health records the missing-source transition.
+            at = clock.utc - 60
+            reading = Reading(physical_id='synthetic.native.room', source_id='synthetic.native.room',
+                value=21.8, unit=Unit.CELSIUS, observed_at=at, received_at=at,
+                quality=Quality(status=QualityStatus.VALID, age_s=60, reason='synthetic'),
+                provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
+            self.assertTrue(backend.accept_source(SourceEvent('synthetic-restored', 'synthetic.native.room', 1, at, reading)))
+            before = backend.status(True)
+            self.assertEqual(before['room']['quality'], 'valid')
+            self.assertEqual(before['now'] - before['room']['observed'], 60)
+            self.assertTrue(backend._pending_stop)
+            self.assertFalse(before['permitted'])
+            settings = backend.critical.read('settings')
+            values = settings['values'] | {'day': 22}
+            common = dict(entry_id='synthetic-entry', version=[2, 0])
+            premature = common | dict(boot_id=before['status']['boot_id'], generation=before['generation'],
+                owner_epoch=before['status']['owner_epoch'], request_id='premature', expected_revision=settings['revision'], values=values)
+            receipt = backend.dispatch('settings/save', premature, True)
+            self.assertEqual(receipt['status'], 'denied')
+            self.assertEqual(receipt['reason'], 'denied')
+            self.assertEqual(backend.critical.read('settings'), settings)
+            self.assertNotIn('premature', backend.critical.read('requests'))
+            reads, writes = 0, []
+            async def read(operation):
+                nonlocal reads
+                if operation == 'status':
+                    reads += 1
+                    if reads == 2:
+                        self.assertTrue(backend.flush_stop())
+                    return backend.status(True)
+                return backend.critical.read('settings')
+            async def save(body):
+                writes.append(body)
+                self.assertFalse(backend._pending_stop)
+                self.assertEqual(body['owner_epoch'], backend.status(True)['status']['owner_epoch'])
+                return backend.dispatch('settings/save', body, True)
+            with redirect_stderr(io.StringIO()):
+                receipt, body = await save_settings_once(read, save, common, settings, values, 'one-save')
+            self.assertEqual(len(writes), 1)
+            self.assertEqual(body['expected_revision'], settings['revision'])
+            self.assertEqual(receipt['status'], 'saved')
+            stored = backend.critical.read('settings')
+            self.assertEqual(stored['values'], values)
+            self.assertEqual(stored['revision'], settings['revision'] + 1)
+            self.assertEqual(stored['lastRequest'], 'one-save')
+            self.assertEqual(backend.critical.read('snapshot')['health_memory'], backend.status(True)['health_memory'])
+
+    async def test_failed_save_reports_status_cas_and_mismatch_without_retry(self):
+        ready = state(True)
+        ready['status']['boot_id'] = 'synthetic.boot'
+        for status in ('denied', 'unavailable', 'conflict'):
+            calls = []
+            async def read(operation):
+                return ready if operation == 'status' else {'revision': 7, 'values': {'day': 21}}
+            async def save(body):
+                calls.append(body)
+                return {'status': status, 'reason': status, 'revision': 7}
+            with self.assertRaises(AssertionError) as error:
+                await save_settings_once(read, save, {}, {'revision': 7}, {'day': 22}, 'synthetic-save')
+            self.assertEqual(len(calls), 1)
+            details = error.exception.args[0]
+            self.assertEqual(details['after']['receipt']['status'], status)
+            self.assertEqual(details['expected_revision'], 7)
+            self.assertEqual(details['stored_revision'], 7)
+            self.assertEqual(details['mismatched_keys'], ['day'])
