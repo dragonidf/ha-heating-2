@@ -188,9 +188,16 @@ export class LiveHAAPI implements OperatorAPI {
   private currentHass: LiveHass;
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
-    sources: {weatherStatus: "UNKNOWN", weatherHours: 0, weatherHorizonEnd: null,
-      weatherIssuedKnown: false, outageStatus: "UNKNOWN", nextOutageAt: null,
-      outagesUpcomingCount: 0, gridForecastQualified: false},
+    sources: {
+      weatherStatus: "UNKNOWN",
+      weatherHours: 0,
+      weatherHorizonEnd: null,
+      weatherIssuedKnown: false,
+      outageStatus: "UNKNOWN",
+      nextOutageAt: null,
+      outagesUpcomingCount: 0,
+      gridForecastQualified: false,
+    },
     room: null,
     thermostatMode: null,
     thermostatSetpoint: null,
@@ -290,21 +297,26 @@ export class LiveHAAPI implements OperatorAPI {
           (v) => v?.attributes.v2_entry_id === this.entryId,
         )?.attributes.provider_summary
       : null;
-    const p = summary && typeof summary === "object" && !Array.isArray(summary)
-      ? summary as Record<string, unknown>
-      : {};
-    const safeCount = (x: unknown) => typeof x === "number" &&
-      Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
-    const safeTime = (x: unknown) => typeof x === "number" &&
-      Number.isFinite(x) && x > 0 ? x : null;
+    const p =
+      summary && typeof summary === "object" && !Array.isArray(summary)
+        ? (summary as Record<string, unknown>)
+        : {};
+    const safeCount = (x: unknown) =>
+      typeof x === "number" && Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
+    const safeTime = (x: unknown) =>
+      typeof x === "number" && Number.isFinite(x) && x > 0 ? x : null;
     const sources: SourceSummary = {
-      weatherStatus: p.weather_status === "RECEIVED_ISSUED_UNKNOWN"
-        ? "RECEIVED_ISSUED_UNKNOWN" : "UNKNOWN",
+      weatherStatus:
+        p.weather_status === "RECEIVED_ISSUED_UNKNOWN"
+          ? "RECEIVED_ISSUED_UNKNOWN"
+          : "UNKNOWN",
       weatherHours: safeCount(p.weather_hours_count),
       weatherHorizonEnd: safeTime(p.weather_horizon_end),
       weatherIssuedKnown: false,
-      outageStatus: p.outage_status === "OUTAGE_EVENTS_ONLY"
-        ? "OUTAGE_EVENTS_ONLY" : "UNKNOWN",
+      outageStatus:
+        p.outage_status === "OUTAGE_EVENTS_ONLY"
+          ? "OUTAGE_EVENTS_ONLY"
+          : "UNKNOWN",
       nextOutageAt: safeTime(p.next_outage_at),
       outagesUpcomingCount: safeCount(p.outages_upcoming_count),
       gridForecastQualified: false,
