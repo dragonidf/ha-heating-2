@@ -13,7 +13,7 @@ ROLES = (
     "voltage_l1", "voltage_l2", "voltage_l3",
     "kws_l1", "kws_l2", "kws_l3", "kws_energy",
 )
-OPTIONAL_ROLES = ("return_probe", "weather_forecast", "outage_calendar", "fireplace", "circulation", "fan_mode", "fan_night", "fan_standard", "fan_intense", "fan_backup", "fan_control", "recuperator", "bath",)
+OPTIONAL_ROLES = ("return_probe", "legacy_model", "stored_heat", "weather_forecast", "outage_calendar", "fireplace", "circulation", "fan_mode", "fan_night", "fan_standard", "fan_intense", "fan_backup", "fan_control", "recuperator", "bath",)
 
 _UNITS = {
     "room": "°C",

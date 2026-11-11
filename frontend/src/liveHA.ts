@@ -39,6 +39,8 @@ export type BaseBindings = Record<
 export type FanBindingRole =
   | "return_probe"
   | "weather_forecast"
+  | "legacy_model"
+  | "stored_heat"
   | "outage_calendar"
   | "fireplace"
   | "circulation"
@@ -55,6 +57,8 @@ export type LiveBindings = BaseBindings &
 export const optionalRoles: FanBindingRole[] = [
   "return_probe",
   "weather_forecast",
+  "legacy_model",
+  "stored_heat",
   "outage_calendar",
   "fireplace",
   "circulation",
@@ -77,7 +81,15 @@ export interface SourceSummary {
   outagesUpcomingCount: number;
   gridForecastQualified: false;
 }
+export interface CoastSummary {
+  status: string;
+  min: number | null;
+  end: number | null;
+  hours: number;
+  qualified: false;
+}
 export interface LiveTelemetry {
+  coast: CoastSummary;
   sources: SourceSummary;
   origin: "ha_last_known";
   room: number | null;
@@ -305,6 +317,22 @@ export class LiveHAAPI implements OperatorAPI {
       typeof x === "number" && Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
     const safeTime = (x: unknown) =>
       typeof x === "number" && Number.isFinite(x) && x > 0 ? x : null;
+    const coastRaw = summary && typeof summary === "object"
+      ? Object.values(hass.states ?? {}).find(
+          (v) => v?.attributes.v2_entry_id === this.entryId,
+        )?.attributes.coast_preview : null;
+    const coastValue = coastRaw && typeof coastRaw === "object" &&
+      !Array.isArray(coastRaw) ? coastRaw as Record<string, unknown> : {};
+    const coastNumber = (x: unknown) => typeof x === "number" &&
+      Number.isFinite(x) ? x : null;
+    const coast: CoastSummary = {
+      status: coastValue.status === "UNQUALIFIED_CONDITIONAL_COAST"
+        ? "UNQUALIFIED_CONDITIONAL_COAST" : "UNAVAILABLE",
+      min: coastNumber(coastValue.temperature_min_c),
+      end: coastNumber(coastValue.temperature_end_c),
+      hours: coastNumber(coastValue.hours_covered) ?? 0,
+      qualified: false,
+    };
     const sources: SourceSummary = {
       weatherStatus:
         p.weather_status === "RECEIVED_ISSUED_UNKNOWN"
@@ -324,6 +352,7 @@ export class LiveHAAPI implements OperatorAPI {
     this.telemetry = {
       origin: "ha_last_known",
       sources,
+      coast,
       room,
       thermostatMode: thermostat?.state ?? null,
       thermostatSetpoint:

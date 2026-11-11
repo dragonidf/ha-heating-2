@@ -27,7 +27,9 @@
           "bath": "Bathroom extractor relay (read-only)",
           "return_probe": "Return line temperature probe (°C) — read-only",
           "weather_forecast": "Weather entity (hourly forecast, read-only)",
-          "outage_calendar": "Outage calendar (events, read-only)"
+          "outage_calendar": "Outage calendar (events, read-only)",
+          "legacy_model": "Existing Heating AI model sensor (read-only)",
+          "stored_heat": "Estimated stored heat sensor (read-only)"
         }
       }
     },

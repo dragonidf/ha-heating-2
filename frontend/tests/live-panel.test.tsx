@@ -56,6 +56,14 @@ function hass(grid = "Наявна мережа"): LiveHass {
         ...source("SHADOW"),
         attributes: {
           v2_entry_id: "synthetic-entry",
+          coast_preview: {
+            status: "UNQUALIFIED_CONDITIONAL_COAST",
+            temperature_min_c: 20.8,
+            temperature_end_c: 20.8,
+            hours_covered: 8,
+            forecast_qualified: false,
+            commands_enabled: false,
+          },
           provider_summary: {
             weather_status: "RECEIVED_ISSUED_UNKNOWN",
             weather_hours_count: 23,
@@ -100,6 +108,7 @@ describe("Actual Home Assistant custom panel mounting", () => {
       expect(panel.shadowRoot?.textContent).toContain("Зворотна лінія котла");
       expect(panel.shadowRoot?.textContent).toContain("Камін та циркуляція");
       expect(panel.shadowRoot?.textContent).toContain("23 точок");
+      expect(panel.shadowRoot?.textContent).toContain("20,8 °C");
       expect(panel.shadowRoot?.textContent).toContain(
         "Час випуску погодного прогнозу",
       );

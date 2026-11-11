@@ -33,6 +33,7 @@ class ShadowRuntime:
         self.values: dict[str, Any] = {}
         self._kernel_fault = False
         self._fan_fault = False
+        self._coast_fault = False
         self._fan_state = None
         self.source_monitor = None
         self.refresh()
@@ -47,8 +48,12 @@ class ShadowRuntime:
                 "state": state.state,
                 "unit": state.attributes.get("unit_of_measurement", ""),
                 "last_reported": state.last_reported.isoformat(),
-                "attributes": ({"percentage": state.attributes.get("percentage")}
-                               if role == "circulation" else {}),
+                "attributes": (
+                    {"percentage": state.attributes.get("percentage")}
+                    if role == "circulation" else
+                    {"parameters": state.attributes.get("parameters")}
+                    if role == "legacy_model" else {}
+                ),
             } if state is not None else None)
         self.values = snapshot(rows)
         from .forecast_sources import source_summary
@@ -81,6 +86,26 @@ class ShadowRuntime:
             if not self._fan_fault:
                 _LOGGER.exception("V2 fan shadow unavailable; no fan commands")
             self._fan_fault = True
+        try:
+            from .shadow_coast import preview
+            from .telemetry import _number
+            model_row = rows.get("legacy_model") or {}
+            params = model_row.get("attributes", {}).get("parameters")
+            self.values["coast"] = preview(
+                self.values.get("room_c_last_known"),
+                _number(rows.get("stored_heat"), "°C", -30, 90),
+                params, self.source_monitor.weather if self.source_monitor else None,
+                dt_util.utcnow().timestamp(),
+            )
+            self._coast_fault = False
+        except Exception:
+            self.values["coast"] = {
+                "status": "FAULT", "commands_enabled": False,
+                "forecast_qualified": False,
+            }
+            if not self._coast_fault:
+                _LOGGER.exception("V2 unqualified thermal coast projection failed")
+            self._coast_fault = True
         for notify in tuple(self.listeners):
             notify()
 
