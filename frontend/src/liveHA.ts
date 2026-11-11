@@ -97,12 +97,17 @@ const roles: (keyof LiveBindings)[] = [
   "kws_l3",
   "kws_energy",
 ];
-function number(state: LiveState | undefined, unit: string, max: number) {
+function number(
+  state: LiveState | undefined,
+  unit: string,
+  max: number,
+  min = 0,
+) {
   if (!state || state.attributes.unit_of_measurement !== unit) return null;
   const value = Number(state.state);
   return state.state.trim() !== "" &&
     Number.isFinite(value) &&
-    value >= 0 &&
+    value >= min &&
     value <= max
     ? value
     : null;
@@ -221,7 +226,7 @@ export class LiveHAAPI implements OperatorAPI {
     const stamp = (state?: LiveState) =>
       state?.last_reported ?? state?.last_changed ?? null;
     const now = Date.now() / 1000;
-    const room = number(s("room"), "°C", 65);
+    const room = number(s("room"), "°C", 65, -30);
     const observed = Date.parse(stamp(s("room")) ?? "") / 1000;
     const gridState = s("grid")?.state;
     const grid =
@@ -234,8 +239,8 @@ export class LiveHAAPI implements OperatorAPI {
       const value = s(role)?.state;
       return value === "on" ? true : value === "off" ? false : null;
     };
-    const returnC = number(s("return_probe"), "°C", 110);
-    const fireplaceC = number(s("fireplace"), "°C", 65);
+    const returnC = number(s("return_probe"), "°C", 110, -30);
+    const fireplaceC = number(s("fireplace"), "°C", 65, -30);
     const fanActualRaw = s("circulation")?.state;
     const fanActual =
       fanActualRaw === "on" || fanActualRaw === "off" ? fanActualRaw : null;
