@@ -1,9 +1,13 @@
 name: One-time v2 fireplace UI formatting
 on:
-  push:
+  pull_request:
     branches:
-      - release/p0-native-live-ui-pipeline-20261111
+      - main
     paths:
+      - 'frontend/src/liveHA.ts'
+      - 'frontend/src/live-panel.tsx'
+      - 'frontend/src/livePages.tsx'
+      - 'frontend/tests/live-ha.test.ts'
       - '.github/workflows/p0-one-time-format.yml'
 permissions:
   contents: write
@@ -11,7 +15,7 @@ jobs:
   formatter:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: github.repository == 'dragonidf/ha-heating-2'
+    if: github.repository == 'dragonidf/ha-heating-2' && github.event.pull_request.number == 43 && github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
