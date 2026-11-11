@@ -70,6 +70,10 @@ class ShadowSensor(SensorEntity):
             "voltages_v_last_known": values["voltages_v_last_known"],
             "kws_phases_kw_last_known": values["kws_phases_kw_last_known"],
             "kws_stage": "UNCALIBRATED",
+            "kernel_mode": values.get("kernel", {}).get("mode", "FAULT"),
+            "kernel_reason": values.get("kernel", {}).get("reason", "unavailable"),
+            "kernel_permit": False,
+            "kernel_intents": 0,
             "unavailable_sources": values["unavailable_sources"],
             "ha_last_reported": values["ha_last_reported"],
         }
