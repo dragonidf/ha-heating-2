@@ -33,7 +33,6 @@ class ShadowRuntime:
         self.values: dict[str, Any] = {}
         self._kernel_fault = False
         self._fan_fault = False
-        self._coast_fault = False
         self._fan_state = None
         self.source_monitor = None
         self.plan_rows: dict[str, dict[str, Any] | None] = {}
@@ -57,6 +56,8 @@ class ShadowRuntime:
                 ),
             } if state is not None else None)
         self.plan_rows = rows
+        if self.source_monitor is not None:
+            self.source_monitor.note_inputs(rows)
         self.values = snapshot(rows)
         self.values["virtual_plan"] = (
             self.source_monitor.plan if self.source_monitor and self.source_monitor.plan
@@ -93,30 +94,12 @@ class ShadowRuntime:
             if not self._fan_fault:
                 _LOGGER.exception("V2 fan shadow unavailable; no fan commands")
             self._fan_fault = True
-        try:
-            from .shadow_coast import preview, recently_reported
-            from .telemetry import _number
-            now = dt_util.utcnow().timestamp()
-            model_row = rows.get("legacy_model") or {}
-            params = model_row.get("attributes", {}).get("parameters")
-            room = (self.values.get("room_c_last_known")
-                    if recently_reported(rows.get("room"), now) else None)
-            stored = (_number(rows.get("stored_heat"), "°C", -30, 90)
-                      if recently_reported(rows.get("stored_heat"), now) else None)
-            self.values["coast"] = preview(
-                room, stored, params,
-                self.source_monitor.weather if self.source_monitor else None,
-                now,
-            )
-            self._coast_fault = False
-        except Exception:
-            self.values["coast"] = {
-                "status": "FAULT", "commands_enabled": False,
-                "forecast_qualified": False,
-            }
-            if not self._coast_fault:
-                _LOGGER.exception("V2 unqualified thermal coast projection failed")
-            self._coast_fault = True
+        self.values["coast"] = (
+            self.source_monitor.coast
+            if self.source_monitor is not None and self.source_monitor.coast is not None
+            else {"status": "UNAVAILABLE", "commands_enabled": False,
+                  "forecast_qualified": False}
+        )
         for notify in tuple(self.listeners):
             notify()
 
