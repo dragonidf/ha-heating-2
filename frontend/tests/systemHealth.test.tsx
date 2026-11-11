@@ -91,3 +91,77 @@ it("labels a HEAT proposal as proposed rather than completed handoff", () => {
   expect(ui.getAllByText(/Запропоновано повернення HEAT/)).toHaveLength(6);
   expect(ui.getByText(/Фізичний стан не підтверджений/)).toBeTruthy();
 });
+
+function sourceHealth(): SystemHealthView {
+  return {
+    ...health(),
+    source_freshness: {
+      living_device_last_activity: 100,
+      living_temperature_last_observed: 0,
+      return_water_last_observed: 100,
+      device_age_s: 0,
+      temperature_age_s: 100,
+      return_age_s: 0,
+      activity_window_s: 3660,
+      device_quality: "OK",
+      temperature_quality: "STALE",
+      return_quality: "OK",
+      return_veto: false,
+      failure_confirmed: false,
+      physical_authority: false,
+      scope: "synthetic_only",
+    },
+  };
+}
+it("separates humidity activity from stale temperature and auxiliary probe", () => {
+  const ui = render(<SystemHealth health={sourceHealth()} />);
+  expect(ui.getByText(/Активність пристрою T&H: OK/)).toBeTruthy();
+  expect(
+    ui.getByText(/Реальний вимір вітальні: Очікування даних · 100 с/),
+  ).toBeTruthy();
+  expect(ui.getByText(/Зовнішній щуп обратки: OK/)).toBeTruthy();
+  expect(
+    ui.getByText(/Поріг активності 3660 с — лише попередження/),
+  ).toBeTruthy();
+  expect(ui.getByText(/Вологість не оновлює температуру/)).toBeTruthy();
+});
+it("shows source failure and return veto without physical acknowledgement", () => {
+  const h = sourceHealth();
+  if (!h.source_freshness) throw Error("fixture missing");
+  h.source_freshness = {
+    ...h.source_freshness,
+    temperature_quality: "OFFLINE",
+    return_veto: true,
+    failure_confirmed: true,
+  };
+  const ui = render(<SystemHealth health={h} />);
+  expect(ui.getByText(/джерело недоступне/)).toBeTruthy();
+  expect(ui.getByText(/вето нагріву/)).toBeTruthy();
+  expect(ui.getByText(/Фізичний стан не підтверджений/)).toBeTruthy();
+});
+it("rejects false source provenance and malformed independent ages", () => {
+  const h = sourceHealth();
+  expect(
+    readSnapshot({ ...snapshot(), system_health: h }).system_health
+      ?.source_freshness?.device_quality,
+  ).toBe("OK");
+  for (const bad of [
+    { temperature_age_s: -1 },
+    { device_quality: "OFFLINE" },
+    { physical_authority: true },
+    { activity_window_s: Infinity },
+    { scope: "physical" },
+    { return_veto: "yes" },
+    { temperature_quality: "fresh" },
+  ]) {
+    expect(() =>
+      readSnapshot({
+        ...snapshot(),
+        system_health: {
+          ...h,
+          source_freshness: { ...h.source_freshness, ...bad },
+        },
+      }),
+    ).toThrow();
+  }
+});

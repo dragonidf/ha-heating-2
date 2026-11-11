@@ -19,6 +19,7 @@ from packages.offline.codec import encode as encode_contract, decode as decode_c
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
 from .health import HealthPolicy, HealthInputs, HealthMemory, project_health
+from .source_activity import SourceActivity, DeviceReport
 from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
@@ -90,7 +91,7 @@ class NativeBackend:
     def __init__(self, root: Path, fixture: dict[str, JSON] | None = None, *,
                  entry_id: str = 'synthetic-entry', enabled: bool = False,
                  clock: Callable[[], tuple[float, float]] | None = None,
-                 health_policy: HealthPolicy | None = None, health_evidence: Callable[[], HealthInputs] = HealthInputs):
+                 activity_window_s: float = 3660, health_policy: HealthPolicy | None = None, health_evidence: Callable[[], HealthInputs] = HealthInputs):
         if type(enabled) is not bool or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', entry_id):
             raise NativeProtocolError('invalid_configuration')
         self.fixture = deepcopy(fixture) if fixture is not None else obj(decode(Path(__file__).with_name('fixture.json').read_text()))
@@ -109,6 +110,8 @@ class NativeBackend:
         self._room_report: tuple[float, float, str] | None = None
         self._health_policy = health_policy or HealthPolicy()
         self._health_evidence = health_evidence
+        self._activity = SourceActivity(activity_window_s)
+        self._activity_active = False
         self._health_memory = HealthMemory()
         self._memory = RLock()
         self._serial = 0
@@ -136,6 +139,8 @@ class NativeBackend:
         self._clock_bad = False
         self._room_seen_mono = None
         self._room_report = None
+        self._activity = SourceActivity(self._activity.window_s)
+        self._activity_active = False
         self._voltage_frame = VoltageFrame()
         self._voltage_state = None
         self._kws_frame = KWSFrame()
@@ -193,6 +198,10 @@ class NativeBackend:
             self.critical.write(con, 'snapshot', state)
             self._model = obj(self.critical.read_from(con, 'model'))
         self._snapshot = state
+        saved_veto = obj(state.get('source_freshness', {})).get('return_veto', False)
+        if type(saved_veto) is not bool:
+            raise StoreError('Invalid auxiliary veto')
+        self._activity.veto_latched = saved_veto
         raw_health = state.get('health_memory')
         if raw_health is not None and not isinstance(raw_health, dict):
             raise StoreError('Invalid durable health memory')
@@ -297,15 +306,24 @@ class NativeBackend:
             changed = changed or obj(state['status'])['mode'] != obj(self._snapshot['status'])['mode']
             evidence = self._health_evidence()
             room_age = None if self._room_report is None else max(clock.utc - self._room_report[0], clock.monotonic - self._room_report[1])
+            freshness = self._activity.view(clock, self._source_max_age, clock_ok=not self._clock_bad)
+            state['source_freshness'] = freshness
+            if self._activity_active:
+                activity_age = freshness['device_age_s']
+                room_age = number(activity_age) if activity_age is not None else None
             health_inputs = replace(evidence, room_age_s=room_age,
-                room_report_verified=self._room_report is not None,
-                room_valid=room['quality'] == 'valid', room_report_id=self._room_report[2] if self._room_report is not None else None,
+                room_report_verified=room_age is not None,
+                room_valid=room['quality'] == 'valid' and (not self._activity_active or freshness['temperature_quality'] == 'OK'), room_report_id=self._room_report[2] if self._room_report is not None else None,
                 electrical_eligible=self._voltage_state.eligible,
                 electrical_reason='Напруга поза межами' if self._voltage_state.status in ('LOW', 'HIGH') else 'Мережа та KWS кваліфіковані' if self._voltage_state.eligible else 'Очікування мережі/KWS або свіжих фаз',
                 electrical_fault=self._voltage_state.status in ('LOW', 'HIGH'),
                 power_qualified=self._kws_state.power.kw is not None and self._kws_state.counter is not None and not self._energy_unavailable,
                 clock_ok=self._opened and not self._clock_bad, persistence_ok=not self._store_failed,
-                plan_ok=evidence.plan_ok and obj(state['diagnostics'])['worker'] == 'ready',
+                plan_ok=evidence.plan_ok and obj(state['diagnostics'])['worker'] == 'ready' and freshness['return_veto'] is not True,
+                room_failure_confirmed=self._activity_active and freshness['failure_confirmed'] is True,
+                room_silence_qualified=not self._activity_active,
+                room_status=('PROBLEM' if freshness['failure_confirmed'] is True or freshness['return_veto'] is True else 'OK' if freshness['device_quality'] == 'OK' and freshness['temperature_quality'] == 'OK' and room['quality'] == 'valid' else 'WAITING') if self._activity_active else None,
+                room_reason=self._activity_reason(freshness) if self._activity_active else None,
                 manual_stop=evidence.manual_stop or obj(state['status'])['mode'] == 'MANUAL_PAUSE',
                 one_shot_blocked=evidence.one_shot_blocked or shot['state'] in ('unknown_outcome', 'consumed', 'expired'))
             previous_memory = asdict(self._health_memory)
@@ -314,6 +332,7 @@ class NativeBackend:
             record = asdict(self._health_memory)
             changed = changed or any(v != previous_memory[k] for k, v in record.items() if k != 'last_mono')
             record['transitions'] = {k: list(v) for k, v in self._health_memory.transitions.items()}
+            health['source_freshness'] = freshness
             state['system_health'] = cast(JSON, health)
             state['health_memory'] = cast(JSON, record)
             if changed:
@@ -445,7 +464,9 @@ class NativeBackend:
         return (self.enabled and self._opened and not self._clock_bad and not self._store_failed
                 and obj(self._snapshot['room'])['quality'] == 'valid' and self._snapshot['grid'] is True
                 and obj(self._snapshot['status'])['mode'] not in ('SAFE_HOLD', 'RECOVERING', 'MANUAL_PAUSE')
-                and self._voltage_state is not None and self._voltage_state.eligible)
+                and self._voltage_state is not None and self._voltage_state.eligible
+                and obj(self._snapshot.get('source_freshness', {})).get('return_veto') is not True
+                and (not self._activity_active or obj(self._snapshot['source_freshness'])['temperature_quality'] == 'OK'))
 
     def voltage_stop_intent(self, *, owner_epoch: int, owns_thermostat: bool = False,
                             thermostat_fresh: bool = False, thermostat_c: float | None = None,
@@ -510,6 +531,37 @@ class NativeBackend:
             self._snapshot = state
             self._serial += 1
             self._pending_stop = True
+
+    @staticmethod
+    def _activity_reason(view: dict[str, JSON]) -> str:
+        return ('Активність T&H (температура АБО вологість): ' + str(view['device_quality'])
+                + '. Реальний вимір вітальні: ' + str(view['temperature_quality'])
+                + '. Щуп обратки (лише допоміжний): ' + str(view['return_quality'])
+                + ('. Допоміжне вето нагріву' if view['return_veto'] is True else '')
+                + '. Вологість не оновлює температуру; перевищення порогу не підтверджує відключення.')
+
+    def accept_device_report(self, report: DeviceReport) -> bool:
+        """Trusted synthetic fixture seam only; no public physical Tuya binding."""
+        from packages.contracts import Reading, Quality, QualityStatus, Provenance, SourceKind
+        with self._memory:
+            clock = self.trusted_clock()
+            if not self._opened or self._clock_bad or not self._activity.accept(report, clock, self._source_max_age):
+                return False
+            self._activity_active = True
+            if report.role == 'temperature':
+                if not report.available:
+                    self.invalidate_source('qualified_synthetic_unavailable')
+                elif (report.measurement_qualified and report.observed_at is not None
+                        and self._activity.measurements.get('temperature', (None, clock))[0] == report):
+                    reading = Reading(physical_id='synthetic.native.room', source_id='synthetic.native.room',
+                        value=report.value, unit=Unit.CELSIUS, observed_at=report.observed_at,
+                        received_at=report.received_at,
+                        quality=Quality(status=QualityStatus.VALID, age_s=clock.utc - report.observed_at, reason='synthetic-raw-report'),
+                        provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
+                    self.accept_source(SourceEvent('environment.' + clock.boot_id + '.' + str(report.sequence),
+                        'synthetic.native.room', report.sequence, report.received_at, reading))
+            self.refresh()
+            return True
 
     def accept_source(self, event: SourceEvent, clock: Clock | None = None) -> bool:
         """Only typed, own synthetic observations; no body-supplied provenance privilege."""

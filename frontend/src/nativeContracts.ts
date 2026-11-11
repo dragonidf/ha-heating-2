@@ -92,6 +92,7 @@ export function readPower(value: unknown): PowerView {
   return structuredClone(p as unknown as PowerView);
 }
 function validateHealth(raw: unknown): void {
+  const nonnegative = (v: unknown): v is number => finite(v) && v >= 0;
   const h = object(raw);
   if (
     h.physical_verified !== false ||
@@ -102,6 +103,36 @@ function validateHealth(raw: unknown): void {
     h.components.length !== 6
   )
     throw Error("Непридатна діагностика");
+  if (h.source_freshness !== undefined) {
+    const f = object(h.source_freshness);
+    if (
+      typeof f.device_quality !== "string" ||
+      typeof f.temperature_quality !== "string" ||
+      typeof f.return_quality !== "string"
+    )
+      throw Error("Непридатна якість джерел");
+    if (
+      ![
+        "living_device_last_activity",
+        "living_temperature_last_observed",
+        "return_water_last_observed",
+        "device_age_s",
+        "temperature_age_s",
+        "return_age_s",
+      ].every((k) => f[k] === null || nonnegative(f[k])) ||
+      !nonnegative(f.activity_window_s) ||
+      f.activity_window_s < 60 ||
+      f.activity_window_s > 86400 ||
+      !["OK", "UNKNOWN", "DEGRADED"].includes(f.device_quality) ||
+      !["OK", "UNKNOWN", "STALE", "OFFLINE"].includes(f.temperature_quality) ||
+      !["OK", "UNKNOWN", "STALE"].includes(f.return_quality) ||
+      typeof f.return_veto !== "boolean" ||
+      typeof f.failure_confirmed !== "boolean" ||
+      f.physical_authority !== false ||
+      f.scope !== "synthetic_only"
+    )
+      throw Error("Непридатна достовірність джерел");
+  }
   if (h.proposal !== undefined && h.proposal !== null) {
     const p = object(h.proposal);
     if (

@@ -9,6 +9,15 @@ const actions: Record<string, string> = {
   BLOCKED: "STOP або недоступний власник/контролер",
 };
 export function SystemHealth({ health }: { health: SystemHealthView }) {
+  const f = health.source_freshness;
+  const age = (v: number | null) =>
+    v === null ? "давність невідома" : `${Math.floor(v)} с`;
+  const quality = (v: string) =>
+    v === "OK"
+      ? "OK"
+      : v === "OFFLINE"
+        ? "Проблема: джерело недоступне"
+        : "Очікування даних";
   const problems = health.components.filter((c) => c.status === "PROBLEM");
   const waiting = health.components.filter((c) => c.status === "WAITING");
   const highest =
@@ -47,6 +56,27 @@ export function SystemHealth({ health }: { health: SystemHealthView }) {
             </li>
           ))}
         </ul>
+        {f && (
+          <div aria-label="Достовірність джерел">
+            <p>
+              Активність пристрою T&H: {quality(f.device_quality)} ·{" "}
+              {age(f.device_age_s)}
+            </p>
+            <p>
+              Реальний вимір вітальні: {quality(f.temperature_quality)} ·{" "}
+              {age(f.temperature_age_s)}
+            </p>
+            <p>
+              Зовнішній щуп обратки: {quality(f.return_quality)} ·{" "}
+              {age(f.return_age_s)} · лише допоміжне джерело
+              {f.return_veto ? "; вето нагріву" : ""}
+            </p>
+            <p>
+              Поріг активності {f.activity_window_s} с — лише попередження.
+              Вологість не оновлює температуру.
+            </p>
+          </div>
+        )}
         <p>
           Дії лише запропоновані в симуляції. Фізичний стан не підтверджений.
         </p>

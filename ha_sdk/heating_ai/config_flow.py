@@ -19,13 +19,16 @@ async def isolated(hass: HomeAssistant) -> bool:
     return await hass.async_add_executor_job(sandbox_marker, hass.config.config_dir)
 
 def options(values: dict[str, Any]) -> dict[str, Any]:
-    if set(values) - {"simulation_enabled", "freshness_s", "meter_source_id"}:
+    if set(values) - {"simulation_enabled", "freshness_s", "meter_source_id", "activity_window_s"}:
         raise ValueError("Unknown option")
     enabled, age, source = values.get("simulation_enabled", False), values.get("freshness_s", 30), values.get("meter_source_id", "")
     if type(enabled) is not bool or type(age) not in (int, float) or not 5 <= age <= 300:
         raise ValueError("Invalid synthetic options")
+    activity = values.get("activity_window_s", 3660)
+    if type(activity) not in (int, float) or not 60 <= activity <= 86400:
+        raise ValueError("Invalid activity window")
     future_meter_binding(source)
-    return {"simulation_enabled": enabled, "freshness_s": age, "meter_source_id": source}
+    return {"simulation_enabled": enabled, "freshness_s": age, "meter_source_id": source, "activity_window_s": activity}
 
 class HeatingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -64,5 +67,6 @@ class HeatingOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=probatio.Schema({
             probatio.Required("simulation_enabled", default=current["simulation_enabled"]): bool,
             probatio.Optional("freshness_s", default=current["freshness_s"]): probatio.All(probatio.Coerce(float), probatio.Range(min=5, max=300)),
+            probatio.Optional("activity_window_s", default=current["activity_window_s"]): probatio.All(probatio.Coerce(float), probatio.Range(min=60, max=86400)),
             probatio.Optional("meter_source_id", default=current["meter_source_id"]): str,
         }), errors=errors)

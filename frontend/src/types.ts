@@ -231,7 +231,24 @@ export interface Track {
   kind: "heat" | "outage" | "fire";
 }
 
+export interface SourceFreshnessView {
+  living_device_last_activity: number | null;
+  living_temperature_last_observed: number | null;
+  return_water_last_observed: number | null;
+  device_age_s: number | null;
+  temperature_age_s: number | null;
+  return_age_s: number | null;
+  activity_window_s: number;
+  device_quality: "OK" | "UNKNOWN" | "DEGRADED";
+  temperature_quality: "OK" | "UNKNOWN" | "STALE" | "OFFLINE";
+  return_quality: "OK" | "UNKNOWN" | "STALE";
+  return_veto: boolean;
+  failure_confirmed: boolean;
+  physical_authority: false;
+  scope: "synthetic_only";
+}
 export interface SystemHealthView {
+  source_freshness?: SourceFreshnessView;
   components: readonly {
     key: string;
     label: string;

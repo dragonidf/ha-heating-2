@@ -145,6 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         root = Path(tempfile.gettempdir()) / ("heating-wp2c-" + entry.entry_id)
         root.mkdir(mode=0o700, exist_ok=True)
         backend = NativeBackend(root, entry_id=entry.entry_id, enabled=selected["simulation_enabled"],
+                                activity_window_s=selected["activity_window_s"],
                                 clock=lambda: (time(), monotonic()))
         backend.configure_source(selected["freshness_s"])
         backend.open()

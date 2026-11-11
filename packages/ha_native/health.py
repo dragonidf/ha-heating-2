@@ -27,6 +27,10 @@ class HealthInputs:
     room_report_verified: bool = False
     room_valid: bool = False
     room_report_id: str | None = None
+    room_failure_confirmed: bool = False
+    room_silence_qualified: bool = True
+    room_status: HealthStatus | None = None
+    room_reason: str | None = None
     fireplace_age_s: float | None = None
     fireplace_qualified: bool = False
     thermostat_qualified: bool = False
@@ -116,8 +120,9 @@ def project_health(inputs: HealthInputs, *, now: float, mono: float, boot: str,
     # last_mono is a high-water mark: clock rollback cannot silently heal.
     m.last_mono = max(m.last_mono if not restart else mono, mono)
     age = inputs.room_age_s
-    confirmed_loss = (inputs.room_report_verified and age is not None and age > policy.room_timeout_s
-                      and mono - m.started >= policy.cold_grace_s)
+    confirmed_loss = (inputs.room_failure_confirmed or (inputs.room_silence_qualified
+                      and inputs.room_report_verified and age is not None and age > policy.room_timeout_s))
+    confirmed_loss = confirmed_loss and mono - m.started >= policy.cold_grace_s
     room_ok = inputs.room_valid and inputs.room_report_verified and age is not None and 0 <= age <= policy.room_timeout_s
     thermostat_ok = (inputs.thermostat_qualified and inputs.thermostat_age_s is not None
                      and 0 <= inputs.thermostat_age_s <= 120)
@@ -193,9 +198,9 @@ def project_health(inputs: HealthInputs, *, now: float, mono: float, boot: str,
         notification = m.pending_notification
         m.notification_at, m.notification_key, m.pending_notification = mono, notification, ''
     specs = [
-        ('living_room', 'Датчик вітальні', 'OK' if room_ok else 'PROBLEM' if confirmed_loss else 'WAITING',
+        ('living_room', 'Датчик вітальні', inputs.room_status or ('OK' if room_ok else 'PROBLEM' if confirmed_loss else 'WAITING'),
          'critical' if confirmed_loss else 'warning', age,
-         'Температура вітальні — єдина основа моделі та графіків' if room_ok else 'Втрачено підтверджені звіти' if confirmed_loss else 'Очікуємо достовірний звіт/heartbeat; незмінна температура не означає втрату'),
+         inputs.room_reason or ('Температура вітальні — єдина основа моделі та графіків' if room_ok else 'Втрачено підтверджені звіти' if confirmed_loss else 'Очікуємо достовірний звіт/heartbeat; незмінна температура не означає втрату')),
         ('fireplace', 'Камін і циркуляція', 'OK' if inputs.fireplace_qualified and inputs.fireplace_age_s is not None and 0 <= inputs.fireplace_age_s <= 300 else 'WAITING', 'warning', inputs.fireplace_age_s, 'Окреме джерело каміна; не замінює температуру вітальні'),
         ('thermostat', 'Термостат і контакти', 'OK' if thermostat_ok else 'WAITING', 'warning', inputs.thermostat_age_s, 'Власна температура, межі й readback лише для контактів; фізичний стан не підтверджений'),
         ('utility', 'Мережа та три фази', 'OK' if inputs.electrical_eligible else 'PROBLEM' if inputs.electrical_fault else 'WAITING', 'critical', None, inputs.electrical_reason),
