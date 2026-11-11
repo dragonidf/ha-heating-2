@@ -96,7 +96,11 @@ class BoundaryTests(unittest.TestCase):
             "datetime.now()",
         ):
             self.assertTrue(violations(bad))
-        self.assertFalse((ROOT / "custom_components").exists())
+        # Accepted synthetic graph stays closed. The only separately reviewed
+        # real-HA profile is a read-only v2 observer; its no-write AST barrier
+        # is enforced by tests.wp2c_revision.test_live_shadow_v2.
+        live = ROOT / "custom_components"
+        self.assertEqual({p.name for p in live.iterdir()}, {"heating_ai_v2"})
 
     def test_actual_synthetic_integration_migration_and_stop_with_network_denied(self):
         result = subprocess.run(
