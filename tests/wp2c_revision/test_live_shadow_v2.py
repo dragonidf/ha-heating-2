@@ -5,7 +5,7 @@ from pathlib import Path
 import runpy
 import unittest
 
-ROOT = Path("custom_components/heating_ai_v2")
+ROOT = Path("releases/ha_v2/custom_components/heating_ai_v2")
 module = runpy.run_path(str(ROOT / "telemetry.py"))
 snapshot = module["snapshot"]
 ROLES = module["ROLES"]

@@ -2,7 +2,7 @@ name: Heating AI 2.0 read-only HA 2026.11 import smoke
 on:
   pull_request:
     paths:
-      - 'custom_components/heating_ai_v2/**'
+      - 'releases/ha_v2/custom_components/heating_ai_v2/**'
       - 'tests/wp2c_revision/test_live_shadow_v2.py'
       - '.github/workflows/heating-ai-v2-smoke.yml'
 permissions:
@@ -27,6 +27,8 @@ jobs:
       - name: Verify supported HA imports and config form
         run: |
           python - <<'PY'
+          import sys
+          sys.path.insert(0, 'releases/ha_v2')
           import custom_components.heating_ai_v2 as integration
           from custom_components.heating_ai_v2 import config_flow, sensor, telemetry
           from homeassistant.config_entries import ConfigFlowResult

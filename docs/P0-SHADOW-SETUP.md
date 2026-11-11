@@ -4,7 +4,7 @@ This is a **separate** Home Assistant custom integration, `heating_ai_v2`, outsi
 
 ## Installation *after code review and approval*
 
-1. Back up the Home Assistant configuration. Copy only the folder `custom_components/heating_ai_v2` into HA's `/config/custom_components/heating_ai_v2`; restart HA. No install has been performed by this PR.
+1. Back up the Home Assistant configuration. Copy only the folder `releases/ha_v2/custom_components/heating_ai_v2` into HA's `/config/custom_components/heating_ai_v2`; restart HA. No install has been performed by this PR.
 2. Settings → Devices & Services → Add Integration → **Heating AI 2.0 — read-only shadow**. Select the existing entities for the thermostat, living-room temperature, upstream utility-present binary sensor, **upstream** voltage for three phases, direct KWS local L1/L2/L3 active power (each **kW**) and KWS local **total** energy (kWh).
 3. The integration checks that the four KWS entities belong to **one** device on the `tuya_local` integration. It does not need cloud entities or any old derived helpers. If the selected upstream voltage source is downstream of KWS or inverter, that is **not** a commissioned voltage safety feed; shadow will display it but never grant heating.
 4. Read the four new entities (mode, temperature, KWS power, KWS energy). Mode should always be `SHADOW`; `commands_enabled=false`, `physical_ack=false`. Compare values to the original KWS entities and current old heating dashboard. A stale unchanged phase reading of 0 kW stays a **last-known** display value. Missing or invalid phase → power unknown. No 3/6/9 mode is claimed without calibration.
