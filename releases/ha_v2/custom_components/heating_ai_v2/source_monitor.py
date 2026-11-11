@@ -21,6 +21,13 @@ from .forecast_sources import outage_intervals, source_summary, weather_hours
 
 _LOGGER = logging.getLogger(__name__)
 POLL_SECONDS = 1800
+REPLAN_MIN_SECONDS = 60
+PLANNING_ROLES = (
+    "room", "stored_heat", "legacy_model", "grid",
+    "day_target", "night_target", "day_upper", "night_upper",
+    "sleep_start", "sleep_end", "heating_start", "heating_end",
+    "strategy", "power_model",
+)
 
 
 class SourceMonitor:
@@ -32,6 +39,9 @@ class SourceMonitor:
         self.notify = notify
         self.read_rows = read_rows
         self.plan: dict[str, Any] | None = None
+        self.coast: dict[str, Any] | None = None
+        self._input_key: tuple[Any, ...] | None = None
+        self._next_replan = 0.0
         self.weather: dict[str, Any] | None = None
         self.outages: dict[str, Any] | None = None
         self._weather_entity: Any = None
@@ -41,6 +51,18 @@ class SourceMonitor:
         self._next_pull = 0.0
         self._closed = False
         self._faults: set[str] = set()
+
+    @callback
+    def note_inputs(self, rows: dict[str, dict[str, Any] | None]) -> None:
+        """Invalidate cached proposals when any material source value changes."""
+        key = tuple(
+            (role, (rows.get(role) or {}).get("state"),
+             repr((rows.get(role) or {}).get("attributes", {})))
+            for role in PLANNING_ROLES
+        )
+        if key != self._input_key:
+            self._input_key = key
+            self.plan = self.coast = None
 
     def start(self) -> None:
         """Discover providers. Later ticks also recover from HA reloads."""
@@ -63,7 +85,7 @@ class SourceMonitor:
                 self._unsub = None
             self._weather_entity = weather
             self.weather = None
-            self.plan = None
+            self.plan = self.coast = None
             self._next_pull = 0.0
             if weather is not None:
                 try:
@@ -79,7 +101,7 @@ class SourceMonitor:
         if calendar is not self._calendar_entity:
             self._calendar_entity = calendar
             self.outages = None
-            self.plan = None
+            self.plan = self.coast = None
             self._next_pull = 0.0
 
     @callback
@@ -92,7 +114,7 @@ class SourceMonitor:
         except (ValueError, TypeError, OverflowError):
             self.weather = None
             self._warn_once("weather")
-        self.plan = None
+        self.plan = self.coast = None
         self.notify()
 
     def _warn_once(self, source: str) -> None:
@@ -102,19 +124,23 @@ class SourceMonitor:
 
     @callback
     def schedule(self) -> None:
-        """Coalesce all 60-s ticks into at most one provider read per 30 min."""
+        """At most one 30-min provider read or 60-s source-change replan."""
         if self._closed or (self._task is not None and not self._task.done()):
             return
         self._bind_sources()
         if self._weather_entity is None and self._calendar_entity is None:
             return
         now = time.monotonic()
-        if now < self._next_pull:
-            return
-        self._next_pull = now + POLL_SECONDS
-        self._task = self.hass.async_create_task(
-            self._poll(), "heating_ai_v2_read_only_providers"
-        )
+        if now >= self._next_pull:
+            self._next_pull = now + POLL_SECONDS
+            self._task = self.hass.async_create_task(
+                self._poll(), "heating_ai_v2_read_only_providers"
+            )
+        elif self.plan is None and now >= self._next_replan:
+            self._next_replan = now + REPLAN_MIN_SECONDS
+            self._task = self.hass.async_create_task(
+                self._recalculate(), "heating_ai_v2_virtual_replan"
+            )
 
     async def _poll(self) -> None:
         if self._weather_entity is not None:
@@ -142,24 +168,38 @@ class SourceMonitor:
                 self.outages = None
                 self._warn_once("calendar")
         if not self._closed:
-            try:
-                from .shadow_plan import conditional_plan
-                self.plan = await asyncio.wait_for(
-                    self.hass.async_add_executor_job(
-                        conditional_plan, self.read_rows(),
-                        self.weather, self.outages, time.time(),
-                    ),
-                    timeout=25,
-                )
-                self._faults.discard("planner")
-            except Exception:
-                self.plan = {
-                    "status": "BLOCKED_INPUTS", "reason": "planner_fault",
-                    "proposal_is_command": False, "commands_sent": 0,
-                }
-                self._warn_once("planner")
-            if not self._closed:
-                self.notify()
+            await self._recalculate()
+
+    async def _recalculate(self) -> None:
+        """No HA event-loop model loops; reject results for superseded inputs."""
+        key = self._input_key
+        weather, outages = self.weather, self.outages
+        rows = self.read_rows()
+        try:
+            from .shadow_plan import diagnostics
+            plan, coast = await asyncio.wait_for(
+                self.hass.async_add_executor_job(
+                    diagnostics, rows, weather, outages, time.time()
+                ),
+                timeout=25,
+            )
+            self._faults.discard("planner")
+        except Exception:
+            plan = {
+                "status": "BLOCKED_INPUTS", "reason": "planner_fault",
+                "proposal_is_command": False, "commands_sent": 0,
+            }
+            coast = {"status": "UNAVAILABLE", "commands_enabled": False}
+            self._warn_once("planner")
+        self._next_replan = time.monotonic() + REPLAN_MIN_SECONDS
+        if self._closed:
+            return
+        if (key == self._input_key and weather is self.weather
+                and outages is self.outages):
+            self.plan, self.coast = plan, coast
+        else:
+            self.plan = self.coast = None  # Never display a superseded plan.
+        self.notify()
 
     def brief(self) -> dict[str, Any]:
         return source_summary(self.weather, self.outages, time.time())
@@ -177,4 +217,4 @@ class SourceMonitor:
             except asyncio.CancelledError:
                 pass
         self._task = None
-        self.weather = self.outages = self.plan = None
+        self.weather = self.outages = self.plan = self.coast = None
