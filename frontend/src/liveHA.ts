@@ -179,7 +179,10 @@ export class LiveHAAPI implements OperatorAPI {
     this.updateHass(hass);
   }
   updateHass(hass: LiveHass) {
-    const s = (role: keyof LiveBindings) => hass.states?.[this.bindings[role]];
+    const s = (role: keyof LiveBindings) => {
+      const entityId = this.bindings[role];
+      return entityId ? hass.states?.[entityId] : undefined;
+    };
     const stamp = (state?: LiveState) =>
       state?.last_reported ?? state?.last_changed ?? null;
     const now = Date.now() / 1000;
