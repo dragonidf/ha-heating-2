@@ -11,6 +11,7 @@ on:
       - 'frontend/tests/live-panel.test.tsx'
       - 'frontend/src/liveRecorder.ts'
       - 'frontend/tests/live-recorder.test.ts'
+      - 'tests/wp2c_revision/test_legacy_state_dryrun.py'
       - 'releases/ha_v2/**'
       - 'tools/release/**'
       - '.github/workflows/p0-live-package.yml'
@@ -46,7 +47,7 @@ jobs:
           test -s dist-live/assets/livePanel.js
       - name: Read-only safety tests
         run: |
-          python -m unittest tests.wp2c_revision.test_live_shadow_v2 -v
+          python -m unittest tests.wp2c_revision.test_live_shadow_v2 tests.wp2c_revision.test_legacy_state_dryrun -v
           python -m compileall -q releases/ha_v2/custom_components/heating_ai_v2
       - name: Compose one self-contained HA folder and ZIP
         run: |
