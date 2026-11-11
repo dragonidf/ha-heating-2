@@ -94,8 +94,14 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
         </p>
       </Card>
       <Card title="Зворотна лінія котла">
-        <p>Зовнішній щуп: {t.returnC === null ? "—" : t.returnC.toFixed(1) + " °C"}</p>
-        <p className="helper">Останнє значення HA. Поки не кваліфіковано як незалежний safety-доказ.</p>
+        <p>
+          Зовнішній щуп:{" "}
+          {t.returnC === null ? "—" : t.returnC.toFixed(1) + " °C"}
+        </p>
+        <p className="helper">
+          Останнє значення HA. Поки не кваліфіковано як незалежний
+          safety-доказ.
+        </p>
       </Card>
       <Card title="Камін та циркуляція">
         <p>
