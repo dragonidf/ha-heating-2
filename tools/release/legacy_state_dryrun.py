@@ -145,7 +145,8 @@ def dry_run(source: Path, directory: Path) -> dict:
                 db.execute("INSERT INTO forecast_proof VALUES (?, ?)", (i, _sha(_canonical(item))))
             db.commit()
         report = _check(path, data, raw)
-        os.replace(path, db_path)
+        # Atomic create-if-absent: never replace a concurrent or earlier dry-run.
+        os.link(path, db_path)
         fd = os.open(directory, os.O_RDONLY)
         try:
             os.fsync(fd)
