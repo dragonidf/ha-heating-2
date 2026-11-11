@@ -37,10 +37,10 @@ def observe(backend):
         provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
     assert backend.accept_source(SourceEvent(boot + '.setup', 'synthetic.native.room', 0, now, reading),
                                  Clock(utc=now, monotonic=0, boot_id=boot))
-    from packages.ha_native.voltage import VoltageFrame, VoltagePhase
+    from packages.ha_native.voltage import SyntheticFeedReadiness, VoltageFrame, VoltagePhase
     backend.accept_voltage(VoltageFrame(tuple(VoltagePhase(p, 'synthetic.input.' + p, 220, now, now, 0,
         phase_verified=True, online=True) for p in ('L1', 'L2', 'L3')), mapping_verified=True,
-        grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True))
+        grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True, feed=SyntheticFeedReadiness(now, True, True, True, True)))
     assert backend.flush_stop()
 
 
@@ -584,10 +584,10 @@ reading = Reading(physical_id='synthetic.native.room', source_id='synthetic.nati
     provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
 assert backend.accept_source(SourceEvent(boot + '.setup', 'synthetic.native.room', 0, now, reading),
                              Clock(utc=now, monotonic=0, boot_id=boot))
-from packages.ha_native.voltage import VoltageFrame, VoltagePhase
+from packages.ha_native.voltage import SyntheticFeedReadiness, VoltageFrame, VoltagePhase
 backend.accept_voltage(VoltageFrame(tuple(VoltagePhase(p, 'synthetic.input.' + p, 220, now, now, 0,
     phase_verified=True, online=True) for p in ('L1', 'L2', 'L3')), mapping_verified=True,
-    grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True))
+    grid_available=True, protection_trip=False, protection_last_reported=now, protection_qualified=True, feed=SyntheticFeedReadiness(now, True, True, True, True)))
 assert backend.flush_stop()
 def request(**fields):
     state = backend.status(True)

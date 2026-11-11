@@ -90,6 +90,13 @@ export function syntheticVoltage(
     protection_trip: false,
     protection_last_reported: at,
     protection_qualified: true,
+    feed: {
+      reported_at: at,
+      utility_ready: true,
+      kws_online: true,
+      output_ready: true,
+      qualified: true,
+    },
   };
 }
 export async function voltageEvent(

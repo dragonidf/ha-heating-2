@@ -17,7 +17,7 @@ from packages.offline.contracts import Binding, Registry, SourceEvent, EnergySli
 from packages.offline.codec import encode as encode_contract, decode as decode_contract
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
-from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view
+from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
 
@@ -413,6 +413,23 @@ class NativeBackend:
                 and obj(self._snapshot['room'])['quality'] == 'valid' and self._snapshot['grid'] is True
                 and obj(self._snapshot['status'])['mode'] not in ('SAFE_HOLD', 'RECOVERING', 'MANUAL_PAUSE')
                 and self._voltage_state is not None and self._voltage_state.eligible)
+
+    def voltage_stop_intent(self, *, owner_epoch: int, owns_thermostat: bool = False,
+                            thermostat_fresh: bool = False, thermostat_c: float | None = None,
+                            min_setpoint_c: float | None = None, max_setpoint_c: float | None = None,
+                            temperature_step_c: float | None = None) -> dict[str, JSON] | None:
+        """Internal synthetic intent only; no device route or inferred real ownership."""
+        with self._memory:
+            self.refresh()
+            view = obj(self._snapshot['status'])
+            if (not self.enabled or not self._opened or self._clock_bad
+                    or owner_epoch != view['owner_epoch'] or self._voltage_state is None):
+                return None
+            return synthetic_voltage_withdrawal(self._voltage_state,
+                thermostat_c=thermostat_c, min_setpoint_c=min_setpoint_c,
+                max_setpoint_c=max_setpoint_c, temperature_step_c=temperature_step_c,
+                thermostat_fresh=thermostat_fresh, owns_thermostat=owns_thermostat,
+                manual_stop=view['mode'] == 'MANUAL_PAUSE')
 
     def safety_permit(self) -> HeatPermit:
         """Reuse accepted eligibility guards with unconditional synthetic SHADOW policy."""

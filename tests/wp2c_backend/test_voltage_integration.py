@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from packages.ha_native.backend import NativeBackend
-from packages.ha_native.voltage import VoltageFrame, VoltagePhase
+from packages.ha_native.voltage import SyntheticFeedReadiness, VoltageFrame, VoltagePhase
 from tests.wp2c_backend.test_backend import fixture, observe
 from tests.wp2c_backend.test_clock import FakeTime
 
@@ -25,7 +25,7 @@ class VoltageIntegrationTests(unittest.TestCase):
             self.clock.utc, sequence, phase_verified=True, online=True)
             for p, value in zip(('L1', 'L2', 'L3'), values)), mapping_verified=True,
             grid_available=True, protection_trip=False, protection_last_reported=self.clock.utc,
-            protection_qualified=True)
+            protection_qualified=True, feed=SyntheticFeedReadiness(self.clock.utc, True, True, True, True))
 
     def request(self, **values):
         state = self.backend.status(True)
@@ -135,3 +135,37 @@ class VoltageIntegrationTests(unittest.TestCase):
         self.assertEqual(accepted['status'], 'accepted_fake')
         self.assertEqual(self.backend.status(True)['status']['mode'], 'RECOVERING')
         self.assertFalse(self.backend.status(True)['demand_eligible'])
+
+    def test_known_voltage_fault_fences_owned_intent_from_auto_and_manual_stop(self):
+        self.backend.accept_voltage(self.frame((199, 220, 220)))
+        # Existing minimum is190; use an actual below-limit fault without changing settings.
+        self.backend.accept_voltage(self.frame((189, 220, 220), sequence=2))
+        self.backend.flush_stop()
+        state = self.backend.status(True)
+        args = dict(owner_epoch=state['status']['owner_epoch'], owns_thermostat=True, thermostat_fresh=True, thermostat_c=19, min_setpoint_c=5, max_setpoint_c=30, temperature_step_c=.5)
+        intent = self.backend.voltage_stop_intent(**args)
+        self.assertEqual(intent['mode'], 'HEAT')
+        self.assertLess(intent['setpoint_c'], state['room']['value'])
+        self.assertIsNone(self.backend.voltage_stop_intent(**(args | {'owner_epoch': args['owner_epoch'] - 1})))
+        self.assertEqual(self.backend.voltage_stop_intent(**(args | {'thermostat_fresh': False}))['action'], 'cannot_confirm_withdrawal')
+        self.backend.stop_request(self.request(kind='pause', request_id='supply-stop'), True)
+        args['owner_epoch'] = self.backend.status(True)['status']['owner_epoch']
+        self.assertIsNone(self.backend.voltage_stop_intent(**args))
+
+    def test_withdrawal_uses_thermostat_temperature_independently_of_room(self):
+        self.backend.accept_voltage(self.frame((189, 220, 220), sequence=2))
+        self.backend.flush_stop()
+        for room, thermostat in ((23, 19), (19, 23)):
+            self.backend._snapshot['room']['value'] = room
+            epoch = self.backend.status(True)['status']['owner_epoch']
+            args = dict(owner_epoch=epoch, owns_thermostat=True, thermostat_fresh=True,
+                        thermostat_c=thermostat, min_setpoint_c=5, max_setpoint_c=30, temperature_step_c=.5)
+            self.assertEqual(self.backend.voltage_stop_intent(**args)['setpoint_c'], thermostat - .5)
+        self.clock.advance(31)
+        self.assertEqual(self.backend.status(True)['room']['quality'], 'stale')
+        args['owner_epoch'] = self.backend.status(True)['status']['owner_epoch']
+        self.assertEqual(self.backend.voltage_stop_intent(**args)['setpoint_c'], 22.5)
+        self.backend.invalidate_source('synthetic-room-unavailable')
+        args['owner_epoch'] = self.backend.status(True)['status']['owner_epoch']
+        self.assertEqual(self.backend.voltage_stop_intent(**args)['setpoint_c'], 22.5)
+        self.assertEqual(self.backend.voltage_stop_intent(**(args | {'thermostat_c': None}))['action'], 'cannot_confirm_withdrawal')
