@@ -104,8 +104,11 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
         <p>
           {t.coast.status === "UNQUALIFIED_CONDITIONAL_COAST" &&
           t.coast.min !== null
-            ? "Мінімум " + fmt(t.coast.min) + " °C за " +
-              t.coast.hours.toFixed(1) + " год"
+            ? "Мінімум " +
+              fmt(t.coast.min) +
+              " °C за " +
+              t.coast.hours.toFixed(1) +
+              " год"
             : "Бракує даних погоди або моделі для сценарію"}
         </p>
         <p className="helper">
@@ -195,7 +198,9 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
         {t.plan.status === "VIRTUAL_CONDITIONAL" ? (
           <>
             <p>
-              <strong>Умовний сценарій на {t.plan.horizonHours.toFixed(1)} год</strong>
+              <strong>
+                Умовний сценарій на {t.plan.horizonHours.toFixed(1)} год
+              </strong>
               {" · "}
               {t.plan.powerKw === null
                 ? "режим котла невідомий"
@@ -405,9 +410,9 @@ export function LiveSettings({ api }: { api: LiveHAAPI }) {
       </Card>
       <Card title="Налаштування та модель">
         <p>
-          Денні та нічні цілі, дозволені години й режим потужності
-          зчитуються лише для умовного розрахунку, якщо прив’язані наявні
-          хелпери старого Heating AI.
+          Денні та нічні цілі, дозволені години й режим потужності зчитуються
+          лише для умовного розрахунку, якщо прив’язані наявні хелпери старого
+          Heating AI.
         </p>
         <p>
           Статус сценарію:{" "}

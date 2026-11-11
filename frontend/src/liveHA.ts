@@ -373,13 +373,17 @@ export class LiveHAAPI implements OperatorAPI {
     const safeTime = (x: unknown) =>
       typeof x === "number" && Number.isFinite(x) && x > 0 ? x : null;
     const coastRaw = statusAttrs?.coast_preview ?? null;
-    const coastValue = coastRaw && typeof coastRaw === "object" &&
-      !Array.isArray(coastRaw) ? coastRaw as Record<string, unknown> : {};
-    const coastNumber = (x: unknown) => typeof x === "number" &&
-      Number.isFinite(x) ? x : null;
+    const coastValue =
+      coastRaw && typeof coastRaw === "object" && !Array.isArray(coastRaw)
+        ? (coastRaw as Record<string, unknown>)
+        : {};
+    const coastNumber = (x: unknown) =>
+      typeof x === "number" && Number.isFinite(x) ? x : null;
     const coast: CoastSummary = {
-      status: coastValue.status === "UNQUALIFIED_CONDITIONAL_COAST"
-        ? "UNQUALIFIED_CONDITIONAL_COAST" : "UNAVAILABLE",
+      status:
+        coastValue.status === "UNQUALIFIED_CONDITIONAL_COAST"
+          ? "UNQUALIFIED_CONDITIONAL_COAST"
+          : "UNAVAILABLE",
       min: coastNumber(coastValue.temperature_min_c),
       end: coastNumber(coastValue.temperature_end_c),
       hours: coastNumber(coastValue.hours_covered) ?? 0,
