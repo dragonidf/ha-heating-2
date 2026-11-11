@@ -110,6 +110,25 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         assert watched.call_count == 1 and timed.call_count == 1
         assert entry.async_on_unload.call_count == 2
         assert not hasattr(hass, "services"), "Physical service transport must not exist"
+        # Exercise repeated HA source changes and the periodic safety observer.
+        # The subscriber count, state shape and allowed command count stay bounded.
+        fields = set(runtime.values)
+        state_event = watched.call_args.args[2]
+        periodic_tick = timed.call_args.args[1]
+        for i in range(300):
+            states[bindings["grid"]].state = (
+                "Відсутня мережа" if i % 3 == 0 else "Наявна мережа"
+            )
+            state_event(None)
+            if i % 3 == 0:
+                periodic_tick(None)
+            assert set(runtime.values) == fields
+            assert runtime.values["kernel"]["permit"] is False
+            assert runtime.values["kernel"]["intents"] == 0
+            assert runtime.values["fan"]["commands_sent"] == 0
+            assert len(runtime.listeners) == 0
+        assert watched.call_count == 1 and timed.call_count == 1
+        assert entry.async_on_unload.call_count == 2
         assert await component.async_unload_entry(hass, entry)
         assert remove.call_count == 1
         assert entry.entry_id not in hass.data[component.DOMAIN]
