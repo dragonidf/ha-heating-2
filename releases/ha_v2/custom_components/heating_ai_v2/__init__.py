@@ -36,6 +36,7 @@ class ShadowRuntime:
         self._coast_fault = False
         self._fan_state = None
         self.source_monitor = None
+        self.plan_rows: dict[str, dict[str, Any] | None] = {}
         self.refresh()
 
     @callback
@@ -55,7 +56,13 @@ class ShadowRuntime:
                     if role == "legacy_model" else {}
                 ),
             } if state is not None else None)
+        self.plan_rows = rows
         self.values = snapshot(rows)
+        self.values["virtual_plan"] = (
+            self.source_monitor.plan if self.source_monitor and self.source_monitor.plan
+            else {"status": "BLOCKED_INPUTS", "reason": "planner_not_ready",
+                  "commands_sent": 0, "proposal_is_command": False}
+        )
         from .forecast_sources import source_summary
         self.values["providers"] = (
             self.source_monitor.brief() if self.source_monitor
@@ -179,7 +186,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ))
         if "weather_forecast" in entry.data or "outage_calendar" in entry.data:
             from .source_monitor import SourceMonitor
-            monitor = SourceMonitor(hass, dict(entry.data), runtime.refresh)
+            monitor = SourceMonitor(
+                hass, dict(entry.data), runtime.refresh,
+                lambda: runtime.plan_rows,
+            )
             monitor.start()
             runtime.source_monitor = monitor
             runtime.refresh()
