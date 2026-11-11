@@ -89,6 +89,44 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     expect(api.view.original).toBe(null);
     expect(api.view.latest).toEqual([]);
   });
+  it("observes a fireplace and one local fan without bypassing manual stop", () => {
+    const selected: LiveBindings = {
+      ...bindings,
+      fireplace: "sensor.fireplace",
+      circulation: "fan.local",
+      fan_mode: "input_select.fan_mode",
+      fan_night: "input_number.night",
+      fan_standard: "input_number.standard",
+      fan_intense: "input_number.intense",
+      fan_backup: "input_boolean.backup",
+      fan_control: "input_boolean.fan_control",
+      recuperator: "switch.recuperator",
+      bath: "switch.bath",
+    };
+    const h = frame("Відсутня мережа");
+    h.states["sensor.fireplace"] = s("27.4", "°C");
+    h.states["fan.local"] = {
+      ...s("off"), attributes: { percentage: 42 },
+    };
+    h.states["input_select.fan_mode"] = s("Зупинити");
+    h.states["input_number.night"] = s("38", "%");
+    h.states["input_number.standard"] = s("42", "%");
+    h.states["input_number.intense"] = s("45", "%");
+    h.states["input_boolean.backup"] = s("on");
+    h.states["input_boolean.fan_control"] = s("on");
+    h.states["switch.recuperator"] = s("unavailable");
+    h.states["switch.bath"] = s("off");
+    const api = new LiveHAAPI(selected, h);
+    expect(api.telemetry.fireplaceC).toBe(27.4);
+    expect(api.telemetry.fireplaceDeltaC).toBe(6.1);
+    expect(api.telemetry.fanActual).toBe("off");
+    expect(api.telemetry.fanMode).toBe("Зупинити");
+    expect(api.telemetry.fanSpeeds).toEqual([38, 42, 45]);
+    expect(api.telemetry.fanBackupVerified).toBe(true);
+    expect(api.telemetry.ventilation).toEqual({ recuperator: null, bath: false });
+    expect(api.feed.value.permitted).toBe(false);
+    expect(api.control("arm", api.session).status).toBe("denied");
+  });
   it("reflects device updates as observed states only", () => {
     const api = new LiveHAAPI(bindings, frame());
     const old = api.feed.value.seq;
