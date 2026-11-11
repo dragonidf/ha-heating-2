@@ -62,6 +62,7 @@ jobs:
           assert (dest/'engine'/'planner'/'__init__.py').is_file()
           assert not (dest/'engine'/'ha_fake').exists()
           assert not (dest/'engine'/'simulator').exists()
+          subprocess.run(['python','tools/release/test_pure_engine.py'],check=True)
           assert (dest/'assets'/'livePanel.js').is_file()
           assert (dest/'manifest.json').is_file()
           manifest=json.loads((dest/'manifest.json').read_text())
