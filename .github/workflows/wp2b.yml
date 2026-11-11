@@ -8,6 +8,9 @@ jobs:
   frontend:
     name: WP2B ${{ matrix.browser }} unit and real browser checks
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      options: --user 1001
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -45,11 +48,18 @@ jobs:
           npm run format:check
           npm run test:coverage -- --reporter=default --reporter=json --outputFile=coverage/unit-results.json
           npm run build
-      - name: Install actual browsers and test-host dependencies only
+      - name: Verify pinned Playwright browser binaries and fonts
         working-directory: frontend
         run: |
-          npx playwright install --with-deps ${{ matrix.browser }}
-          sudo apt-get install -y fonts-dejavu-core
+          node - <<'JS'
+          const fs = require('node:fs');
+          const pw = require('@playwright/test');
+          const version = require('@playwright/test/package.json').version;
+          if (version !== '1.64.1') throw new Error('Playwright image/package mismatch: ' + version);
+          const browser = pw['${{ matrix.browser }}'];
+          if (!fs.existsSync(browser.executablePath())) throw new Error('Missing preinstalled browser: ' + browser.executablePath());
+          JS
+          fc-match 'DejaVu Sans' | grep -qi 'DejaVu'
       - name: Browser, accessibility, visual and failure matrix
         working-directory: frontend
         run: npm run test:browser -- --project='${{ matrix.browser }}-*'
