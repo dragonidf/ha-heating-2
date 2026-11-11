@@ -113,7 +113,10 @@ def conditional_plan(
     empty = _blocked("missing_real_inputs")
     if not isinstance(now, (float, int)) or not isfinite(now) or now <= 0:
         return empty
-    if not isinstance(weather, dict) or not 0 <= now - weather.get("received_at", -1) <= 3600:
+    issued_unknown_received = (weather or {}).get("received_at") if isinstance(weather, dict) else None
+    if (type(issued_unknown_received) not in (int, float)
+            or not isfinite(issued_unknown_received)
+            or not 0 <= now - issued_unknown_received <= 3600):
         return _blocked("weather_unavailable_or_old")
     hours = weather.get("hours")
     if not isinstance(hours, list) or not 2 <= len(hours) <= 72:
@@ -168,7 +171,7 @@ def conditional_plan(
         local = datetime.fromtimestamp(cursor, KYIV)
         minute = local.hour * 60 + local.minute
         a, b = times["sleep_start"], times["sleep_end"]
-        sleeping = a <= minute < b if a < b else minute >= a or minute < b
+        sleeping = (a <= minute < b if a < b else minute >= a or minute < b) if a != b else False
         target = nums["night_target"] if sleeping else nums["day_target"]
         upper = nums["night_upper"] if sleeping else nums["day_upper"]
         announced_outage = bool(
