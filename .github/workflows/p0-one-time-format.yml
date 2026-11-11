@@ -1,0 +1,37 @@
+name: One-time formatter for HA live-panel test
+on:
+  push:
+    branches:
+      - release/p0-native-live-ui-pipeline-20261111
+    paths:
+      - '.github/workflows/p0-one-time-format.yml'
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'dragonidf/ha-heating-2'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: release/p0-native-live-ui-pipeline-20261111
+          persist-credentials: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.19.0'
+      - name: Format ONLY the new UI smoke test
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npx prettier --write tests/live-panel.test.tsx
+      - name: Commit only formatter changes to this PR branch
+        run: |
+          git diff --check
+          git add -- frontend/tests/live-panel.test.tsx
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "style(v2): format native panel smoke test"
+            git push origin HEAD:release/p0-native-live-ui-pipeline-20261111
+          fi
