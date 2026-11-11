@@ -68,7 +68,11 @@ export class HeatingAIV2Panel extends HTMLElement {
           .filter((role) => typeof config[role] === "string")
           .map((role) => [role, config[role]]),
       ) as LiveBindings;
-      this.api = new LiveHAAPI(bindings, this.currentHass);
+      this.api = new LiveHAAPI(
+        bindings,
+        this.currentHass,
+        typeof config.entry_id === "string" ? config.entry_id : undefined,
+      );
       this.root.render(<LiveApp api={this.api} />);
     } catch {
       this.root.render(

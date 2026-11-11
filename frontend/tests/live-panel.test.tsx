@@ -52,6 +52,22 @@ function hass(grid = "Наявна мережа"): LiveHass {
       "sensor.kwh": source("160.7", "kWh"),
       "sensor.return_probe": source("22.1", "°C"),
       "sensor.fireplace": source("27.5", "°C"),
+      "sensor.v2_status": {
+        ...source("SHADOW"),
+        attributes: {
+          v2_entry_id: "synthetic-entry",
+          provider_summary: {
+            weather_status: "RECEIVED_ISSUED_UNKNOWN",
+            weather_hours_count: 23,
+            weather_horizon_end: Date.now() / 1000 + 20000,
+            weather_issued_at: null,
+            outage_status: "OUTAGE_EVENTS_ONLY",
+            next_outage_at: Date.now() / 1000 + 2400,
+            outages_upcoming_count: 2,
+            normal_grid_forecast_qualified: false,
+          },
+        },
+      },
       "fan.local": {
         ...source("off"),
         attributes: { percentage: 42 },
@@ -77,12 +93,14 @@ describe("Actual Home Assistant custom panel mounting", () => {
       hass: LiveHass;
       panel: { config: Record<string, string> };
     };
-    panel.panel = { config: mapping };
+    panel.panel = { config: { ...mapping, entry_id: "synthetic-entry" } };
     panel.hass = hass();
     document.body.appendChild(panel);
     await waitFor(() => {
       expect(panel.shadowRoot?.textContent).toContain("Зворотна лінія котла");
       expect(panel.shadowRoot?.textContent).toContain("Камін та циркуляція");
+      expect(panel.shadowRoot?.textContent).toContain("23 точок");
+      expect(panel.shadowRoot?.textContent).toContain("Час випуску погодного прогнозу");
       expect(panel.shadowRoot?.textContent).toContain("21,5");
       expect(panel.shadowRoot?.textContent).toContain("Зупинити");
       expect(panel.shadowRoot?.textContent).toContain("Реальні дані");

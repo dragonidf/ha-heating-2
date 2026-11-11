@@ -38,6 +38,8 @@ export type BaseBindings = Record<
 >;
 export type FanBindingRole =
   | "return_probe"
+  | "weather_forecast"
+  | "outage_calendar"
   | "fireplace"
   | "circulation"
   | "fan_mode"
@@ -52,6 +54,8 @@ export type LiveBindings = BaseBindings &
   Partial<Record<FanBindingRole, string>>;
 export const optionalRoles: FanBindingRole[] = [
   "return_probe",
+  "weather_forecast",
+  "outage_calendar",
   "fireplace",
   "circulation",
   "fan_mode",
@@ -63,7 +67,18 @@ export const optionalRoles: FanBindingRole[] = [
   "recuperator",
   "bath",
 ];
+export interface SourceSummary {
+  weatherStatus: string;
+  weatherHours: number;
+  weatherHorizonEnd: number | null;
+  weatherIssuedKnown: false;
+  outageStatus: string;
+  nextOutageAt: number | null;
+  outagesUpcomingCount: number;
+  gridForecastQualified: false;
+}
 export interface LiveTelemetry {
+  sources: SourceSummary;
   origin: "ha_last_known";
   room: number | null;
   thermostatMode: string | null;
@@ -173,6 +188,9 @@ export class LiveHAAPI implements OperatorAPI {
   private currentHass: LiveHass;
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
+    sources: {weatherStatus: "UNKNOWN", weatherHours: 0, weatherHorizonEnd: null,
+      weatherIssuedKnown: false, outageStatus: "UNKNOWN", nextOutageAt: null,
+      outagesUpcomingCount: 0, gridForecastQualified: false},
     room: null,
     thermostatMode: null,
     thermostatSetpoint: null,
@@ -196,6 +214,7 @@ export class LiveHAAPI implements OperatorAPI {
   constructor(
     private readonly bindings: LiveBindings,
     hass: LiveHass,
+    private readonly entryId?: string,
   ) {
     if (
       roles.some((role) => typeof bindings[role] !== "string") ||
@@ -266,8 +285,33 @@ export class LiveHAAPI implements OperatorAPI {
       : null;
     const thermostat = s("thermostat");
     const target = thermostat?.attributes.temperature;
+    const summary = this.entryId
+      ? Object.values(hass.states ?? {}).find(
+          (v) => v?.attributes.v2_entry_id === this.entryId,
+        )?.attributes.provider_summary
+      : null;
+    const p = summary && typeof summary === "object" && !Array.isArray(summary)
+      ? summary as Record<string, unknown>
+      : {};
+    const safeCount = (x: unknown) => typeof x === "number" &&
+      Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
+    const safeTime = (x: unknown) => typeof x === "number" &&
+      Number.isFinite(x) && x > 0 ? x : null;
+    const sources: SourceSummary = {
+      weatherStatus: p.weather_status === "RECEIVED_ISSUED_UNKNOWN"
+        ? "RECEIVED_ISSUED_UNKNOWN" : "UNKNOWN",
+      weatherHours: safeCount(p.weather_hours_count),
+      weatherHorizonEnd: safeTime(p.weather_horizon_end),
+      weatherIssuedKnown: false,
+      outageStatus: p.outage_status === "OUTAGE_EVENTS_ONLY"
+        ? "OUTAGE_EVENTS_ONLY" : "UNKNOWN",
+      nextOutageAt: safeTime(p.next_outage_at),
+      outagesUpcomingCount: safeCount(p.outages_upcoming_count),
+      gridForecastQualified: false,
+    };
     this.telemetry = {
       origin: "ha_last_known",
+      sources,
       room,
       thermostatMode: thermostat?.state ?? null,
       thermostatSetpoint:

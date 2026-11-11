@@ -76,6 +76,30 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
           · L3: {volt(t.voltages[2] ?? null)}
         </p>
       </Card>
+      <Card title="Погода та відключення · джерела прогнозу">
+        <p>
+          Погодинний прогноз:{" "}
+          {t.sources.weatherStatus === "RECEIVED_ISSUED_UNKNOWN"
+            ? t.sources.weatherHours + " точок"
+            : "не завантажено"}
+        </p>
+        <p className="helper">
+          Час випуску погодного прогнозу не підтверджено джерелом.
+          Отримання прогнозу не доводить точність теплової моделі.
+        </p>
+        <p>
+          Наступне оголошене відключення:{" "}
+          {t.sources.nextOutageAt === null
+            ? "невідомо"
+            : new Date(t.sources.nextOutageAt * 1000).toLocaleString("uk-UA", {
+                timeZone: "Europe/Kyiv",
+              })}
+        </p>
+        <p className="helper">
+          Календар містить лише оголошені відключення. Відсутність події
+          не означає підтвердженої наявності електроенергії.
+        </p>
+      </Card>
       <Card title="KWS · котел">
         <p>
           <strong>Сумарна активна потужність: {kw(t.kwsTotal)}</strong>
