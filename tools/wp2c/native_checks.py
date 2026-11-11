@@ -374,9 +374,9 @@ async def voltage_guards(session, admin, common, mutate, read, sample) -> list[s
         await subscription.connection.close()
     checks.append("native_idle_zigbee_voltage_expires_by_timer_without_fabricated_reports")
     current = await read("settings/get")
-    result = await mutate("settings/save", request_id="native-voltage-test-restore",
-                          expected_revision=current["revision"], values=current["values"] | {"stable_recovery_s": 0, "voltage_max_age_s": 30})
-    assert result["status"] == "saved"
+    await save_settings_once(read, lambda payload: admin.ok("heating_ai/settings/save", **payload),
+        common, current, current["values"] | {"stable_recovery_s": 0, "voltage_max_age_s": 30},
+        "native-voltage-test-restore")
     await report(9)
     return checks
 
