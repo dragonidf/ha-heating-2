@@ -25,7 +25,9 @@
           "fan_control": "Fan control enabled helper",
           "recuperator": "Recuperator relay (read-only)",
           "bath": "Bathroom extractor relay (read-only)",
-          "return_probe": "Return line temperature probe (°C) — read-only"
+          "return_probe": "Return line temperature probe (°C) — read-only",
+          "weather_forecast": "Weather entity (hourly forecast, read-only)",
+          "outage_calendar": "Outage calendar (events, read-only)"
         }
       }
     },

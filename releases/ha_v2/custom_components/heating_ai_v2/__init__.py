@@ -34,6 +34,7 @@ class ShadowRuntime:
         self._kernel_fault = False
         self._fan_fault = False
         self._fan_state = None
+        self.source_monitor = None
         self.refresh()
 
     @callback
@@ -50,6 +51,11 @@ class ShadowRuntime:
                                if role == "circulation" else {}),
             } if state is not None else None)
         self.values = snapshot(rows)
+        from .forecast_sources import source_summary
+        self.values["providers"] = (
+            self.source_monitor.brief() if self.source_monitor
+            else source_summary(None, None, 0.0)
+        )
         try:
             from .shadow_kernel import shadow_decision
             self.values['kernel'] = shadow_decision(self.values)
@@ -113,6 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def tick(_now: Any) -> None:
         runtime.refresh()
+        if runtime.source_monitor is not None:
+            runtime.source_monitor.schedule()
 
     forwarded = False
     panel_registered = False
@@ -140,7 +148,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, tick, timedelta(seconds=60),
             name='heating_ai_v2_shadow_monitor'
         ))
+        if "weather_forecast" in entry.data or "outage_calendar" in entry.data:
+            from .source_monitor import SourceMonitor
+            monitor = SourceMonitor(hass, dict(entry.data), runtime.refresh)
+            monitor.start()
+            runtime.source_monitor = monitor
+            runtime.refresh()
+            monitor.schedule()
     except Exception:
+        if runtime.source_monitor is not None:
+            await runtime.source_monitor.close()
         if panel_registered:
             frontend.async_remove_panel(hass, 'heating-ai-v2', warn_if_unknown=False)
         if forwarded:
@@ -157,5 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     frontend.async_remove_panel(hass, 'heating-ai-v2', warn_if_unknown=False)
     runtime: ShadowRuntime | None = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     if runtime is not None:
+        if runtime.source_monitor is not None:
+            await runtime.source_monitor.close()
         runtime.listeners.clear()
     return True

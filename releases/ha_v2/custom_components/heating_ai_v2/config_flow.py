@@ -15,7 +15,9 @@ from .telemetry import ROLES, OPTIONAL_ROLES
 def mapping_schema() -> probatio.Schema:
     fields: dict[Any, Any] = {}
     for role in ROLES + OPTIONAL_ROLES:
-        domain = ("climate" if role == "thermostat" else
+        domain = ("weather" if role == "weather_forecast" else
+                  "calendar" if role == "outage_calendar" else
+                  "climate" if role == "thermostat" else
                   "input_select" if role in ("grid", "fan_mode") else
                   "input_number" if role in ("fan_night", "fan_standard", "fan_intense") else
                   "input_boolean" if role in ("fan_backup", "fan_control") else

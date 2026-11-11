@@ -74,6 +74,8 @@ class ShadowSensor(SensorEntity):
             "kernel_reason": values.get("kernel", {}).get("reason", "unavailable"),
             "kernel_permit": False,
             "kernel_intents": 0,
+            "v2_entry_id": self.runtime.entry.entry_id,
+            "provider_summary": values.get("providers", {}),
             "return_c_last_known": values["return_c_last_known"],
             "fireplace_c_last_known": values["fireplace_c_last_known"],
             "fireplace_delta_c_last_known": values["fireplace_delta_c_last_known"],
