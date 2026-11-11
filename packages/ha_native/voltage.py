@@ -5,6 +5,7 @@ changes require the inclusive inward band continuously for monotonic recovery
 dwell. Eligibility cannot issue HEAT, resume manual control, or operate a pump.
 """
 from dataclasses import dataclass
+from decimal import Decimal, ROUND_FLOOR
 from typing import Literal, cast
 
 from packages.contracts import Clock, QualityStatus, SourceKind
@@ -302,16 +303,39 @@ def decode_voltage_frame(raw: object) -> VoltageFrame:
                         cast(bool, value.get("protection_qualified", False)), feed)
 
 
-def synthetic_voltage_withdrawal(state: VoltageState, *, room_c: float | None,
-                                 room_fresh: bool, thermostat_fresh: bool,
+def synthetic_voltage_withdrawal(state: VoltageState, *, thermostat_c: float | None,
+                                 min_setpoint_c: float | None, max_setpoint_c: float | None,
+                                 temperature_step_c: float | None, thermostat_fresh: bool,
                                  owns_thermostat: bool, manual_stop: bool) -> dict[str, JSON] | None:
-    """Non-actuating owned-request fence; known voltage faults never select AUTO.
+    """Test-only HEAT intent based on the thermostat's own qualified sensor.
 
-    No action is inferred when STOP/ownership/temperature evidence is missing.
-    Hardware setpoint bounds and real output readiness remain commissioning blockers.
+    Require at least one full supported step below that sensor, aligned to the
+    validated minimum. A diagnostic never claims contact opening/device OFF.
     """
-    if state.eligible or manual_stop or not owns_thermostat or not room_fresh or not thermostat_fresh or room_c is None:
+    if state.eligible or manual_stop or not owns_thermostat:
         return None
-    number(room_c)
-    return {"mode": "HEAT", "setpoint_c": room_c - 1, "action": "withdraw_demand",
-            "physical_authority": False, "scope": "synthetic_only"}
+    diagnostic: dict[str, JSON] = {'action': 'cannot_confirm_withdrawal',
+        'reason': 'thermostat_temperature_missing_or_stale',
+        'physical_authority': False, 'scope': 'synthetic_only'}
+    if not thermostat_fresh or thermostat_c is None:
+        return diagnostic
+    try:
+        for value in (thermostat_c, min_setpoint_c, max_setpoint_c, temperature_step_c):
+            number(value)
+        current, minimum, maximum, step = (Decimal(str(v)) for v in
+            (thermostat_c, min_setpoint_c, max_setpoint_c, temperature_step_c))
+        if minimum >= maximum or step <= 0 or step > maximum - minimum:
+            raise ValueError('Invalid thermostat bounds/step')
+        target = min(maximum, current - step)
+        steps = ((target - minimum) / step).to_integral_value(rounding=ROUND_FLOOR)
+        candidate = minimum + steps * step
+        value = float(candidate)
+        if (steps < 0 or not minimum <= candidate <= maximum or candidate > current - step
+                or Decimal(str(value)) != candidate or not value < thermostat_c):
+            diagnostic['reason'] = 'no_supported_below_temperature_setpoint'
+            return diagnostic
+    except (ValueError, TypeError, ArithmeticError):
+        diagnostic['reason'] = 'thermostat_limits_or_temperature_unqualified'
+        return diagnostic
+    return {'mode': 'HEAT', 'setpoint_c': value, 'action': 'withdraw_demand',
+            'physical_authority': False, 'scope': 'synthetic_only'}

@@ -65,17 +65,36 @@ class SupplyGateTests(unittest.TestCase):
 
     def test_known_fault_withdraws_only_owned_fresh_manual_heat_never_auto(self):
         bad = evaluate_voltage(self.policy, self.ready(100, (199, 220, 220)), clock())
-        args = dict(room_c=21, room_fresh=True, thermostat_fresh=True, owns_thermostat=True, manual_stop=False)
+        args = dict(thermostat_c=19, min_setpoint_c=5, max_setpoint_c=30, temperature_step_c=.5, thermostat_fresh=True, owns_thermostat=True, manual_stop=False)
         intent = synthetic_voltage_withdrawal(bad, **args)
         self.assertEqual(intent['mode'], 'HEAT')
         self.assertLess(intent['setpoint_c'], 21)
         self.assertFalse(intent['physical_authority'])
-        for field in ('room_fresh', 'thermostat_fresh', 'owns_thermostat'):
+        for field in ('owns_thermostat',):
             self.assertIsNone(synthetic_voltage_withdrawal(bad, **(args | {field: False})))
         self.assertIsNone(synthetic_voltage_withdrawal(bad, **(args | {'manual_stop': True})))
-        self.assertIsNone(synthetic_voltage_withdrawal(bad, **(args | {'room_c': None})))
+        self.assertEqual(synthetic_voltage_withdrawal(bad, **(args | {'thermostat_c': None}))['action'], 'cannot_confirm_withdrawal')
 
     def test_decoder_defaults_unknown_not_fabricated_ready(self):
         empty = decode_voltage_frame({'phases': []})
         self.assertIsNone(empty.feed)
         self.assertFalse(evaluate_voltage(self.policy, empty, clock()).eligible)
+
+    def test_withdrawal_respects_thermostat_bounds_step_and_diagnostics(self):
+        bad = evaluate_voltage(self.policy, self.ready(100, (199, 220, 220)), clock())
+        args = dict(thermostat_c=19.3, min_setpoint_c=5.1, max_setpoint_c=30,
+                    temperature_step_c=.5, thermostat_fresh=True, owns_thermostat=True, manual_stop=False)
+        intent = synthetic_voltage_withdrawal(bad, **args)
+        self.assertAlmostEqual(intent['setpoint_c'], 18.6)
+        self.assertLessEqual(intent['setpoint_c'], args['thermostat_c'] - .5)
+        for change in ({'thermostat_c': None}, {'thermostat_fresh': False},
+                       {'min_setpoint_c': None}, {'max_setpoint_c': None},
+                       {'thermostat_c': 5.1}, {'thermostat_c': 5.2},
+                       {'temperature_step_c': 0}, {'temperature_step_c': float('nan')},
+                       {'thermostat_c': float('inf')}, {'min_setpoint_c': 31}):
+            with self.subTest(change=change):
+                diagnostic = synthetic_voltage_withdrawal(bad, **(args | change))
+                self.assertEqual(diagnostic['action'], 'cannot_confirm_withdrawal')
+                self.assertNotIn('setpoint_c', diagnostic)
+                self.assertNotIn('mode', diagnostic)
+                self.assertFalse(diagnostic['physical_authority'])
