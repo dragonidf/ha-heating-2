@@ -66,7 +66,9 @@ afterEach(() => {
 
 describe("Actual Home Assistant custom panel mounting", () => {
   it("mounts the real 3-tab UI and updates from HA without demo fallback", async () => {
-    const panel = document.createElement("heating-ai-v2-panel") as HTMLElement & {
+    const panel = document.createElement(
+      "heating-ai-v2-panel",
+    ) as HTMLElement & {
       hass: LiveHass;
       panel: { config: Record<string, string> };
     };
@@ -82,38 +84,46 @@ describe("Actual Home Assistant custom panel mounting", () => {
     });
 
     panel.hass = hass("Відсутня мережа");
-    await waitFor(() => expect(panel.shadowRoot?.textContent).toContain(
-      "Відсутня мережа",
-    ));
+    await waitFor(() =>
+      expect(panel.shadowRoot?.textContent).toContain("Відсутня мережа"),
+    );
     expect(panel.shadowRoot?.textContent).toContain("230.0 В");
 
-    const history = [...(panel.shadowRoot?.querySelectorAll("nav button") ?? [])]
-      .find((node) => node.textContent?.includes("Історія"));
+    const history = [
+      ...(panel.shadowRoot?.querySelectorAll("nav button") ?? []),
+    ].find((node) => node.textContent?.includes("Історія"));
     expect(history).toBeDefined();
     fireEvent.click(history!);
-    await waitFor(() => expect(panel.shadowRoot?.textContent).toContain(
-      "Міграцію історії не завершено",
-    ));
-    const settings = [...(panel.shadowRoot?.querySelectorAll("nav button") ?? [])]
-      .find((node) => node.textContent?.includes("Налаштування"));
+    await waitFor(() =>
+      expect(panel.shadowRoot?.textContent).toContain(
+        "Міграцію історії не завершено",
+      ),
+    );
+    const settings = [
+      ...(panel.shadowRoot?.querySelectorAll("nav button") ?? []),
+    ].find((node) => node.textContent?.includes("Налаштування"));
     fireEvent.click(settings!);
-    await waitFor(() => expect(panel.shadowRoot?.textContent).toContain(
-      "Налаштування та модель",
-    ));
+    await waitFor(() =>
+      expect(panel.shadowRoot?.textContent).toContain("Налаштування та модель"),
+    );
     expect(panel.shadowRoot?.querySelector("[data-theme]")).not.toBeNull();
   });
 
   it("refuses missing bindings rather than showing synthetic readings", async () => {
-    const panel = document.createElement("heating-ai-v2-panel") as HTMLElement & {
+    const panel = document.createElement(
+      "heating-ai-v2-panel",
+    ) as HTMLElement & {
       hass: LiveHass;
       panel: { config: Record<string, string> };
     };
     panel.panel = { config: { ...mapping, kws_l3: "" } };
     panel.hass = hass();
     document.body.appendChild(panel);
-    await waitFor(() => expect(panel.shadowRoot?.textContent).toContain(
-      "Не вдалося перевірити прив'язки",
-    ));
+    await waitFor(() =>
+      expect(panel.shadowRoot?.textContent).toContain(
+        "Не вдалося перевірити прив'язки",
+      ),
+    );
     expect(panel.shadowRoot?.textContent).not.toContain("Симуляція");
   });
 });
