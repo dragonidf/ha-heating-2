@@ -73,3 +73,42 @@ class NativeHealthTests(unittest.TestCase):
         with self.assertRaises(StoreError):
             self.backend.open()
         self.assertFalse(self.backend._opened)
+
+    def test_one_recovery_report_expires_before_dwell_without_bypassing_freshness(self):
+        from packages.contracts import Reading, Quality, QualityStatus, Provenance, SourceKind, Unit
+        from packages.offline.contracts import SourceEvent
+        from tests.wp2c_meter.test_voltage import frame
+        self.backend._health_policy = HealthPolicy(room_timeout_s=60, recovery_s=30, cold_grace_s=0)
+        self.clock.advance(61)
+        self.backend.accept_voltage(frame(self.clock.utc));self.backend.flush_stop()
+        lost = self.backend.status(True)
+        self.assertEqual(lost['system_health']['mode'], 'AUTO_PROPOSED')
+        now = self.clock.utc
+        reading = Reading(physical_id='synthetic.native.room', source_id='synthetic.native.room',
+            value=21.8, unit=Unit.CELSIUS, observed_at=now, received_at=now,
+            quality=Quality(status=QualityStatus.VALID, age_s=0, reason='synthetic-recovery'),
+            provenance=Provenance(kind=SourceKind.DIRECT, independent=True), evidence_ids=())
+        self.assertTrue(self.backend.accept_source(SourceEvent('synthetic.recover-once', 'synthetic.native.room', 1, now, reading)))
+        self.backend.flush_stop()
+        fresh = self.backend.status(True)
+        self.assertEqual(fresh['system_health']['mode'], 'RECOVERING')
+        self.clock.advance(30.1)
+        # Keep only electrical evidence current; do not fabricate another room report.
+        self.backend.accept_voltage(frame(self.clock.utc));self.backend.flush_stop()
+        after = self.backend.status(True)
+        self.assertEqual(after['room']['observed'], now)
+        self.assertEqual(after['room']['quality'], 'stale')
+        self.assertFalse(after['permitted'])
+        self.assertIsNone(after['system_health']['intent'])
+        self.assertIsNone(after['system_health']['proposal'])
+        self.assertEqual(after['system_health']['mode'], 'RECOVERING')
+        self.assertIsNone(after['health_memory']['recovery_since'])
+        self.assertEqual(after['health_memory']['auto_owner'], 'synthetic.owner')
+
+    def test_missing_reading_does_not_refresh_report_provenance(self):
+        from packages.offline.contracts import SourceEvent
+        before = self.backend._room_report
+        self.clock.advance(1)
+        self.assertFalse(self.backend.accept_source(SourceEvent('synthetic.missing-reading', 'synthetic.native.room', 1, self.clock.utc, None)))
+        self.assertEqual(self.backend._room_report, before)
+        self.assertNotEqual(self.backend.status(True)['room']['quality'], 'valid')

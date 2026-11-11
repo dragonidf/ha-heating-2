@@ -523,7 +523,7 @@ class NativeBackend:
             try:
                 accepted = self._adapter.ingest(event)
                 # Explicit qualified reports/heartbeats are distinct from a value change.
-                if (accepted and event.entity == 'synthetic.native.room' and event.author == 'sensor'
+                if (accepted and event.reading is not None and event.entity == 'synthetic.native.room' and event.author == 'sensor'
                         and event.reading.quality.status.value == 'valid'
                         and event.reading.provenance.independent
                         and event.reading.provenance.kind.value == 'direct'

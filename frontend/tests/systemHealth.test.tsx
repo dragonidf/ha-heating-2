@@ -79,3 +79,15 @@ it("validates optional shared snapshot health and rejects malformed or fake phys
   ])
     expect(() => readSnapshot({ ...s, system_health: bad })).toThrow();
 });
+it("labels a HEAT proposal as proposed rather than completed handoff", () => {
+  const h = health();
+  h.mode = "HEAT_PROPOSED";
+  h.components = h.components.map((c) => ({
+    ...c,
+    fallback_action: "HEAT_PROPOSED",
+  }));
+  const ui = render(<SystemHealth health={h} />);
+  fireEvent.click(ui.getByText(/Стан системи/));
+  expect(ui.getAllByText(/Запропоновано повернення HEAT/)).toHaveLength(6);
+  expect(ui.getByText(/Фізичний стан не підтверджений/)).toBeTruthy();
+});

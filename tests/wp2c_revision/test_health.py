@@ -141,3 +141,13 @@ class HealthTests(unittest.TestCase):
         self.assertIsNone(blocked['proposal'])
         electrical, _ = self.step(self.lost(electrical_eligible=False), 102, memory)
         self.assertNotEqual((electrical['proposal'] or {}).get('mode'), 'AUTO')
+
+    def test_heat_proposal_keeps_unacknowledged_fallback_owner_and_label(self):
+        _, memory = self.step(self.lost())
+        _, memory = self.step(self.inputs(), 101, memory)
+        recovered, memory = self.step(self.inputs(), 131, memory)
+        self.assertEqual(recovered['mode'], 'HEAT_PROPOSED')
+        self.assertEqual(memory.auto_owner, 'synthetic.owner')
+        self.assertEqual(recovered['proposal']['stage'], 'proposed')
+        self.assertFalse(recovered['proposal']['physical_authority'])
+        self.assertTrue(all(c['fallback_action'] == 'HEAT_PROPOSED' and not c['physical_verified'] for c in recovered['components']))

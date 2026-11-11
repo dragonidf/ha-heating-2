@@ -83,7 +83,7 @@ class HealthMemory:
             else:
                 number(value, nonnegative=True)
             setattr(result, key, value)
-        require(type(raw['transition_seq']) is int and cast(int, raw['transition_seq']) >= 0, 'Invalid intent sequence')
+        require(type(raw['transition_seq']) is int and raw['transition_seq'] >= 0, 'Invalid intent sequence')
         result.transition_seq = cast(int, raw['transition_seq'])
         proposal = raw['last_proposal']
         require(proposal is None or type(proposal) is dict, 'Invalid proposal record')
@@ -162,7 +162,7 @@ def project_health(inputs: HealthInputs, *, now: float, mono: float, boot: str,
                 m.recovery_since, m.recovered_report = mono, inputs.room_report_id
             if mono - m.recovery_since >= policy.recovery_s:
                 intent = {'mode': 'HEAT', 'action': 'proposed_recovery', 'owner': m.auto_owner}
-                m.auto_owner, m.recovery_since, m.mode = None, None, 'NORMAL'
+                m.mode = 'HEAT_PROPOSED'
                 event = 'Джерело вітальні відновлено. Запропоновано повернення до HEAT за планом.'
         else:
             m.recovery_since = None
@@ -183,7 +183,7 @@ def project_health(inputs: HealthInputs, *, now: float, mono: float, boot: str,
     if guards and m.last_proposal is not None:
         action = m.last_proposal.get('action')
         if ((m.mode == 'AUTO_PROPOSED' and action == 'proposed_fallback' and inputs.electrical_eligible and thermostat_ok and confirmed_loss)
-            or (m.mode == 'NORMAL' and action == 'proposed_recovery' and room_ok and inputs.electrical_eligible and thermostat_ok and inputs.plan_ok and not inputs.one_shot_blocked)
+            or (m.mode == 'HEAT_PROPOSED' and action == 'proposed_recovery' and room_ok and inputs.electrical_eligible and thermostat_ok and inputs.plan_ok and not inputs.one_shot_blocked)
             or (m.mode == 'ELECTRICAL_INHIBIT' and action in ('withdraw_demand', 'cannot_confirm_withdrawal'))):
             active_proposal = deepcopy(m.last_proposal)
     notification = None

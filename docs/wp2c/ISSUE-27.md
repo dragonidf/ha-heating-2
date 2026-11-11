@@ -17,3 +17,11 @@ Focused validation:
 - `git diff --check`:PASS.
 
 No general audit or manual full-CI execution/polling. Draft implementation/self-tests only; independent acceptance pending.
+
+## PR28 focused review correction
+
+Strict mypy's four errors were reproduced: redundant cast on a checked sequence and missing None-narrowing of SourceEvent.reading. Removed only the redundant cast and added the real reading guard; missing-reading provenance remains fail-closed. `python -m mypy`:39 files PASS.19 directly related health/backend regressions PASS, including a real NativeBackend fake-clock test with one fresh report, independently refreshed electrical evidence and no second room report at30.1s. The room observation becomes stale, recovery dwell resets and no HEAT proposal is active.
+
+**Unresolved policy blocker:** with native measurement freshness30s and health recovery30s, a single room report cannot reliably complete recovery after30s. This revision does not extend measurement validity, forge samples from heartbeats or reduce dwell. A separately reviewed, source-provenance-qualified measurement freshness policy is required for reliable sparse-report recovery. The proposed10800s report-liveness timeout is not equivalent to model measurement validity. G1/B03/B04/B05 remain BLOCKED.
+
+A HEAT proposal now retains fallback ownership and the explicit HEAT_PROPOSED state. It is never NORMAL/acknowledged on proposal alone. Physical ACK/handoff remains absent; proposals, including UI labels, are explicitly unverified. New pure/backend tests cover retained ownership/proposed labels and no unsafe takeover; native policy thresholds and production are unchanged. Final automatic CI is recorded by PR checks/description; no manual full-CI trigger.
