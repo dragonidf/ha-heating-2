@@ -68,11 +68,9 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         eid.endswith("kws_l2") else "one_physical_meter",
     ))
     unsubs = [Mock(), Mock()]
-    async def fake_track(*args, **kwargs):
-        raise AssertionError("Unexpected async watcher")
     with (
         patch.object(component.er, "async_get", return_value=registry),
-        patch.object(component.panel_custom, "async_register_panel") as panel,
+        patch.object(component.panel_custom, "async_register_panel", new_callable=Mock) as panel,
         patch.object(component.frontend, "async_remove_panel") as remove,
         patch.object(component, "async_track_state_change_event", return_value=unsubs[0]) as watched,
         patch.object(component, "async_track_time_interval", return_value=unsubs[1]) as timed,
