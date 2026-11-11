@@ -13,6 +13,8 @@ ROLES = (
     "voltage_l1", "voltage_l2", "voltage_l3",
     "kws_l1", "kws_l2", "kws_l3", "kws_energy",
 )
+OPTIONAL_ROLES = ("fireplace", "circulation", "fan_mode", "fan_night", "fan_standard", "fan_intense", "fan_backup", "fan_control", "recuperator", "bath",)
+
 _UNITS = {
     "room": "°C",
     "voltage_l1": "V", "voltage_l2": "V", "voltage_l3": "V",
@@ -53,6 +55,23 @@ def snapshot(rows: Mapping[str, Mapping[str, Any] | None]) -> dict[str, Any]:
     unavailable = [name for name in ROLES
                    if rows.get(name) is None
                    or rows[name].get("state") in ("unavailable", "unknown", None)]
+    fireplace = _number(rows.get("fireplace"), "°C", -30, 65)
+    delta = round(fireplace - room, 2) if fireplace is not None and room is not None else None
+    fan_state = (rows.get("circulation") or {}).get("state")
+    if fan_state not in ("on", "off"):
+        fan_state = None
+    fan_attrs = (rows.get("circulation") or {}).get("attributes") or {}
+    fan_pct = fan_attrs.get("percentage")
+    fan_pct = float(fan_pct) if type(fan_pct) in (int, float) and 0 <= fan_pct <= 100 else None
+    mode = (rows.get("fan_mode") or {}).get("state")
+    if mode not in ("Авто", "Ручний запуск", "Зупинити"):
+        mode = None
+    speeds = {role: _number(rows.get(role), "%", 0, 100) for role in
+              ("fan_night", "fan_standard", "fan_intense")}
+    def binary(role: str) -> bool | None:
+        state = (rows.get(role) or {}).get("state")
+        return True if state == "on" else False if state == "off" else None
+    vent = {role: binary(role) for role in ("recuperator", "bath")}
     return {
         "mode": "SHADOW", "commands_enabled": False,
         "physical_ack": False, "contacts_open": None,
@@ -64,10 +83,17 @@ def snapshot(rows: Mapping[str, Mapping[str, Any] | None]) -> dict[str, Any]:
         "kws_total_kw_last_known": total,
         "kws_energy_kwh_last_known": energy,
         "kws_stage": "UNCALIBRATED",
+        "fireplace_c_last_known": fireplace, "fireplace_delta_c_last_known": delta,
+        "circulation_last_known": fan_state, "circulation_percentage_last_known": fan_pct,
+        "fan_mode_last_known": mode, "fan_speed_percent_last_known": speeds,
+        "fan_backup_verified_last_known": binary("fan_backup"),
+        "fan_control_enabled_last_known": binary("fan_control"),
+        "ventilation_last_known": vent,
+        "fireplace_heat_proven": False, "fan_commands_enabled": False,
         "kws_value_semantics": "HA_last_known_not_verified_raw_sample",
         "unavailable_sources": unavailable,
         "ha_last_reported": {
             name: (rows.get(name) or {}).get("last_reported")
-            for name in ROLES
+            for name in ROLES + OPTIONAL_ROLES
         },
     }

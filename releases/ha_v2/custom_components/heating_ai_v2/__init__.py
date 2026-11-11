@@ -17,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 
 from .const import DOMAIN
-from .telemetry import ROLES, snapshot
+from .telemetry import ROLES, OPTIONAL_ROLES, snapshot
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ShadowRuntime:
     @callback
     def refresh(self) -> None:
         rows: dict[str, dict[str, Any] | None] = {}
-        for role in ROLES:
+        for role in (*ROLES, *(role for role in OPTIONAL_ROLES if role in self.entry.data)):
             entity_id = self.entry.data[role]
             state = self.hass.states.get(entity_id)
             rows[role] = ({
@@ -62,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     if any(isinstance(row, ShadowRuntime) for row in hass.data[DOMAIN].values()):
         return False
-    if set(entry.data) != set(ROLES) or len(set(entry.data.values())) != len(ROLES):
+    if (not set(ROLES).issubset(entry.data)
+            or not set(entry.data).issubset(set(ROLES + OPTIONAL_ROLES))
+            or len(set(entry.data.values())) != len(entry.data)):
         raise ConfigEntryError("Incomplete or duplicate shadow bindings")
 
     registry = er.async_get(hass)
@@ -111,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         panel_registered = True
         entry.async_on_unload(async_track_state_change_event(
-            hass, [entry.data[role] for role in ROLES], changed
+            hass, list(entry.data.values()), changed
         ))
         entry.async_on_unload(async_track_time_interval(
             hass, tick, timedelta(seconds=60),

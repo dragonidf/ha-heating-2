@@ -14,7 +14,17 @@
           "kws_l1": "KWS local active power L1 (kW)",
           "kws_l2": "KWS local active power L2 (kW)",
           "kws_l3": "KWS local active power L3 (kW)",
-          "kws_energy": "KWS local total energy (kWh)"
+          "kws_energy": "KWS local total energy (kWh)",
+          "fireplace": "Fireplace temperature (°C)",
+          "circulation": "Air circulation fan (read-only)",
+          "fan_mode": "Fan mode helper",
+          "fan_night": "Fan speed - night (%)",
+          "fan_standard": "Fan speed - day (%)",
+          "fan_intense": "Fan speed - intense (%)",
+          "fan_backup": "Fan backup-power verified helper",
+          "fan_control": "Fan control enabled helper",
+          "recuperator": "Recuperator relay (read-only)",
+          "bath": "Bathroom extractor relay (read-only)"
         }
       }
     },
