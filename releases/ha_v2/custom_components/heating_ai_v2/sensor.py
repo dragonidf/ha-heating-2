@@ -77,6 +77,7 @@ class ShadowSensor(SensorEntity):
             "v2_entry_id": self.runtime.entry.entry_id,
             "provider_summary": values.get("providers", {}),
             "coast_preview": values.get("coast", {}),
+            "virtual_plan": values.get("virtual_plan", {}),
             "return_c_last_known": values["return_c_last_known"],
             "fireplace_c_last_known": values["fireplace_c_last_known"],
             "fireplace_delta_c_last_known": values["fireplace_delta_c_last_known"],
