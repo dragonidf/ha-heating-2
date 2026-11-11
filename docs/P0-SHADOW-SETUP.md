@@ -30,3 +30,19 @@ This is a **separate** Home Assistant custom integration, `heating_ai_v2`, outsi
 - The v2 observation keeps bounded in-memory fan state only. Restarts do not re-arm heating or automatically replay pending fan commands. Persistent errors log once per fault episode instead of flooding the logger. There is exactly one periodic safety observer (60s), cleaned up on entry unload.
 - `fan.tsirkuliatsiia_povitria_lokal` should be bound as the **single** circulation fan; its cloud alias refers to the same physical device and is not an independent witness. Existing `Зупинити` mode must be preserved, not overwritten by v2 setup.
 - This release remains read-only, not the full P0/P1 controller. Shadow running state and manual cutover are separate acceptance gates; the legacy fan and boiler automations remain active until supervised ownership transfer.
+
+
+## Real future-source inputs (native HA, zero services)
+
+Optional roles `weather_forecast` and `outage_calendar` bind an existing HA
+WeatherEntity with hourly support and an existing timetable calendar. The v2
+SHADOW subscribes directly to WeatherEntity hourly updates and uses the native
+CalendarEntity async_get_events read API, once every 30 minutes at most; there
+is **no service registry or device command path**. Invalid/missing providers
+yield UNKNOWN, never fresh evidence or an assumed grid-on window.
+
+Important: HA weather forecast returns an hourly temperature series but generally
+does not expose the provider's original forecast issuance time. We retain the
+actual v2 receipt time and mark issuance UNKNOWN. The outage calendar gives
+explicit off events, not guaranteed normal-grid coverage outside those events.
+Do not execute the optimizer's physical plan on these inputs before G4/G5/G6.

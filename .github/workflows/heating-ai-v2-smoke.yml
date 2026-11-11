@@ -5,6 +5,7 @@ on:
       - 'releases/ha_v2/custom_components/heating_ai_v2/**'
       - 'tests/wp2c_revision/test_live_shadow_v2.py'
       - 'tools/release/test_ha2026_v2_lifecycle.py'
+      - 'tests/wp2c_revision/test_forecast_sources_v2.py'
       - '.github/workflows/heating-ai-v2-smoke.yml'
 permissions:
   contents: read
@@ -22,7 +23,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Run read-only source and zero-value regressions
-        run: python -m unittest tests.wp2c_revision.test_live_shadow_v2 -v
+        run: python -m unittest tests.wp2c_revision.test_live_shadow_v2 tests.wp2c_revision.test_forecast_sources_v2 -v
       - name: Install exact HA release in disposable CI environment only
         run: python -m pip install --disable-pip-version-check 'homeassistant==2026.11.0'
       - name: Verify supported HA imports and config form
