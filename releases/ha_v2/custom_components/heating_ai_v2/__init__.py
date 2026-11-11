@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN]['_static'] = True
         await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
         forwarded = True
-        panel_custom.async_register_panel(
+        await panel_custom.async_register_panel(
             hass, frontend_url_path='heating-ai-v2',
             webcomponent_name='heating-ai-v2-panel',
             sidebar_title='Heating AI 2.0', sidebar_icon='mdi:radiator',
