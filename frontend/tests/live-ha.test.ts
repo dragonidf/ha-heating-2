@@ -2,13 +2,21 @@ import { describe, expect, it } from "vitest";
 import { LiveHAAPI, type LiveBindings, type LiveHass } from "../src/liveHA";
 
 const bindings: LiveBindings = {
-  thermostat: "climate.boiler", room: "sensor.living", grid: "input_select.grid",
-  voltage_l1: "sensor.voltage_a", voltage_l2: "sensor.voltage_b", voltage_l3: "sensor.voltage_c",
-  kws_l1: "sensor.kws_a", kws_l2: "sensor.kws_b", kws_l3: "sensor.kws_c",
+  thermostat: "climate.boiler",
+  room: "sensor.living",
+  grid: "input_select.grid",
+  voltage_l1: "sensor.voltage_a",
+  voltage_l2: "sensor.voltage_b",
+  voltage_l3: "sensor.voltage_c",
+  kws_l1: "sensor.kws_a",
+  kws_l2: "sensor.kws_b",
+  kws_l3: "sensor.kws_c",
   kws_energy: "sensor.kws_energy",
 };
 const s = (state: string, unit = "", last = new Date().toISOString()) => ({
-  state, last_changed: last, last_reported: last,
+  state,
+  last_changed: last,
+  last_reported: last,
   attributes: { unit_of_measurement: unit },
 });
 function frame(grid = "Наявна мережа"): LiveHass {
@@ -56,9 +64,9 @@ describe("Real HA v2 live bridge (no actuator)", () => {
     h.states["sensor.kws_b"] = s("1500", "W");
     const api = new LiveHAAPI(bindings, h);
     expect(api.telemetry.kwsTotal).toBe(null);
-    expect(() => new LiveHAAPI(
-      { ...bindings, kws_l2: bindings.kws_l1 }, h,
-    )).toThrow();
+    expect(
+      () => new LiveHAAPI({ ...bindings, kws_l2: bindings.kws_l1 }, h),
+    ).toThrow();
   });
   it("unknown/unavailable grid never equals availability", () => {
     const api = new LiveHAAPI(bindings, frame("unavailable"));

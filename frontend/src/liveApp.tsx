@@ -15,43 +15,78 @@ export function LiveApp({ api }: { api: LiveHAAPI }) {
   };
   return (
     <div className="app" data-theme={theme}>
-      <a className="skip-link" href="#live-main" onClick={(e) => {
-        e.preventDefault();
-        main.current?.focus();
-      }}>До основного вмісту</a>
+      <a
+        className="skip-link"
+        href="#live-main"
+        onClick={(e) => {
+          e.preventDefault();
+          main.current?.focus();
+        }}
+      >
+        До основного вмісту
+      </a>
       <header className="topbar">
         <div className="brand">
-          <div className="brand-mark"><Icon name="fire" /></div>
+          <div className="brand-mark">
+            <Icon name="fire" />
+          </div>
           <div>
-            <strong>Heating<span>AI</span></strong>
+            <strong>
+              Heating<span>AI</span>
+            </strong>
             <span className="brand-caption">Комфорт під контролем</span>
           </div>
           <Badge tone="control">Реальні дані · лише читання</Badge>
         </div>
         <nav className="main-nav" aria-label="Основні вкладки">
-          {([
-            ["home", "Дім"], ["history", "Історія"], ["settings", "Налаштування"],
-          ] as const).map(([id, label]) => (
-            <button key={id} aria-current={tab === id ? "page" : undefined}
-                    onClick={() => navigate(id)}>
-              <Icon name={id} /><span>{label}</span>
+          {(
+            [
+              ["home", "Дім"],
+              ["history", "Історія"],
+              ["settings", "Налаштування"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              aria-current={tab === id ? "page" : undefined}
+              onClick={() => navigate(id)}
+            >
+              <Icon name={id} />
+              <span>{label}</span>
             </button>
           ))}
         </nav>
-        <button className="theme-button" aria-label={theme === "dark"
-            ? "Увімкнути світлу тему" : "Увімкнути темну тему"}
-            onClick={() => setTheme((t) => t === "dark" ? "light" : "dark")}>
+        <button
+          className="theme-button"
+          aria-label={
+            theme === "dark" ? "Увімкнути світлу тему" : "Увімкнути темну тему"
+          }
+          onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+        >
           <Icon name={theme === "dark" ? "sun" : "moon"} />
         </button>
       </header>
       <div className="connection-bar">
-        <span>{state.connected ? "Home Assistant · реальні датчики" : "Немає зв'язку · останні показники"}</span>
+        <span>
+          {state.connected
+            ? "Home Assistant · реальні датчики"
+            : "Немає зв'язку · останні показники"}
+        </span>
         <span>Новий контролер: SHADOW</span>
       </div>
       <main id="live-main" ref={main} tabIndex={-1}>
-        {api.dataErrors.map((msg) => <p key={msg} className="helper">{msg}</p>)}
-        {tab === "home" ? <LiveHome api={api} state={state} />
-          : tab === "history" ? <LiveHistory /> : <LiveSettings api={api} />}
+        {api.dataErrors.map((msg) => (
+          <p key={msg} className="helper">
+            {msg}
+          </p>
+        ))}
+        {tab === "home" ? (
+          <LiveHome api={api} state={state} />
+        ) : tab === "history" ? (
+          <LiveHistory />
+        ) : (
+          <LiveSettings api={api} />
+        )}
       </main>
     </div>
   );
