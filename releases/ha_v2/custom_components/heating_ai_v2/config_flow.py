@@ -18,8 +18,9 @@ def mapping_schema() -> probatio.Schema:
         domain = ("weather" if role == "weather_forecast" else
                   "calendar" if role == "outage_calendar" else
                   "climate" if role == "thermostat" else
-                  "input_select" if role in ("grid", "fan_mode") else
-                  "input_number" if role in ("fan_night", "fan_standard", "fan_intense") else
+                  "input_select" if role in ("grid", "fan_mode", "strategy") else
+                  "input_datetime" if role in ("sleep_start", "sleep_end", "heating_start", "heating_end") else
+                  "input_number" if role in ("fan_night", "fan_standard", "fan_intense", "day_target", "night_target", "day_upper", "night_upper") else
                   "input_boolean" if role in ("fan_backup", "fan_control") else
                   "fan" if role == "circulation" else
                   "switch" if role in ("recuperator", "bath") else "sensor")
