@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+from time import monotonic
 import logging
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .telemetry import ROLES, OPTIONAL_ROLES, snapshot
@@ -30,6 +32,7 @@ class ShadowRuntime:
         self.listeners: set[Callable[[], None]] = set()
         self.values: dict[str, Any] = {}
         self._kernel_fault = False
+        self._fan_state = None
         self.refresh()
 
     @callback
@@ -54,6 +57,19 @@ class ShadowRuntime:
             if not self._kernel_fault:
                 _LOGGER.exception('V2 shadow kernel failed; no physical command authority')
             self._kernel_fault = True
+        try:
+            from .fan_shadow import project
+            self._fan_state, self.values["fan"] = project(
+                self.values, self._fan_state, monotonic(), dt_util.now().hour
+            )
+        except Exception:
+            self._fan_state = None
+            self.values["fan"] = {
+                "percentage_proposed": None, "reason": "fault",
+                "physical_authority": False, "commands_sent": 0,
+            }
+            if not self._kernel_fault:
+                _LOGGER.exception("V2 fan shadow unavailable; no fan commands")
         for notify in tuple(self.listeners):
             notify()
 
