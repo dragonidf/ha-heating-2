@@ -277,3 +277,29 @@ def conditional_plan(
             "future_fire_and_ventilation_assumed_zero",
         ],
     }
+
+
+def diagnostics(
+    rows: dict[str, dict[str, Any] | None],
+    weather: dict[str, Any] | None,
+    outages: dict[str, Any] | None,
+    now: float,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Single worker request: accepted planner + existing coasting observer.
+
+    Do not run either 24h model loop on HA's event loop on every sensor update.
+    """
+    from .shadow_coast import preview
+    from .telemetry import _number
+    room = (
+        _scalar(rows.get("room"), -30, 60)
+        if recently_reported(rows.get("room"), now) else None
+    )
+    stored = (
+        _number(rows.get("stored_heat"), "°C", -30, 90)
+        if recently_reported(rows.get("stored_heat"), now) else None
+    )
+    model_row = rows.get("legacy_model") or {}
+    parameters = (model_row.get("attributes") or {}).get("parameters")
+    coast = preview(room, stored, parameters, weather, now)
+    return conditional_plan(rows, weather, outages, now), coast
