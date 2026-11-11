@@ -32,6 +32,9 @@ const mapping = {
 function hass(grid = "Наявна мережа"): LiveHass {
   return {
     connected: true,
+    callWS: async (_request: Record<string, unknown>) => ({
+      "sensor.room": [{ s: "21.5", lu: Date.now() / 1000 - 600 }],
+    }),
     states: {
       "climate.boiler": {
         ...source("heat"),
@@ -98,6 +101,9 @@ describe("Actual Home Assistant custom panel mounting", () => {
       expect(panel.shadowRoot?.textContent).toContain(
         "Міграцію історії не завершено",
       ),
+    );
+    await waitFor(() =>
+      expect(panel.shadowRoot?.textContent).toContain("Записи HA: 1"),
     );
     const settings = [
       ...(panel.shadowRoot?.querySelectorAll("nav button") ?? []),
