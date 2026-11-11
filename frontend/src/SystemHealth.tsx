@@ -1,3 +1,4 @@
+import { dateTime } from "./domain";
 import type { SystemHealthView } from "./types";
 const actions: Record<string, string> = {
   NORMAL: "Плановий режим",
@@ -77,6 +78,32 @@ export function SystemHealth({ health }: { health: SystemHealthView }) {
             </p>
           </div>
         )}
+        {f?.measurement_authorization_age_s !== undefined && (
+          <p>
+            Дозвіл виміру: {f.measurement_authorization_age_s} с · стабілізація:{" "}
+            {f.recovery_dwell_s} с ·
+            {f.recovery_policy_ready
+              ? "політика симуляції придатна"
+              : "відновлення BLOCKED"}
+            . Фізичні команди вимкнені.
+          </p>
+        )}
+        {health.passive_sources?.map((p) => (
+          <p key={p.role}>
+            Пасивне джерело{" "}
+            {
+              {
+                temperature: "Вітальня",
+                humidity: "Вологість T&H",
+                return_water: "Щуп обратки",
+              }[p.role]
+            }
+            : {p.available ? p.value : "недоступне"} · запис HA:{" "}
+            {dateTime(p.last_reported)} · оновлення: {dateTime(p.last_updated)}{" "}
+            · зміна значення: {dateTime(p.last_changed)}. Фізичний вимір
+            BLOCKED; запис HA не є виміром пристрою.
+          </p>
+        ))}
         <p>
           Дії лише запропоновані в симуляції. Фізичний стан не підтверджений.
         </p>

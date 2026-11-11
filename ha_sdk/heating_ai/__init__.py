@@ -24,6 +24,7 @@ from .const import ASSETS, DOMAIN, EVENT_SAMPLE, PANEL
 from .core.offline.codec import decode
 from .core.offline.contracts import SourceEvent
 from .core.ha_native.backend import NativeBackend, NativeProtocolError
+from .core.ha_native.health import SourceTimingPolicy
 from .core.ha_native.meter import binding_summary, future_meter_binding
 from .core.ha_native.store import JSON
 from .core.ha_native.voltage import decode_voltage_frame
@@ -147,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         backend = NativeBackend(root, entry_id=entry.entry_id, enabled=selected["simulation_enabled"],
                                 activity_window_s=selected["activity_window_s"],
                                 clock=lambda: (time(), monotonic()))
-        backend.configure_source(selected["freshness_s"])
+        backend.configure_timing(SourceTimingPolicy(selected["freshness_s"], selected["activity_window_s"], selected["recovery_dwell_s"]))
         backend.open()
         return backend
     try:

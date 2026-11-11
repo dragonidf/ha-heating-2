@@ -1,9 +1,13 @@
 """Synthetic raw-report evidence; HA state writes are never hardware measurements."""
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 from packages.contracts import Clock
 from packages.contracts.models import number, require
 from .store import JSON
+
+if TYPE_CHECKING:
+    from .passive_bridge import IntegrationReport
 
 Role = Literal['temperature', 'humidity', 'return_water']
 Origin = Literal['synthetic_raw_report', 'ha_state_write', 'recorder', 'derived', 'ui_poll']
@@ -58,6 +62,8 @@ class SourceActivity:
         self.reports: dict[Role, tuple[DeviceReport, Clock]] = {}
         self.measurements: dict[Role, tuple[DeviceReport, Clock]] = {}
         self.veto_latched = False
+        # Registry-qualified integration writes are liveness only, never measurements.
+        self.integration_reports: dict[Role, tuple[IntegrationReport, Clock]] = {}
 
     def accept(self, report: DeviceReport, clock: Clock, max_measurement_age_s: float = 30) -> bool:
         old = self.reports.get(report.role)
@@ -82,6 +88,15 @@ class SourceActivity:
                     self.veto_latched = False
         return True
 
+    def observe_integration(self, report: IntegrationReport, clock: Clock) -> bool:
+        old = self.integration_reports.get(report.role)
+        if (report.boot_id != clock.boot_id or report.received_at > clock.utc
+                or old is not None and (report.reported_at <= old[0].reported_at
+                    or clock.monotonic < old[1].monotonic or clock.utc < old[1].utc)):
+            return False
+        self.integration_reports[report.role] = (report, clock)
+        return True
+
     def view(self, clock: Clock, max_temperature_age_s: float, *, clock_ok: bool = True) -> dict[str, JSON]:
         def age(role: Role, observed: bool = False) -> float | None:
             pair = (self.measurements if observed else self.reports).get(role)
@@ -96,6 +111,10 @@ class SourceActivity:
 
         activity = [(age(role), pair[0].reported_at) for role, pair in self.reports.items()
                     if role in ('temperature', 'humidity') and pair[0].available and age(role) is not None]
+        for role, (report, anchor) in self.integration_reports.items():
+            if (role in ('temperature', 'humidity') and report.available and clock_ok
+                    and report.boot_id == clock.boot_id and clock.utc >= anchor.utc and clock.monotonic >= anchor.monotonic):
+                activity.append((max(clock.utc-report.reported_at, clock.monotonic-anchor.monotonic+anchor.utc-report.reported_at), report.reported_at))
         latest = min(activity, key=lambda p: p[0] if p[0] is not None else float('inf')) if activity else (None, None)
         activity_age, activity_at = latest
         temp = self.measurements.get('temperature')
@@ -104,6 +123,12 @@ class SourceActivity:
         probe_report = self.reports.get('return_water')
         failure_age = age('temperature')
         failed = temp_report is not None and not temp_report[0].available and failure_age is not None and failure_age <= max_temperature_age_s
+        integration_temp = self.integration_reports.get('temperature')
+        if integration_temp is not None:
+            report, anchor = integration_temp
+            if (clock_ok and report.boot_id == clock.boot_id and clock.utc >= anchor.utc and clock.monotonic >= anchor.monotonic
+                    and (temp_report is None or report.reported_at >= temp_report[0].reported_at)):
+                failed = not report.available and max(clock.utc-report.reported_at, clock.monotonic-anchor.monotonic+anchor.utc-report.reported_at) <= max_temperature_age_s
         temp_age, probe_age = age('temperature', True), age('return_water', True)
         temp_ok = temp is not None and temp[0].available and temp[0].measurement_qualified and temp_age is not None
         probe_ok = probe is not None and probe[0].available and probe[0].measurement_qualified and probe_age is not None
@@ -113,6 +138,7 @@ class SourceActivity:
             'living_device_last_activity': activity_at, 'device_age_s': activity_age,
             'device_quality': 'UNKNOWN' if activity_age is None else 'OK' if activity_age <= self.window_s else 'DEGRADED',
             'activity_window_s': self.window_s,
+            'activity_provenance': 'ha_state_write' if any(role in ('temperature', 'humidity') and p[0].available and p[0].reported_at == activity_at for role, p in self.integration_reports.items()) else 'synthetic_raw_report' if activity_at is not None else 'unknown',
             'living_temperature_last_observed': temp[0].observed_at if temp_ok and temp is not None else None,
             'temperature_age_s': temp_age if temp_ok else None, 'temperature_quality': temperature_quality,
             'return_water_last_observed': probe[0].observed_at if probe_ok and probe is not None else None,

@@ -165,3 +165,59 @@ it("rejects false source provenance and malformed independent ages", () => {
     ).toThrow();
   }
 });
+it("shows passive HA timing separately from qualified recovery policy and rejects fake ACK", () => {
+  const h = sourceHealth();
+  if (!h.source_freshness) throw Error("fixture missing");
+  h.source_freshness = {
+    ...h.source_freshness,
+    activity_provenance: "ha_state_write",
+    measurement_authorization_age_s: 30,
+    recovery_dwell_s: 15,
+    recovery_policy_ready: true,
+    physical_commands_enabled: false,
+  };
+  h.passive_sources = [
+    {
+      role: "temperature",
+      value: 22,
+      last_reported: 100,
+      last_updated: 90,
+      last_changed: 80,
+      available: true,
+      origin: "ha_state_write",
+      physical_measurement: "BLOCKED",
+      physical_commands_enabled: false,
+    },
+  ];
+  const ui = render(<SystemHealth health={h} />);
+  expect(ui.getByText(/Дозвіл виміру: 30 с/)).toBeTruthy();
+  expect(ui.getByText(/запис HA не є виміром пристрою/)).toBeTruthy();
+  expect(
+    readSnapshot({ ...snapshot(), system_health: h }).system_health
+      ?.passive_sources,
+  ).toHaveLength(1);
+  for (const bad of [
+    { physical_measurement: "CONFIRMED" },
+    { physical_commands_enabled: true },
+    { last_updated: 101 },
+    { role: "thermostat" },
+  ])
+    expect(() =>
+      readSnapshot({
+        ...snapshot(),
+        system_health: {
+          ...h,
+          passive_sources: [{ ...h.passive_sources![0], ...bad }],
+        },
+      }),
+    ).toThrow();
+  expect(() =>
+    readSnapshot({
+      ...snapshot(),
+      system_health: {
+        ...h,
+        source_freshness: { ...h.source_freshness, recovery_dwell_s: 30 },
+      },
+    }),
+  ).toThrow();
+});
