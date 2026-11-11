@@ -103,6 +103,36 @@ function validateHealth(raw: unknown): void {
     h.components.length !== 6
   )
     throw Error("Непридатна діагностика");
+  if (h.thermostat_ceiling !== undefined) {
+    const c = object(h.thermostat_ceiling);
+    if (
+      !(c.source_mode === null || typeof c.source_mode === "string") ||
+      ![
+        "room_upper_c",
+        "reserve_margin_c",
+        "ceiling_raw_c",
+        "proposed_ceiling_c",
+        "proposed_setpoint_c",
+      ].every((k) => c[k] === null || finite(c[k])) ||
+      typeof c.action !== "string" ||
+      typeof c.reason !== "string" ||
+      typeof c.thermostat_fresh !== "boolean" ||
+      !["HEAT", "AUTO", "OFF", "UNKNOWN"].includes(
+        c.thermostat_mode as string,
+      ) ||
+      !["none", "proposed"].includes(c.stage as string) ||
+      c.acknowledged_setpoint_c !== null ||
+      c.physical_ack !== false ||
+      c.physical_authority !== false ||
+      c.scope !== "synthetic_only" ||
+      (finite(c.proposed_ceiling_c) &&
+        (!finite(c.ceiling_raw_c) || c.proposed_ceiling_c > c.ceiling_raw_c)) ||
+      (finite(c.proposed_setpoint_c) &&
+        (!finite(c.proposed_ceiling_c) ||
+          c.proposed_setpoint_c > c.proposed_ceiling_c))
+    )
+      throw Error("Непридатна резервна межа термостата");
+  }
   if (h.passive_sources !== undefined) {
     if (!Array.isArray(h.passive_sources) || h.passive_sources.length > 3)
       throw Error("Непридатні пасивні джерела");

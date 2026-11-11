@@ -221,3 +221,72 @@ it("shows passive HA timing separately from qualified recovery policy and reject
     }),
   ).toThrow();
 });
+it("shows active upper/margin and proposed ceiling separately from physical ACK", () => {
+  const h = health();
+  h.thermostat_ceiling = {
+    source_mode: "day",
+    room_upper_c: 22,
+    reserve_margin_c: 2.5,
+    ceiling_raw_c: 24.5,
+    proposed_ceiling_c: 24.5,
+    proposed_setpoint_c: 24.5,
+    action: "request_heat",
+    reason: "planner_demand_capped",
+    thermostat_fresh: true,
+    thermostat_mode: "HEAT",
+    stage: "proposed",
+    acknowledged_setpoint_c: null,
+    physical_ack: false,
+    physical_authority: false,
+    scope: "synthetic_only",
+  };
+  const ui = render(<SystemHealth health={h} />);
+  expect(ui.getByLabelText("Резервний максимум термостата")).toBeTruthy();
+  expect(ui.getByText(/Активна верхня межа вітальні: 22°C/)).toBeTruthy();
+  expect(
+    ui.getByText(/фізичне застосування та ACK не підтверджені/),
+  ).toBeTruthy();
+  expect(
+    readSnapshot({ ...snapshot(), system_health: h }).system_health
+      ?.thermostat_ceiling?.proposed_ceiling_c,
+  ).toBe(24.5);
+  for (const bad of [
+    { physical_ack: true },
+    { acknowledged_setpoint_c: 24.5 },
+    { proposed_setpoint_c: 25 },
+    { proposed_ceiling_c: null },
+    { ceiling_raw_c: null },
+    { proposed_ceiling_c: 25 },
+    { ceiling_raw_c: Infinity },
+  ])
+    expect(() =>
+      readSnapshot({
+        ...snapshot(),
+        system_health: {
+          ...h,
+          thermostat_ceiling: { ...h.thermostat_ceiling, ...bad },
+        },
+      }),
+    ).toThrow();
+  ui.rerender(
+    <SystemHealth
+      health={{
+        ...h,
+        thermostat_ceiling: {
+          ...h.thermostat_ceiling,
+          source_mode: "night",
+          room_upper_c: 21.5,
+          ceiling_raw_c: 24,
+          proposed_ceiling_c: 24,
+          proposed_setpoint_c: 23.5,
+          action: "withdraw_demand",
+          reason: "room_target_or_upper_reached",
+          thermostat_mode: "AUTO",
+        },
+      }}
+    />,
+  );
+  expect(ui.getByText(/Активна верхня межа вітальні: 21.5°C/)).toBeTruthy();
+  expect(ui.getByText(/Запропоновано зняття запиту/)).toBeTruthy();
+  expect(ui.getByText(/AUTO не підкоряється/)).toBeTruthy();
+});

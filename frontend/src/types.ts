@@ -252,7 +252,25 @@ export interface SourceFreshnessView {
   physical_authority: false;
   scope: "synthetic_only";
 }
+export interface ThermostatCeilingView {
+  source_mode: string | null;
+  room_upper_c: number | null;
+  reserve_margin_c: number | null;
+  ceiling_raw_c: number | null;
+  proposed_ceiling_c: number | null;
+  proposed_setpoint_c: number | null;
+  action: string;
+  reason: string;
+  thermostat_fresh: boolean;
+  thermostat_mode: string;
+  stage: "none" | "proposed";
+  acknowledged_setpoint_c: null;
+  physical_ack: false;
+  physical_authority: false;
+  scope: "synthetic_only";
+}
 export interface SystemHealthView {
+  thermostat_ceiling?: ThermostatCeilingView;
   passive_sources?: readonly {
     role: "temperature" | "humidity" | "return_water";
     value: number | null;
