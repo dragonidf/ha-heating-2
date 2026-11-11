@@ -1,7 +1,7 @@
 /** Real Home Assistant panel: read-only live state, no fake NativeAPI. */
 import { createRoot, type Root } from "react-dom/client";
 import { LiveApp } from "./liveApp";
-import { LiveHAAPI, type LiveHass, type LiveBindings } from "./liveHA";
+import { LiveHAAPI, optionalRoles, type LiveHass, type LiveBindings } from "./liveHA";
 import styles from "./styles.css?inline";
 
 const roles: (keyof LiveBindings)[] = [
@@ -59,7 +59,9 @@ export class HeatingAIV2Panel extends HTMLElement {
     try {
       const config = this.currentPanel.config ?? {};
       const bindings = Object.fromEntries(
-        roles.map((role) => [role, config[role]]),
+        [...roles, ...optionalRoles]
+          .filter((role) => typeof config[role] === "string")
+          .map((role) => [role, config[role]]),
       ) as LiveBindings;
       this.api = new LiveHAAPI(bindings, this.currentHass);
       this.root.render(<LiveApp api={this.api} />);
