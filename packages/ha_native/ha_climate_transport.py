@@ -10,12 +10,12 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from math import isfinite
-from typing import Any, Callable, Literal, Protocol
+from typing import Any, Callable, Literal, Mapping, Protocol
 
 
 class ClimateState(Protocol):
     state: str
-    attributes: dict[str, Any]
+    attributes: Mapping[str, Any]
     last_reported: datetime
 
 
