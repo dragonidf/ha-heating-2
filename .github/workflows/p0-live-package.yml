@@ -8,6 +8,7 @@ on:
       - 'frontend/src/App.tsx'
       - 'frontend/vite.live.config.ts'
       - 'frontend/tests/live-ha.test.ts'
+      - 'frontend/tests/live-panel.test.tsx'
       - 'releases/ha_v2/**'
       - 'tools/release/**'
       - '.github/workflows/p0-live-package.yml'
