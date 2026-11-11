@@ -22,6 +22,20 @@ class HealthPolicy:
 
 
 @dataclass(frozen=True)
+class SourceTimingPolicy:
+    measurement_authorization_age_s: float = 30
+    device_activity_window_s: float = 3660
+    recovery_dwell_s: float = 15
+
+    def __post_init__(self) -> None:
+        for value in (self.measurement_authorization_age_s, self.device_activity_window_s, self.recovery_dwell_s):
+            number(value)
+        require(5 <= self.measurement_authorization_age_s <= 300
+                and 60 <= self.device_activity_window_s <= 86400
+                and 0 < self.recovery_dwell_s < self.measurement_authorization_age_s, 'Recovery must fit measurement validity')
+
+
+@dataclass(frozen=True)
 class HealthInputs:
     room_age_s: float | None = None
     room_report_verified: bool = False

@@ -103,8 +103,57 @@ function validateHealth(raw: unknown): void {
     h.components.length !== 6
   )
     throw Error("Непридатна діагностика");
+  if (h.passive_sources !== undefined) {
+    if (!Array.isArray(h.passive_sources) || h.passive_sources.length > 3)
+      throw Error("Непридатні пасивні джерела");
+    const roles = new Set();
+    for (const raw of h.passive_sources) {
+      const p = object(raw);
+      if (
+        !["temperature", "humidity", "return_water"].includes(
+          p.role as string,
+        ) ||
+        roles.has(p.role) ||
+        !(p.value === null || finite(p.value)) ||
+        !nonnegative(p.last_changed) ||
+        !nonnegative(p.last_updated) ||
+        !nonnegative(p.last_reported) ||
+        p.last_changed > p.last_updated ||
+        p.last_updated > p.last_reported ||
+        typeof p.available !== "boolean" ||
+        p.origin !== "ha_state_write" ||
+        p.physical_measurement !== "BLOCKED" ||
+        p.physical_commands_enabled !== false
+      )
+        throw Error("Непридатне походження пасивного джерела");
+      roles.add(p.role);
+    }
+  }
   if (h.source_freshness !== undefined) {
     const f = object(h.source_freshness);
+    if (
+      f.activity_provenance !== undefined &&
+      !["ha_state_write", "synthetic_raw_report", "unknown"].includes(
+        f.activity_provenance as string,
+      )
+    )
+      throw Error("Непридатне походження активності");
+    if (
+      f.measurement_authorization_age_s !== undefined ||
+      f.recovery_dwell_s !== undefined
+    ) {
+      if (
+        !nonnegative(f.measurement_authorization_age_s) ||
+        !nonnegative(f.recovery_dwell_s) ||
+        f.measurement_authorization_age_s < 5 ||
+        f.measurement_authorization_age_s > 300 ||
+        f.recovery_policy_ready !==
+          (f.recovery_dwell_s > 0 &&
+            f.recovery_dwell_s < f.measurement_authorization_age_s) ||
+        f.physical_commands_enabled !== false
+      )
+        throw Error("Непридатна політика відновлення");
+    }
     if (
       typeof f.device_quality !== "string" ||
       typeof f.temperature_quality !== "string" ||

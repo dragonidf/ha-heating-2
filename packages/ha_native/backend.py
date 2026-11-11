@@ -18,8 +18,9 @@ from packages.offline.contracts import Binding, Registry, SourceEvent, EnergySli
 from packages.offline.codec import encode as encode_contract, decode as decode_contract
 
 from .store import JSON as JSON, NativeStore, StoreError, decode, encode
-from .health import HealthPolicy, HealthInputs, HealthMemory, project_health
+from .health import HealthPolicy, HealthInputs, HealthMemory, project_health, SourceTimingPolicy
 from .source_activity import SourceActivity, DeviceReport
+from .passive_bridge import IntegrationReport
 from .voltage import VoltageFrame, VoltagePolicy, VoltageState, evaluate_voltage, voltage_view, synthetic_voltage_withdrawal
 from .kws import KWSFrame, KWSState, project_kws, kws_view, kws_counter_energy
 
@@ -108,7 +109,7 @@ class NativeBackend:
         self._room_seen_mono: float | None = None
         self._room_initial_age = 0.0
         self._room_report: tuple[float, float, str] | None = None
-        self._health_policy = health_policy or HealthPolicy()
+        self._health_policy = health_policy or HealthPolicy(recovery_s=15)
         self._health_evidence = health_evidence
         self._activity = SourceActivity(activity_window_s)
         self._activity_active = False
@@ -307,6 +308,10 @@ class NativeBackend:
             evidence = self._health_evidence()
             room_age = None if self._room_report is None else max(clock.utc - self._room_report[0], clock.monotonic - self._room_report[1])
             freshness = self._activity.view(clock, self._source_max_age, clock_ok=not self._clock_bad)
+            freshness['measurement_authorization_age_s'] = self._source_max_age
+            freshness['recovery_dwell_s'] = self._health_policy.recovery_s
+            freshness['recovery_policy_ready'] = 0 < self._health_policy.recovery_s < self._source_max_age
+            freshness['physical_commands_enabled'] = False
             state['source_freshness'] = freshness
             if self._activity_active:
                 activity_age = freshness['device_age_s']
@@ -319,7 +324,7 @@ class NativeBackend:
                 electrical_fault=self._voltage_state.status in ('LOW', 'HIGH'),
                 power_qualified=self._kws_state.power.kw is not None and self._kws_state.counter is not None and not self._energy_unavailable,
                 clock_ok=self._opened and not self._clock_bad, persistence_ok=not self._store_failed,
-                plan_ok=evidence.plan_ok and obj(state['diagnostics'])['worker'] == 'ready' and freshness['return_veto'] is not True,
+                plan_ok=evidence.plan_ok and obj(state['diagnostics'])['worker'] == 'ready' and freshness['return_veto'] is not True and freshness['recovery_policy_ready'] is True,
                 room_failure_confirmed=self._activity_active and freshness['failure_confirmed'] is True,
                 room_silence_qualified=not self._activity_active,
                 room_status=('PROBLEM' if freshness['failure_confirmed'] is True or freshness['return_veto'] is True else 'OK' if freshness['device_quality'] == 'OK' and freshness['temperature_quality'] == 'OK' and room['quality'] == 'valid' else 'WAITING') if self._activity_active else None,
@@ -332,6 +337,11 @@ class NativeBackend:
             record = asdict(self._health_memory)
             changed = changed or any(v != previous_memory[k] for k, v in record.items() if k != 'last_mono')
             record['transitions'] = {k: list(v) for k, v in self._health_memory.transitions.items()}
+            health['passive_sources'] = [dict(role=role, value=pair[0].value,
+                last_reported=pair[0].reported_at, last_updated=pair[0].last_updated,
+                last_changed=pair[0].last_changed, available=pair[0].available,
+                origin='ha_state_write', physical_measurement='BLOCKED', physical_commands_enabled=False)
+                for role, pair in sorted(self._activity.integration_reports.items())]
             health['source_freshness'] = freshness
             state['system_health'] = cast(JSON, health)
             state['health_memory'] = cast(JSON, record)
@@ -539,6 +549,24 @@ class NativeBackend:
                 + '. Щуп обратки (лише допоміжний): ' + str(view['return_quality'])
                 + ('. Допоміжне вето нагріву' if view['return_veto'] is True else '')
                 + '. Вологість не оновлює температуру; перевищення порогу не підтверджує відключення.')
+
+    def configure_timing(self, policy: SourceTimingPolicy) -> None:
+        with self._memory:
+            self.configure_source(policy.measurement_authorization_age_s)
+            self._health_policy = replace(self._health_policy, recovery_s=policy.recovery_dwell_s)
+            self._activity.window_s = policy.device_activity_window_s
+
+    def accept_integration_report(self, report: IntegrationReport) -> bool:
+        """Passive monitor: no hardware measurement, transport sequence or command."""
+        with self._memory:
+            clock = self.trusted_clock()
+            if not self._opened or self._clock_bad or not self._activity.observe_integration(report, clock):
+                return False
+            self._activity_active = True
+            if report.role == 'temperature' and not report.available:
+                self.invalidate_source('integration_source_unavailable')
+            self.refresh()
+            return True
 
     def accept_device_report(self, report: DeviceReport) -> bool:
         """Trusted synthetic fixture seam only; no public physical Tuya binding."""

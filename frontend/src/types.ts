@@ -232,6 +232,11 @@ export interface Track {
 }
 
 export interface SourceFreshnessView {
+  activity_provenance?: "ha_state_write" | "synthetic_raw_report" | "unknown";
+  measurement_authorization_age_s?: number;
+  recovery_dwell_s?: number;
+  recovery_policy_ready?: boolean;
+  physical_commands_enabled?: false;
   living_device_last_activity: number | null;
   living_temperature_last_observed: number | null;
   return_water_last_observed: number | null;
@@ -248,6 +253,17 @@ export interface SourceFreshnessView {
   scope: "synthetic_only";
 }
 export interface SystemHealthView {
+  passive_sources?: readonly {
+    role: "temperature" | "humidity" | "return_water";
+    value: number | null;
+    last_reported: number;
+    last_updated: number;
+    last_changed: number;
+    available: boolean;
+    origin: "ha_state_write";
+    physical_measurement: "BLOCKED";
+    physical_commands_enabled: false;
+  }[];
   source_freshness?: SourceFreshnessView;
   components: readonly {
     key: string;
