@@ -14,6 +14,8 @@ on:
       - 'tests/wp2c_revision/test_legacy_state_dryrun.py'
       - 'tests/wp2c_revision/test_forecast_sources_v2.py'
       - 'releases/ha_v2/**'
+      - 'hacs.json'
+      - 'manifest.json'
       - 'tools/release/**'
       - '.github/workflows/p0-live-package.yml'
   workflow_dispatch:
@@ -71,8 +73,16 @@ jobs:
           assert (dest/'assets'/'livePanel.js').is_file()
           assert (dest/'manifest.json').is_file()
           manifest=json.loads((dest/'manifest.json').read_text())
+          root_manifest=json.loads(pathlib.Path('manifest.json').read_text())
+          marketplace=json.loads(pathlib.Path('hacs.json').read_text())
+          assert manifest==root_manifest, 'Marketplace tag manifest is not the packaged integration manifest'
+          assert marketplace['zip_release'] is True
+          assert marketplace['filename']=='heating_ai_v2.zip'
+          assert marketplace['content_in_root'] is True
           assert manifest['domain']=='heating_ai_v2'
           assert manifest['requirements']==[]
+          assert manifest['version'].count('.')==2
+          assert all(part.isdigit() for part in manifest['version'].split('.'))
           zip_path=pathlib.Path('heating-ai-v2-live-shadow.zip')
           with zipfile.ZipFile(zip_path,'w',zipfile.ZIP_DEFLATED) as z:
               for p in sorted(root.rglob('*')):
