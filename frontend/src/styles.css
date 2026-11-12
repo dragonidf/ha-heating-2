@@ -1487,6 +1487,7 @@ footer {
 .timeline-key { display:inline-block; width:20px; height:0; border-top:3px solid var(--text); }
 .key-actual { border-color:var(--control); }
 .key-forecast { border-color:var(--prediction); border-top-style:dashed; }
+.key-coast { border-color:var(--muted); border-top-style:dashed; }
 .key-target { border-color:var(--warning); border-top-style:dotted; }
 .key-heat { height:11px; width:15px; background:color-mix(in srgb,var(--heating) 22%,transparent); border:1px solid var(--heating); }
 .timeline-scroll { overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; border-radius:12px; scrollbar-width:thin; background:var(--canvas); }
@@ -1500,6 +1501,7 @@ footer {
 .timeline-actual { stroke:var(--control); }
 .timeline-last-actual { fill:var(--control); stroke:var(--canvas); stroke-width:2; }
 .timeline-forecast { stroke:var(--prediction); stroke-dasharray:7 5; }
+.timeline-coast { stroke:var(--muted); stroke-dasharray:5 6; stroke-width:2; opacity:.92; }
 .timeline-target { stroke:var(--warning); stroke-width:1.9; stroke-dasharray:3 4; }
 .timeline-cursor { stroke:var(--text); stroke-width:1; stroke-opacity:.7; }
 .timeline-inspect { display:block; margin-top:9px; font-size:.79rem; line-height:1.6; color:var(--muted); }
