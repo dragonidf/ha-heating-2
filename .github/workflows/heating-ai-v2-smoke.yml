@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'releases/ha_v2/custom_components/heating_ai_v2/**'
+      - 'hacs.json'
+      - 'manifest.json'
       - 'tests/wp2c_revision/test_live_shadow_v2.py'
       - 'tools/release/test_ha2026_v2_lifecycle.py'
       - 'tests/wp2c_revision/test_forecast_sources_v2.py'
