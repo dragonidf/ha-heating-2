@@ -1,0 +1,99 @@
+name: Heating AI 2.0 Marketplace release
+on:
+  workflow_run:
+    workflows:
+      - P0 v2 live HA installable package
+      - WP2C isolated native Home Assistant
+    types: [completed]
+    branches: [release/p0-native-live-ui-pipeline-20261111]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: heating-ai-v2-marketplace-v0.1.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: >-
+      ${{ github.repository == 'dragonidf/ha-heating-2'
+          && github.event.workflow_run.head_repository.full_name == github.repository
+          && github.event.workflow_run.head_branch == 'release/p0-native-live-ui-pipeline-20261111'
+          && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      RELEASE_TAG: v0.1.0
+    steps:
+      - name: Require successful package and native HA checks for EXACT commit
+        id: gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json,os,subprocess
+          repo=os.environ['GH_REPO'];sha=os.environ['SHA']
+          raw=subprocess.check_output(['gh','api',f'repos/{repo}/actions/runs?head_sha={sha}&per_page=100'])
+          runs=json.loads(raw)['workflow_runs']
+          good={r['name'] for r in runs if r.get('head_sha')==sha and
+                r.get('event')=='pull_request' and r.get('conclusion')=='success'}
+          needed={'P0 v2 live HA installable package','WP2C isolated native Home Assistant'}
+          if not needed.issubset(good):
+              print(f'RELEASE BLOCKED for {sha}: incomplete checks {sorted(needed-good)}')
+              with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('ready=false\n')
+          else:
+              print(f'RELEASE GATES PASS at {sha}; no extra compile/tests')
+              with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('ready=true\n')
+          PY
+      - name: Download previously tested CI artifact (no duplicate build)
+        if: steps.gate.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id="$(gh api "repos/$GH_REPO/actions/runs?head_sha=$SHA&per_page=100" --jq '.workflow_runs[] | select(.name == "P0 v2 live HA installable package" and .event == "pull_request" and .conclusion == "success") | .id' | head -n1)"
+          test -n "$run_id"
+          gh run download "$run_id" --repo "$GH_REPO" --name heating-ai-v2-live-shadow --dir ci-artifact
+      - name: Repackage exact tested integration at ZIP ROOT for Marketplace
+        if: steps.gate.outputs.ready == 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,zipfile
+          original=pathlib.Path('ci-artifact/heating-ai-v2-live-shadow.zip')
+          assert original.is_file() and original.stat().st_size > 10000
+          prefix='custom_components/heating_ai_v2/'
+          target=pathlib.Path('heating_ai_v2.zip')
+          with zipfile.ZipFile(original) as source,zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as out:
+              names=source.namelist()
+              assert all(not p.startswith('/') and '..' not in pathlib.PurePosixPath(p).parts for p in names)
+              entries=[n for n in names if n.startswith(prefix) and not n.endswith('/')]
+              assert len(entries) >= 25
+              for name in sorted(entries):
+                  relative=name[len(prefix):]
+                  assert relative and not relative.startswith('/') and '..' not in pathlib.PurePosixPath(relative).parts
+                  assert '__pycache__' not in relative and not relative.endswith('.pyc')
+                  out.writestr(relative,source.read(name))
+          with zipfile.ZipFile(target) as archive:
+              names=set(archive.namelist())
+              assert {'manifest.json','__init__.py','config_flow.py','assets/livePanel.js','engine/SOURCE-SHA256.json','critical_ledger.py'} <= names
+              manifest=json.loads(archive.read('manifest.json'))
+              assert manifest['domain']=='heating_ai_v2'
+              assert manifest['version']=='0.1.0'
+              assert manifest.get('config_flow') is True
+              assert archive.testzip() is None
+          print(json.dumps({'file':str(target),'bytes':target.stat().st_size,
+                            'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'files':len(names)}))
+          PY
+      - name: Publish one immutable Marketplace release; no production install
+        if: steps.gate.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; never replace an installed artifact."
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" heating_ai_v2.zip --repo "$GH_REPO" --target "$SHA" \
+            --title 'Heating AI 2.0 v0.1.0 — read-only SHADOW' \
+            --notes 'Installable Home Assistant 2026.11 Marketplace integration, native 3-tab UI and telemetry; SHADOW ONLY. No thermostat or fan actuator writer. Old controller remains responsible. Never interpret this as physical launch. A later reviewed release is required for full autonomous control.'
