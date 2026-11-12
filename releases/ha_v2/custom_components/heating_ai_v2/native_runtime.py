@@ -19,7 +19,7 @@ from .engine.contracts import (
     EventKind, Provenance, Quality, QualityStatus, Reading, Revisions, SourceKind, Unit,
 )
 from .engine.control import reduce
-from .engine.ha_native.thermostat import ActiveRoomLimit, finalize_heat_setpoint
+from .engine.ha_native.thermostat import ActiveRoomLimit, finalize_heat_setpoint, supported_ceiling
 from .shadow_plan import REQUIRED, _model, _minutes
 
 
@@ -162,7 +162,8 @@ class NativeController:
             thermostat_fresh=False, thermostat_mode=str((rows.get('thermostat') or {}).get('state')).upper(),
             owns_thermostat=False, manual_stop=self.persisted['manual_pause'])
         self.active_limit = dict(band=band, target=target, upper=upper,
-                                ceiling=None if upper is None else upper+2.5, qualified=False)
+                                ceiling=supported_ceiling(limit, attrs.get('min_temp'),
+                                    attrs.get('max_temp'), attrs.get('target_temp_step')), qualified=False)
 
     async def observe(self):
         rows, values = deepcopy(self.rows), deepcopy(self.values)

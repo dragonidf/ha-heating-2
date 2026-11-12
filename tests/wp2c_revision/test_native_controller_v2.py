@@ -148,14 +148,16 @@ class NativeControllerTests(unittest.IsolatedAsyncioTestCase):
     async def test_native_settings_cas_auth_and_immutable_original_truth(self):
         c=self.controller
         request=self.mutation()
-        values=dict(c.persisted['values'],day_upper=23)
+        values=dict(c.persisted['values'],day_upper=23.2)
         with self.assertRaises(PermissionError):
             await c.dispatch('settings/save',request|dict(values=values),False)
         result=await c.dispatch('settings/save',request|dict(values=values),True)
         self.assertEqual(result['status'],'saved')
         conflict=await c.dispatch('settings/save',request|dict(request_id='stale',values=values),True)
         self.assertEqual(conflict['status'],'conflict')
-        self.assertEqual(c.store.status()['values']['day_upper'],23)
+        self.assertEqual(c.store.status()['values']['day_upper'],23.2)
+        self.tick()
+        self.assertEqual(c.active_limit['ceiling'],25.5)
         c.store.archive(dict(issued_at=None,received_at=self.now,hours=[]))
         result=c.store.history(self.now-100,self.now,self.now)
         self.assertEqual(result['original_status'],'MISSING')

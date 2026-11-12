@@ -17,6 +17,7 @@ Repository-only integration; no HA installation, household connection, legacy sh
 
 - `python -m unittest tests.wp2c_revision.test_native_controller_v2 tests.wp2c_revision.test_live_shadow_v2 -v`: 18/18 PASS (six critical transition groups +12 SHADOW guards).
 - An added stale-settings STOP case first failed: persisted manual pause became false after CAS conflict. The narrow fix uses the current durable revision for authorized STOP. Only the affected native module was rerun:6/6 PASS.
+- A non-half-degree upper limit regression then reproduced UI ceiling25.7 instead of supported25.5. The display now calls the accepted `supported_ceiling` helper (no policy rewrite); only that settings test was rerun and passed.
 - `npm run typecheck`: PASS. `npx vitest run tests/live-backend.test.ts`:1/1 PASS, including versioned CAS/history, draft retention, hard-OFF and hung-backend timeout. Only that affected frontend contract file/typecheck was repeated after timeout/fault handling changed.
 - No full local test discovery, browser matrix, dependency installation or manual GitHub Actions execution. Automatic final-head CI is authoritative for the existing wider checks; no pending CI is represented as PASS.
 
