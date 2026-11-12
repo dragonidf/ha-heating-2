@@ -1,0 +1,7 @@
+{
+  "name": "Heating AI 2.0",
+  "homeassistant": "2026.11.0",
+  "zip_release": true,
+  "filename": "heating_ai_v2.zip",
+  "hide_default_branch": true
+}
