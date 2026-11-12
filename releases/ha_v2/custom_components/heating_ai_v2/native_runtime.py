@@ -141,7 +141,8 @@ class NativeController:
         decision = reduce(self.state, event, snapshot, policy, clock)
         self.state = decision.state
         self.decision = dict(mode=self.state.mode.value, reason=decision.permit.reason.value,
-                             permitted=False, proposed_intents=len(decision.intents), actual_commands=0)
+                             permit=False, intents=0, permitted=False,
+                             proposed_intents=len(decision.intents), actual_commands=0)
         # Use the accepted final limiter, never duplicate its dynamic ceiling algorithm.
         planning = self.planning_rows(rows)
         start, end = _minutes(planning.get('sleep_start')), _minutes(planning.get('sleep_end'))
