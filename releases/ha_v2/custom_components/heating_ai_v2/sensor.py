@@ -61,6 +61,18 @@ class ShadowSensor(SensorEntity):
         if self.kind != "status":
             return {"measurement_status": "HA_last_known_not_verified_raw_sample",
                     "commands_enabled": False, "physical_ack": False}
+        # The full thermal trajectory remains available via the authenticated
+        # native WebSocket snapshot. Never write hundreds of forecast points
+        # into a Recorder-backed HA state every two-second safety tick.
+        plan = values.get("virtual_plan") or {}
+        plan_brief = {
+            k: plan[k] for k in (
+                "status", "reason", "scenario_power_kw", "projected_min_c",
+                "nominal_energy_kwh", "horizon_hours", "segment_count",
+                "segments", "segments_truncated", "computed_at",
+                "commands_sent",
+            ) if k in plan
+        }
         return {
             "commands_enabled": False,
             "physical_ack": False,
@@ -77,7 +89,7 @@ class ShadowSensor(SensorEntity):
             "v2_entry_id": self.runtime.entry.entry_id,
             "provider_summary": values.get("providers", {}),
             "coast_preview": values.get("coast", {}),
-            "virtual_plan": values.get("virtual_plan", {}),
+            "virtual_plan": plan_brief,
             "return_c_last_known": values["return_c_last_known"],
             "fireplace_c_last_known": values["fireplace_c_last_known"],
             "fireplace_delta_c_last_known": values["fireplace_delta_c_last_known"],
