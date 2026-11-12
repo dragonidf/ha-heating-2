@@ -1472,3 +1472,60 @@ footer {
 .sample.latest {
   fill: var(--text);
 }
+
+/* Heating AI 2.0 live operator view: one useful chart, terse instruments, diagnostics on demand. */
+.climate-timeline { padding: 20px 20px 16px; }
+.timeline-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.timeline-head h2 { font-size:1.2rem; letter-spacing:-.025em; margin:3px 0 0; }
+.timeline-mode { border:1px solid var(--warning); color:var(--warning); font-size:.73rem; font-weight:650; border-radius:24px; padding:5px 9px; white-space:nowrap; }
+.timeline-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:17px 0 12px; }
+.timeline-metrics > div { display:flex; flex-direction:column; justify-content:center; min-width:0; border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--raised); }
+.timeline-metrics span { font-size:.73rem; color:var(--muted); }
+.timeline-metrics strong { font-size:1.1rem; letter-spacing:-.03em; margin-top:4px; overflow-wrap:anywhere; }
+.timeline-legend { display:flex; gap:8px 18px; flex-wrap:wrap; font-size:.76rem; margin:10px 0; color:var(--muted); }
+.timeline-legend span { display:inline-flex; align-items:center; gap:7px; }
+.timeline-key { display:inline-block; width:20px; height:0; border-top:3px solid var(--text); }
+.key-actual { border-color:var(--control); }
+.key-forecast { border-color:var(--prediction); border-top-style:dashed; }
+.key-target { border-color:var(--warning); border-top-style:dotted; }
+.key-heat { height:11px; width:15px; background:color-mix(in srgb,var(--heating) 22%,transparent); border:1px solid var(--heating); }
+.timeline-scroll { overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; border-radius:12px; scrollbar-width:thin; background:var(--canvas); }
+.timeline-svg { display:block; min-width:700px; width:100%; height:auto; }
+.timeline-svg text { fill:var(--muted); font-size:14px; font-weight:500; }
+.timeline-svg .timeline-now-label { fill:var(--text); font-weight:650; }
+.timeline-grid { stroke:var(--border); stroke-width:1; stroke-dasharray:3 6; }
+.timeline-heat { fill:var(--heating); fill-opacity:.15; }
+.timeline-now { stroke:var(--text); stroke-width:1.6; stroke-dasharray:4 4; }
+.timeline-path { fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-width:2.6; vector-effect:non-scaling-stroke; }
+.timeline-actual { stroke:var(--control); }
+.timeline-forecast { stroke:var(--prediction); stroke-dasharray:7 5; }
+.timeline-target { stroke:var(--warning); stroke-width:1.9; stroke-dasharray:3 4; }
+.timeline-cursor { stroke:var(--text); stroke-width:1; stroke-opacity:.7; }
+.timeline-inspect { display:block; margin-top:9px; font-size:.79rem; line-height:1.6; color:var(--muted); }
+.timeline-inspect strong { color:var(--text); }
+.timeline-inspect input { display:block; margin-top:7px; min-height:24px; }
+.timeline-caveat { font-size:.75rem; color:var(--muted); margin-top:8px; line-height:1.5; }
+.timeline-empty { font-size:.8rem; color:var(--warning); margin-top:10px; }
+.live-quick { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.live-quick > div { padding:12px 14px; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; gap:5px; }
+.live-quick span { font-size:.72rem; color:var(--muted); }
+.live-quick strong { font-size:.95rem; overflow-wrap:anywhere; }
+.live-technical { border:1px solid var(--border); border-radius:12px; background:var(--surface); padding:0 13px; }
+.live-technical summary { font-size:.83rem; color:var(--muted); }
+.live-technical-content { display:grid; gap:12px; padding-bottom:14px; }
+.live-technical-content .card { min-width:0; }
+@media(max-width:699px) {
+  .climate-timeline { padding:15px 12px; }
+  .timeline-head h2 { font-size:1.06rem; }
+  .timeline-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:12px 0; }
+  .timeline-metrics > div { padding:9px 11px; }
+  .timeline-metrics strong { font-size:1rem; }
+  .timeline-scroll { margin:0 -3px; }
+  .timeline-svg { min-width:760px; }
+  .timeline-legend { font-size:.69rem; gap:8px 12px; }
+  .live-quick { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .live-quick > div { padding:10px 12px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .timeline-scroll { scroll-behavior:auto; }
+}
