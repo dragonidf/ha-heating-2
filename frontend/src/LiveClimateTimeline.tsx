@@ -54,6 +54,17 @@ function pathPieces(points: Point[], x: (t: number) => number, y: (v: number) =>
   if (current) results.push(current);
   return results;
 }
+function targetStep(points: Point[], x: (t: number) => number, y: (v: number) => number): string {
+  let path = "";
+  let previous: Point | null = null;
+  for (const p of points) {
+    if (p.value === null || !finite(p.value)) { previous = null; continue; }
+    if (previous === null) path += "M" + x(p.at).toFixed(2) + " " + y(p.value).toFixed(2);
+    else path += " H" + x(p.at).toFixed(2) + " V" + y(p.value).toFixed(2);
+    previous = p;
+  }
+  return path;
+}
 function nearest(series: Point[], at: number, maxGap: number): number | null {
   let best: Point | null = null;
   let gap = maxGap;
@@ -98,7 +109,7 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
   const settings = api.backend?.settings.values ?? {};
   const desired = useMemo(() => {
     const points: Point[] = [];
-    for (let t = now; t <= end; t += 15 * 60) {
+    for (let t = now; t <= end; t += 5 * 60) {
       points.push({ at: t, value: targetAt(t, settings) });
     }
     return points;
@@ -174,10 +185,12 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
           ))}
           <line className="timeline-now" x1={x(now)} x2={x(now)} y1={TOP} y2={BOTTOM + 8} />
           <text x={x(now) + 7} y={TOP - 8} className="timeline-now-label">Зараз</text>
-          {pathPieces(desired, x, y, 960).map((path, i) =>
-            <path key={"target" + i} className="timeline-path timeline-target" d={path} />)}
+          <path className="timeline-path timeline-target" d={targetStep(desired, x, y)} />
           {pathPieces(actual, x, y, 5400).map((path, i) =>
             <path key={"actual" + i} className="timeline-path timeline-actual" d={path} />)}
+          {actual.length > 0 && actual[actual.length - 1]!.value !== null &&
+            <circle className="timeline-last-actual" cx={x(actual[actual.length - 1]!.at)}
+              cy={y(actual[actual.length - 1]!.value!)} r="4" />}
           {pathPieces(forecast, x, y, 1200).map((path, i) =>
             <path key={"forecast" + i} className="timeline-path timeline-forecast" d={path} />)}
           {cursor !== null && cursor >= start && cursor <= end &&
