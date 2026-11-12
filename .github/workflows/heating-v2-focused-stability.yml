@@ -12,7 +12,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      REVIEW_SHA: 3602b1ee17cb81b4bddec6d80b1a9c696c97b008
+      REVIEW_SHA: f84cdf3bcc943edd6ecc513e6f3c53625184bfc4
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
