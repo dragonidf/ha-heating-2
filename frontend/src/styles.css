@@ -1498,6 +1498,7 @@ footer {
 .timeline-now { stroke:var(--text); stroke-width:1.6; stroke-dasharray:4 4; }
 .timeline-path { fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-width:2.6; vector-effect:non-scaling-stroke; }
 .timeline-actual { stroke:var(--control); }
+.timeline-last-actual { fill:var(--control); stroke:var(--canvas); stroke-width:2; }
 .timeline-forecast { stroke:var(--prediction); stroke-dasharray:7 5; }
 .timeline-target { stroke:var(--warning); stroke-width:1.9; stroke-dasharray:3 4; }
 .timeline-cursor { stroke:var(--text); stroke-width:1; stroke-opacity:.7; }
