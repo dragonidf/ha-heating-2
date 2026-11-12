@@ -312,11 +312,45 @@ async def providers_case():
     assert monitor.brief()["weather_status"] == "UNKNOWN"
 
 
+def coast_case():
+    """A failed heat optimizer still has a bounded, separately labeled model."""
+    from custom_components.heating_ai_v2.shadow_coast import preview
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    ts = now.timestamp()
+    weather = {
+        "received_at": ts,
+        "hours": [
+            {"at": (now + timedelta(hours=i)).timestamp(), "outside_c": 2.0}
+            for i in range(-1, 6)
+        ],
+    }
+    params = {
+        "floor_air": 0.03, "room_loss": 0.01, "floor_decay": 0.25,
+        "heat_gain": 1.0, "fire_gain": 0.025, "version": 6,
+    }
+    result = preview(21.1, 27.3, params, weather, ts)
+    assert result["status"] == "UNQUALIFIED_CONDITIONAL_COAST"
+    assert result["commands_enabled"] is False
+    assert result["forecast_qualified"] is False
+    points = result["trajectory"]
+    assert 2 <= len(points) <= 100
+    assert points[0]["at"] == ts
+    assert all(p["quality"] == "estimated" and
+               ts <= p["at"] <= ts + 86400 for p in points)
+    assert result["temperature_min_c"] is not None
+    denied = preview(21.1, 27.3, None, weather, ts)
+    assert denied["status"] == "UNAVAILABLE"
+    assert denied["trajectory"] == []
+
+
 async def main():
     await case()
     await case(bad_meter=True)
     await case(fail_panel=True)
     await providers_case()
+    coast_case()
     print("PASS: native HA lifecycle + strictly read-only bounded real source monitor")
 
 
