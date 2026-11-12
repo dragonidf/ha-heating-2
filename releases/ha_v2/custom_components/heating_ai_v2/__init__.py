@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import asyncio
 from functools import partial
+from hashlib import sha256
 from time import monotonic
 import logging
 from pathlib import Path
@@ -155,6 +156,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not (Path(__file__).parent / 'engine' / 'SOURCE-SHA256.json').is_file():
         raise ConfigEntryNotReady('Missing accepted deterministic control engine')
 
+    # Stable per-build URL and element name avoid stale Android Companion
+    # custom-elements after a Marketplace update. No cache flushing/restarts.
+    # Hash the actual installed asset, not a separately maintained version.
+    bundle_id = await hass.async_add_executor_job(
+        lambda: sha256((assets / 'livePanel.js').read_bytes()).hexdigest()[:12]
+    )
+
     runtime = ShadowRuntime(hass, entry)
     from .native_runtime import NativeController
     from .climate_gateway import ha_service, ha_readback
@@ -196,9 +204,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         forwarded = True
         await panel_custom.async_register_panel(
             hass, frontend_url_path='heating-ai-v2',
-            webcomponent_name='heating-ai-v2-panel',
+            webcomponent_name=f'heating-ai-v2-panel-{bundle_id}',
             sidebar_title='Heating AI 2.0', sidebar_icon='mdi:radiator',
-            module_url='/heating_ai_v2/assets/livePanel.js',
+            module_url=f'/heating_ai_v2/assets/livePanel.js?v={bundle_id}',
             config={**dict(entry.data), 'entry_id': entry.entry_id},
             require_admin=True,
         )
