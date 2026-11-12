@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Point, Snapshot } from "./types";
 import type { LiveHAAPI, NativeHistory } from "./liveHA";
+import { LiveClimateTimeline } from "./LiveClimateTimeline";
 import { Card, Chart } from "./components";
 import { fmt, kyivRange, shiftDate } from "./domain";
 
@@ -53,10 +54,16 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
           </span>
         </div>
       </section>
-      <div className="notice safety" role="status">
-        Новий контролер: спостереження. Фізичні команди заборонені, старий
-        Heating AI продовжує керування.
+      <LiveClimateTimeline api={api} state={state} />
+      <div className="live-quick" aria-label="Стан обладнання">
+        <div><span>Котел</span><strong>{kw(t.kwsTotal)}</strong></div>
+        <div><span>Мережа</span><strong>{t.grid === true ? "Є" : t.grid === false ? "Немає" : "Невідомо"}</strong></div>
+        <div><span>Камін</span><strong>{t.fireplaceC === null ? "—" : t.fireplaceC.toFixed(1) + "°C"}</strong></div>
+        <div><span>Циркуляція</span><strong>{t.fanActual === "on" ? "Увімкнено" : t.fanActual === "off" ? "Вимкнено" : "Невідомо"}</strong></div>
       </div>
+      <details className="live-technical">
+        <summary>Технічні дані та діагностика</summary>
+        <div className="live-technical-content">
       <NativeStatus api={api} />
       <Card title="Електромережа та вхідна напруга">
         <p>
@@ -260,6 +267,8 @@ export function LiveHome({ api, state }: { api: LiveHAAPI; state: Snapshot }) {
           номінальна, не виміряна. Автоматичні команди заборонені.
         </p>
       </Card>
+        </div>
+      </details>
     </>
   );
 }
@@ -673,23 +682,6 @@ function NativeStatus({ api }: { api: LiveHAAPI }) {
             Скасувати разовий запит
           </button>
           {message && <p role="status">{message}</p>}
-          {(native.plan?.trajectory?.length ?? 0) > 0 && (
-            <Chart
-              actual={[]}
-              original={[]}
-              forecast={native.plan!.trajectory!}
-              scope={{
-                start: api.feed.value.now,
-                end: api.feed.value.now + 86400,
-              }}
-              now={api.feed.value.now}
-              label="Умовний 24-годинний прогноз погодженої теплової моделі"
-              forecastLabel="Умовний прогноз, не фізичний факт"
-              events={[]}
-              tracks={false}
-              comfort={false}
-            />
-          )}
         </>
       )}
       <p className="helper">
