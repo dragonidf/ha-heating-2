@@ -1,0 +1,106 @@
+name: Heating AI v0.2.2 stable SHADOW Marketplace release
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    if: ${{ github.repository == 'dragonidf/ha-heating-2' && github.event.issue.number == 40 && github.event.comment.user.login == 'dragonidf' && github.event.comment.body == '/publish-heating-v2-0.2.2' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      REVIEW_SHA: 3602b1ee17cb81b4bddec6d80b1a9c696c97b008
+      RELEASE_SHA: 252972efdd5417ed96dcefa3c790a698464ef45c
+      GATE_RUN_ID: '43189655848'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - name: Verify exact reviewed source and metadata-only version bump
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          python - <<'PY'
+          import json,os,subprocess
+          repo=os.environ['GH_REPO']
+          def gh(path):
+              return json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/{path}']))
+          pr=gh('pulls/43')
+          assert pr['head']['sha']==os.environ['RELEASE_SHA']
+          assert pr['head']['ref']=='release/p0-native-live-ui-pipeline-20261111'
+          assert pr['head']['repo']['full_name']==repo and pr['draft'] and not pr['merged']
+          manifest=json.load(open('manifest.json'))
+          assert manifest==json.load(open('releases/ha_v2/custom_components/heating_ai_v2/manifest.json'))
+          hacs=json.load(open('hacs.json'))
+          assert manifest['domain']=='heating_ai_v2' and manifest['version']=='0.2.2'
+          assert hacs['zip_release'] is True and hacs['filename']=='heating_ai_v2.zip'
+          assert hacs['content_in_root'] is True and hacs['hide_default_branch'] is True
+          diff=gh('compare/'+os.environ['REVIEW_SHA']+'...'+os.environ['RELEASE_SHA'])
+          changed={f['filename'] for f in diff['files']}
+          expected={'manifest.json','releases/ha_v2/custom_components/heating_ai_v2/manifest.json'}
+          assert diff['status']=='ahead' and changed==expected,changed
+          run=gh('actions/runs/'+os.environ['GATE_RUN_ID'])
+          assert run['conclusion']=='success' and run['status']=='completed'
+          assert run['name']=='Heating v2 focused stability candidate (no release)'
+          print('Reviewed exact source with focused pass; only manifest metadata changed')
+          PY
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24.19.0'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build the reviewed UI exactly once
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npx vite build --config vite.live.config.ts
+          test -s dist-live/assets/livePanel.js
+      - name: Reuse verified v0.2.1 native package and replace only reviewed fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release download v0.2.1 --repo "$GH_REPO" --pattern heating_ai_v2.zip --dir previous
+          python - <<'PY'
+          import hashlib,json,pathlib,zipfile
+          base=pathlib.Path('previous/heating_ai_v2.zip')
+          target=pathlib.Path('heating_ai_v2.zip')
+          overlays={
+            'manifest.json':pathlib.Path('manifest.json'),
+            'source_monitor.py':pathlib.Path('releases/ha_v2/custom_components/heating_ai_v2/source_monitor.py'),
+            'sensor.py':pathlib.Path('releases/ha_v2/custom_components/heating_ai_v2/sensor.py'),
+            'assets/livePanel.js':pathlib.Path('frontend/dist-live/assets/livePanel.js'),
+          }
+          assert base.is_file() and all(p.is_file() for p in overlays.values())
+          with zipfile.ZipFile(base) as z,zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as out:
+              names=z.namelist()
+              assert set(overlays)<=set(names) and len(names)>25
+              assert json.loads(z.read('manifest.json'))['version']=='0.2.1'
+              assert all(not x.startswith('/') and '..' not in pathlib.PurePosixPath(x).parts for x in names)
+              for name in sorted(names):
+                  out.writestr(name,overlays[name].read_bytes() if name in overlays else z.read(name))
+          with zipfile.ZipFile(base) as old,zipfile.ZipFile(target) as new:
+              assert json.loads(new.read('manifest.json'))['version']=='0.2.2'
+              assert all(old.read(n)==new.read(n) for n in old.namelist() if n not in overlays)
+              assert all(new.read(n)==p.read_bytes() for n,p in overlays.items())
+              assert new.testzip() is None
+              assert {'critical_ledger.py','native_store.py','native_runtime.py','native_api.py','engine/SOURCE-SHA256.json'}<=set(new.namelist())
+          print('Safe update; untouched physical executor and ledger.',target.stat().st_size,
+                hashlib.sha256(target.read_bytes()).hexdigest())
+          PY
+      - name: Publish immutable v0.2.2 without installing or restarting HA
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v0.2.2 --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo 'v0.2.2 already exists; refusing rewrite'
+            exit 0
+          fi
+          gh release create v0.2.2 heating_ai_v2.zip --repo "$GH_REPO" --target "$RELEASE_SHA" \
+            --title 'Heating AI 2.0 v0.2.2 — стабільний план і компактна історія' \
+            --notes 'Stabilizes 24h conditional planning against changing legacy diagnostic metadata, preserves real coefficients/freshness invalidation, moves full chart trajectory to authenticated native WebSocket instead of frequent Recorder state attributes. Focused HA2026.11, source and frontend checks PASS. No legacy/HA production changes: physical_commands_enabled=false, old controller retains all heating/fan ownership. Install once for 7-day SHADOW evaluation; HA Core restart is required by Marketplace 2026.11 after an integration update.'
