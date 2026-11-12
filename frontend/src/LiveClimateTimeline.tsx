@@ -102,9 +102,16 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
   const qualifiedShape = plan.status === "VIRTUAL_CONDITIONAL" &&
     finite(plan.computedAt) && now >= plan.computedAt &&
     now - plan.computedAt <= 5400 && plan.trajectory.length >= 2;
-  const forecast = useMemo(() => qualifiedShape ? plan.trajectory
-    .filter(p => finite(p.at) && finite(p.value) && p.at >= now - 600 && p.at <= end)
-    .slice(0, 300) : [], [qualifiedShape, plan.trajectory, now, end]);
+  const coast = api.telemetry.coast;
+  const coastReady = !qualifiedShape &&
+    coast.status === "UNQUALIFIED_CONDITIONAL_COAST" &&
+    finite(coast.computedAt) && now >= coast.computedAt &&
+    now - coast.computedAt <= 5400 && coast.trajectory.length >= 2;
+  const forecast = useMemo(() =>
+    (qualifiedShape ? plan.trajectory : coastReady ? coast.trajectory : [])
+      .filter(p => finite(p.at) && finite(p.value) && p.at >= now - 600 && p.at <= end)
+      .slice(0, 300),
+    [qualifiedShape, coastReady, coast.trajectory, plan.trajectory, now, end]);
   const windows = qualifiedShape ? plan.segments.filter(s => s.start < end && s.end > now) : [];
   const settings = api.backend?.settings.values ?? {};
   const desired = useMemo(() => {
@@ -149,16 +156,16 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
       </div>
       <div className="timeline-metrics">
         <div><span>Зараз</span><strong>{temp(lastKnown)}</strong></div>
-        <div><span>Мінімум моделі</span><strong>{qualifiedShape ? temp(plan.projectedMinC) : "—"}</strong></div>
+        <div><span>{qualifiedShape ? "Мінімум моделі" : "Без котла · мінімум"}</span><strong>{qualifiedShape ? temp(plan.projectedMinC) : coastReady ? temp(coast.min) : "—"}</strong></div>
         <div><span>Умовний нагрів</span><strong>{nearestHeat
           ? clock(Math.max(now, nearestHeat.start)) + "–" + clock(nearestHeat.end)
-          : "немає плану"}</strong></div>
+          : "план не сформовано"}</strong></div>
         <div><span>Енергія сценарію</span><strong>{qualifiedShape && plan.nominalEnergyKwh !== null
           ? plan.nominalEnergyKwh.toFixed(1).replace(".", ",") + " кВт·год" : "—"}</strong></div>
       </div>
       <div className="timeline-legend" aria-label="Позначення на графіку">
         <span><i className="timeline-key key-actual" />Виміряно HA</span>
-        <span><i className="timeline-key key-forecast" />Умовна модель</span>
+        <span><i className={qualifiedShape ? "timeline-key key-forecast" : "timeline-key key-coast"} />{qualifiedShape ? "Умовний план" : "Без котла · сценарій"}</span>
         <span><i className="timeline-key key-target" />Ціль кімнати</span>
         <span><i className="timeline-key key-heat" />Можливий нагрів</span>
       </div>
@@ -192,7 +199,7 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
             <circle className="timeline-last-actual" cx={x(actual[actual.length - 1]!.at)}
               cy={y(actual[actual.length - 1]!.value!)} r="4" />}
           {pathPieces(forecast, x, y, 1200).map((path, i) =>
-            <path key={"forecast" + i} className="timeline-path timeline-forecast" d={path} />)}
+            <path key={"forecast" + i} className={qualifiedShape ? "timeline-path timeline-forecast" : "timeline-path timeline-coast"} d={path} />)}
           {cursor !== null && cursor >= start && cursor <= end &&
             <line className="timeline-cursor" x1={x(cursor)} x2={x(cursor)} y1={TOP} y2={BOTTOM} />}
           {Array.from({length: 6}, (_, i) => start + i * 6 * HOUR).map(at =>
@@ -203,14 +210,16 @@ export function LiveClimateTimeline({ api, state }: { api: LiveHAAPI; state: Sna
       </div>
       <label className="timeline-inspect">
         Час: <strong>{clock(selectedAt)}</strong> · Факт {temp(nearest(actual, selectedAt, 15 * 60))}
-        {" · "}Модель {qualifiedShape ? temp(nearest(forecast, selectedAt, 10 * 60)) : "—"}
+        {" · "}{qualifiedShape ? "План" : "Без котла"} {qualifiedShape || coastReady ? temp(nearest(forecast, selectedAt, 10 * 60)) : "—"}
         {" · "}Ціль {temp(targetAt(selectedAt, settings))}
         {atHeat ? " · можливий нагрів" : ""}
         <input aria-label="Переглянути час на графіку" type="range" min={start} max={end}
           step={300} value={selectedAt} onChange={e => setCursor(Number(e.target.value))} />
       </label>
-      {!qualifiedShape ? <p className="timeline-empty" role="status">
-        Прогноз наразі недоступний або застарілий. Графік не домальовує майбутнє без розрахунку.
+      {!qualifiedShape ? <p className={coastReady ? "timeline-caveat" : "timeline-empty"} role="status">
+        {coastReady
+          ? "Оптимізатор не сформував допустимого плану. Пунктир — лише умовне охолодження/інерція без котла, каміна та вентиляції; не прогноз фактичних команд."
+          : "Немає актуального розрахунку. Відображено лише фактичні вимірювання та підтверджені цілі."}
       </p> : <p className="timeline-caveat">
         Пунктир — умовний сценарій на старій неперевіреній моделі. Виділені вікна НЕ виконуються.
         {plan.truncated ? " Показано лише частину інтервалів." : ""}
