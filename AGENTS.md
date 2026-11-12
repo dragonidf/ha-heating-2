@@ -1,14 +1,5 @@
 # AGENTS.md — Heating AI 2.0
 
-## CURRENT TASK 2026-11-12 — Issue #40, PR #43 (pre-install code only)
-
-This is the current *owner instruction for the next Codex run*, replacing the obsolete WP2C / PR #22 task routing below for this specific continuation. **Read only [docs/CODEX-NEXT-P0-GATEWAY.md](docs/CODEX-NEXT-P0-GATEWAY.md) and its named code/tests**, then implement that one bounded, hard-OFF native climate gateway slice on the existing draft PR #43 branch. The older WP2C paragraphs below remain historical evidence and safety background; do not switch branches, restart WP2C, or claim that they authorize installed real-home work.
-
-**Authorized now:** repository-only pre-install development in an isolated environment with fake clients/data and limited tests. **Not authorized by this task:** contacting or modifying production Home Assistant, installing the v2 ZIP, switching any old AppDaemon heating, watchdog or fan writer, sending physical thermostat/KWS/fan commands, enabling physical-command capability, or merging the PR. Owner indicated Codex will handle a future installation; that is a separate reviewed step, not part of this run.
-
-Privacy/security/persistence/STOP/one-writer gates from the rest of this file still apply. Real household entity IDs, configuration, sensor histories, state.json, original forecast curves and the private binding manifest **must not** enter this public repository, tests or CI. Owner phase allocations have already been provided privately; do not ask again or hard-code home-specific IDs. Prefer zero new helper entities and no broad audits. After the one targeted change, report SHA, limited tests and blockers; **stop**.
-
-
 ## Current owner authorization (2026-11-04): WP2C isolated HA sandbox ONLY
 
 Owner explicitly approved **WP2C development, provisioning a new disposable independent Home Assistant Core TEST instance, and synthetic-only native integration/browser tests** under [Issue #20](https://github.com/dragonidf/ha-heating-2/issues/20). The test HA must live **solely inside a separate Codex sandbox or ephemeral CI runner**, with fake identities and data. **No production HA access, even read-only; no existing user-host/Proxmox/LAN access; no physical equipment contact.** No WP2D/real shadow/deployment permission.
