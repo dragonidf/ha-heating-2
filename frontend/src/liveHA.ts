@@ -338,6 +338,7 @@ export class LiveHAAPI implements OperatorAPI {
   async refreshBackend() {
     if (this.nativeFlight || this.closed || !this.entryId) return;
     this.nativeFlight = true;
+    let refreshedFromBackend = false;
     try {
       const result = await this.nativeRequest("snapshot");
       if (!result || typeof result !== "object")
@@ -356,6 +357,10 @@ export class LiveHAAPI implements OperatorAPI {
       if (!this.closed) {
         this.backend = data as NativeOverview;
         this.backendError = null;
+        // Full trajectory comes only from the authenticated WebSocket backend.
+        // The status sensor publishes a compact Recorder-safe plan summary.
+        this.updateHass(this.currentHass);
+        refreshedFromBackend = true;
       }
     } catch {
       if (!this.closed)
@@ -363,7 +368,7 @@ export class LiveHAAPI implements OperatorAPI {
           "Native backend недоступний — запис і керування заблоковані";
     } finally {
       this.nativeFlight = false;
-      if (!this.closed)
+      if (!this.closed && !refreshedFromBackend)
         this.feed.reset({ ...this.feed.value, seq: this.feed.value.seq + 1 });
     }
   }
@@ -569,7 +574,9 @@ export class LiveHAAPI implements OperatorAPI {
       hours: coastNumber(coastValue.hours_covered) ?? 0,
       qualified: false,
     };
-    const candidate = statusAttrs?.virtual_plan;
+    const candidate = this.backend && !this.backendError && this.backend.plan
+      ? this.backend.plan
+      : statusAttrs?.virtual_plan;
     const planRaw =
       candidate && typeof candidate === "object" && !Array.isArray(candidate)
         ? (candidate as Record<string, unknown>)
