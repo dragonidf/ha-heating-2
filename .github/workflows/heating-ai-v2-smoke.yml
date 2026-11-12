@@ -4,6 +4,8 @@ on:
     paths:
       - 'releases/ha_v2/custom_components/heating_ai_v2/**'
       - 'tests/wp2c_revision/test_live_shadow_v2.py'
+      - 'tools/release/test_ha2026_v2_lifecycle.py'
+      - 'tests/wp2c_revision/test_forecast_sources_v2.py'
       - '.github/workflows/heating-ai-v2-smoke.yml'
 permissions:
   contents: read
@@ -21,7 +23,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Run read-only source and zero-value regressions
-        run: python -m unittest tests.wp2c_revision.test_live_shadow_v2 -v
+        run: python -m unittest tests.wp2c_revision.test_live_shadow_v2 tests.wp2c_revision.test_forecast_sources_v2 -v
       - name: Install exact HA release in disposable CI environment only
         run: python -m pip install --disable-pip-version-check 'homeassistant==2026.11.0'
       - name: Verify supported HA imports and config form
@@ -34,10 +36,18 @@ jobs:
           from homeassistant.config_entries import ConfigFlowResult
           from homeassistant.components.sensor import SensorEntity
           form = config_flow.mapping_schema()
-          assert len(form.schema) == len(telemetry.ROLES) == 10
+          assert len(telemetry.ROLES) == 10
+          assert len(telemetry.OPTIONAL_ROLES) == 25
+          assert len(form.schema) == 35
           assert issubclass(sensor.ShadowSensor, SensorEntity)
           assert hasattr(integration, 'async_setup_entry')
           assert hasattr(integration, 'async_unload_entry')
           assert telemetry.snapshot({})['commands_enabled'] is False
           print('HA2026.11 imports/schema OK; profile has no writer')
           PY
+      - name: Exercise real HA2026.11 v2 setup/unload and failure cleanup
+        run: |
+          mkdir -p releases/ha_v2/custom_components/heating_ai_v2/assets
+          printf '/* disposable CI only */' > releases/ha_v2/custom_components/heating_ai_v2/assets/livePanel.js
+          python tools/release/build_v2_engine.py --output releases/ha_v2/custom_components/heating_ai_v2/engine
+          PYTHONPATH=releases/ha_v2 python tools/release/test_ha2026_v2_lifecycle.py

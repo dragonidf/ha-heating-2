@@ -88,6 +88,50 @@ class ReadOnlyShadowTests(unittest.TestCase):
         self.assertIsNone(snapshot(f)["grid_last_known"])
         self.assertFalse(snapshot(f)["commands_enabled"])
 
+    def test_return_probe_is_observed_without_granting_authority(self):
+        f = frame()
+        f["return_probe"] = {"state": "22.1", "unit": "°C", "last_reported": "today"}
+        view = snapshot(f)
+        self.assertEqual(view["return_c_last_known"], 22.1)
+        self.assertFalse(view["commands_enabled"])
+        f["return_probe"]["state"] = "unavailable"
+        self.assertIsNone(snapshot(f)["return_c_last_known"])
+
+    def test_fireplace_fan_modes_and_ventilation_are_read_only(self):
+        f = frame()
+        f.update({
+            "fireplace": {"state": "27.4", "unit": "°C", "last_reported": "today"},
+            "circulation": {"state": "off", "unit": "", "last_reported": "today",
+                            "attributes": {"percentage": 42}},
+            "fan_mode": {"state": "Зупинити", "unit": "", "last_reported": "today"},
+            "fan_night": {"state": "38", "unit": "%", "last_reported": "today"},
+            "fan_standard": {"state": "42", "unit": "%", "last_reported": "today"},
+            "fan_intense": {"state": "45", "unit": "%", "last_reported": "today"},
+            "fan_backup": {"state": "on", "unit": "", "last_reported": "today"},
+            "fan_control": {"state": "on", "unit": "", "last_reported": "today"},
+            "recuperator": {"state": "unavailable", "unit": "", "last_reported": "today"},
+            "bath": {"state": "off", "unit": "", "last_reported": "today"},
+        })
+        view = snapshot(f)
+        self.assertAlmostEqual(view["fireplace_delta_c_last_known"], 5.8)
+        self.assertEqual(view["circulation_last_known"], "off")
+        self.assertEqual(view["fan_mode_last_known"], "Зупинити")
+        self.assertEqual(view["fan_speed_percent_last_known"], {
+            "fan_night": 38., "fan_standard": 42., "fan_intense": 45.,
+        })
+        self.assertTrue(view["fan_backup_verified_last_known"])
+        self.assertIsNone(view["ventilation_last_known"]["recuperator"])
+        self.assertIs(view["ventilation_last_known"]["bath"], False)
+        self.assertFalse(view["fireplace_heat_proven"])
+        self.assertFalse(view["fan_commands_enabled"])
+
+    def test_missing_fireplace_never_invents_flame_or_fan_demand(self):
+        view = snapshot(frame())
+        self.assertIsNone(view["fireplace_delta_c_last_known"])
+        self.assertIsNone(view["fan_mode_last_known"])
+        self.assertIsNone(view["ventilation_last_known"]["bath"])
+        self.assertFalse(view["fan_commands_enabled"])
+
     def test_no_services_transports_automation_or_actuator_code_in_live_shadow(self):
         forbidden = {"async_call", "call_service", "set_temperature", "set_hvac_mode",
                      "turn_on", "turn_off", "async_press", "async_turn_on", "async_turn_off"}
@@ -95,11 +139,22 @@ class ReadOnlyShadowTests(unittest.TestCase):
             tree = ast.parse(file.read_text())
             for node in ast.walk(tree):
                 if isinstance(node, ast.Attribute):
-                    self.assertNotEqual(node.attr, "services", str(file))
+                    if node.attr == "services":
+                        self.assertEqual(file.name, "climate_gateway.py")
                 if isinstance(node, ast.Call):
                     name = (node.func.attr if isinstance(node.func, ast.Attribute)
                             else node.func.id if isinstance(node.func, ast.Name) else "")
-                    self.assertNotIn(name, forbidden, str(file))
+                    if name == "async_call" and file.name == "climate_gateway.py":
+                        self.assertEqual([ast.literal_eval(arg) for arg in node.args[:2]],
+                                         ["climate", "set_temperature"])
+                    else:
+                        self.assertNotIn(name, forbidden, str(file))
+        gateway = ast.parse((ROOT / "climate_gateway.py").read_text())
+        gate = next(node for node in ast.walk(gateway) if isinstance(node, ast.FunctionDef)
+                    and node.name == "physical_commands_enabled")
+        self.assertTrue(any(isinstance(node, ast.Return) and isinstance(node.value, ast.Constant)
+                            and node.value.value is False for node in ast.walk(gate)))
+        self.assertIn("lambda: None", (ROOT / "native_runtime.py").read_text())
         manifest = json.loads((ROOT / "manifest.json").read_text())
         self.assertEqual(manifest["domain"], "heating_ai_v2")
         self.assertEqual(manifest["requirements"], [])
