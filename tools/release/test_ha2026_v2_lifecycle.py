@@ -244,6 +244,22 @@ async def providers_case():
     kept_plan = {"status": "VIRTUAL_CONDITIONAL", "commands_sent": 0}
     kept_coast = {"status": "UNQUALIFIED_CONDITIONAL_COAST"}
     monitor.plan, monitor.coast = kept_plan, kept_coast
+    # Dynamic stored-floor heat is a derived estimate, not a raw safety gate:
+    # sub-0.25°C drift must not starve the bounded 24h compute worker.
+    plan_rows["stored_heat"] = {
+        "state": "26.51", "unit": "°C", "last_reported": now.isoformat()
+    }
+    monitor.note_inputs(plan_rows)
+    monitor.plan, monitor.coast = kept_plan, kept_coast
+    plan_rows["stored_heat"]["state"] = "26.53"
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is kept_plan and monitor.coast is kept_coast
+    plan_rows["stored_heat"]["state"] = "26.81"
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is None and monitor.coast is None
+    plan_rows["stored_heat"]["state"] = "26.51"
+    monitor.note_inputs(plan_rows)
+    monitor.plan, monitor.coast = kept_plan, kept_coast
     plan_rows["legacy_model"]["attributes"]["journal"].append("diagnostic")
     plan_rows["power_model"]["attributes"]["power_observation"] = "next"
     monitor.note_inputs(plan_rows)
