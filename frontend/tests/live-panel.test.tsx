@@ -147,6 +147,44 @@ describe("Actual Home Assistant custom panel mounting", () => {
     expect(panel.shadowRoot?.querySelector("[data-theme]")).not.toBeNull();
   });
 
+  it("plots the real conditional 24h trajectory and proposed heat windows, without issuing commands", async () => {
+    const ha = hass();
+    const now = Date.now() / 1000;
+    const state = ha.states["sensor.v2_status"];
+    expect(state).toBeDefined();
+    state!.attributes.virtual_plan = {
+      status: "VIRTUAL_CONDITIONAL",
+      reason: "comfort_shortfall",
+      computed_at: now,
+      projected_min_c: 20.5,
+      nominal_energy_kwh: 3.5,
+      horizon_hours: 24,
+      segment_count: 1,
+      segments_truncated: false,
+      segments: [{ start: now + 600, end: now + 1800, conditional: true }],
+      trajectory: [300, 600, 900].map(offset => ({
+        at: now + offset, value: 21.3 - offset / 3000, quality: "estimated",
+      })),
+    };
+    const panel = document.createElement("heating-ai-v2-panel") as HTMLElement & {
+      hass: LiveHass; panel: { config: Record<string, string> };
+    };
+    panel.panel = { config: { ...mapping, entry_id: "synthetic-entry" } };
+    panel.hass = ha;
+    document.body.appendChild(panel);
+    await waitFor(() => {
+      const root = panel.shadowRoot;
+      expect(root?.textContent).toContain("Температура та план нагріву");
+      expect(root?.querySelectorAll("path.timeline-forecast").length).toBeGreaterThan(0);
+      expect(root?.querySelectorAll("rect.timeline-heat").length).toBe(1);
+      expect(root?.textContent).toContain("Умовний нагрів");
+      expect(root?.textContent).toContain("20,5°");
+      expect(root?.querySelector("details.live-technical")?.hasAttribute("open")).toBe(false);
+      expect(root?.textContent).toContain("SHADOW · без команд");
+    });
+    expect(ha.states["climate.boiler"]?.state).toBe("heat");
+  });
+
   it("refuses missing bindings rather than showing synthetic readings", async () => {
     const panel = document.createElement(
       "heating-ai-v2-panel",
