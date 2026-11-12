@@ -88,5 +88,18 @@ export class HeatingAIV2Panel extends HTMLElement {
     }
   }
 }
-if (!customElements.get("heating-ai-v2-panel"))
-  customElements.define("heating-ai-v2-panel", HeatingAIV2Panel);
+// A new Marketplace bundle receives its own tag, so an existing Android
+// WebView cannot silently reuse the custom element from a previous build.
+const currentBuild = new URL(import.meta.url).searchParams.get("v");
+const versionedElement =
+  currentBuild && /^[a-f0-9]{12}$/.test(currentBuild)
+    ? `heating-ai-v2-panel-${currentBuild}`
+    : "heating-ai-v2-panel";
+if (!customElements.get(versionedElement))
+  customElements.define(versionedElement, HeatingAIV2Panel);
+// Preserve direct-import test harnesses and old bookmarks.
+if (
+  versionedElement !== "heating-ai-v2-panel" &&
+  !customElements.get("heating-ai-v2-panel")
+)
+  customElements.define("heating-ai-v2-panel", class extends HeatingAIV2Panel {});
