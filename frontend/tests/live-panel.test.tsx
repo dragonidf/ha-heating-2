@@ -244,6 +244,62 @@ describe("Actual Home Assistant custom panel mounting", () => {
     expect((row!.attributes.virtual_plan as Record<string, unknown>).trajectory).toBeUndefined();
   });
 
+  it("keeps the measured graph and displays a labeled no-boiler curve when the heat plan is blocked", async () => {
+    const ha = hass();
+    const now = Date.now() / 1000;
+    const coast = {
+      status: "UNQUALIFIED_CONDITIONAL_COAST",
+      computed_at: now,
+      temperature_min_c: 20.9,
+      temperature_end_c: 21.4,
+      hours_covered: 3,
+      trajectory: [0, 900, 1800].map(offset => ({
+        at: now + offset, value: 21.1 + offset / 6000, quality: "estimated",
+      })),
+      commands_enabled: false,
+      forecast_qualified: false,
+    };
+    const row = ha.states["sensor.v2_status"];
+    expect(row).toBeDefined();
+    row!.attributes.virtual_plan = { status: "BLOCKED_INPUTS", reason: "solver_external_overheat" };
+    row!.attributes.coast_preview = { status: coast.status, hours_covered: 3 };
+    ha.callWS = async request => request.type === "heating_ai_v2/backend"
+      ? {
+          version: [2, 0], seq: 1, boot_id: "isolated", owner_epoch: 0,
+          settings: {
+            revision: 0, values: { day_target: 21.5, night_target: 20.5,
+              sleep_start: "23:00:00", sleep_end: "06:30:00" },
+            manual_pause: true, energy_fault: null, counter: null, model_frozen: true,
+          },
+          safety: { voltage_status: "UNQUALIFIED", reason: "shadow", ages: {} },
+          controller: { mode: "safe_hold", reason: "hard_stop", actual_commands: 0 },
+          active_limit: { band: "day", target: 21.5, upper: 22.0, ceiling: 24.5 },
+          model: { parameters: null, qualification: "NOT_PARITY_VERIFIED", frozen: true },
+          one_shot: { state: "unknown_outcome", expires: null },
+          journal: { revision: 0, fenced: true, commands: {} },
+          fan: null, plan: row!.attributes.virtual_plan, coast,
+          physical_commands_enabled: false, fault: null,
+        }
+      : { "sensor.room": [{ s: "21.5", lu: now - 600 }] };
+    const panel = document.createElement("heating-ai-v2-panel") as HTMLElement & {
+      hass: LiveHass; panel: { config: Record<string, string> };
+    };
+    panel.panel = { config: { ...mapping, entry_id: "synthetic-entry" } };
+    panel.hass = ha;
+    document.body.appendChild(panel);
+    await waitFor(() => {
+      const root = panel.shadowRoot;
+      expect(root?.textContent).toContain("Температура та план нагріву");
+      expect(root?.querySelectorAll("path.timeline-coast").length).toBeGreaterThan(0);
+      expect(root?.querySelectorAll("path.timeline-forecast").length).toBe(0);
+      expect(root?.querySelectorAll("rect.timeline-heat").length).toBe(0);
+      expect(root?.textContent).toContain("Без котла · сценарій");
+      expect(root?.textContent).toContain("20,9°");
+      expect(root?.textContent).toContain("плану");
+      expect(root?.textContent).toContain("SHADOW · без команд");
+    });
+  });
+
   it("refuses missing bindings rather than showing synthetic readings", async () => {
     const panel = document.createElement(
       "heating-ai-v2-panel",
