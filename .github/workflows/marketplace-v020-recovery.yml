@@ -1,0 +1,108 @@
+name: Heating AI 2.0 v0.2.0 one-time Marketplace recovery
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    if: ${{ github.repository == 'dragonidf/ha-heating-2' && github.event.issue.number == 40 && github.event.comment.user.login == 'dragonidf' && github.event.comment.body == '/publish-heating-v2-0.2.0' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_SHA: 9215dc0c23457a6056fd4a1e93bc500c70289dc7
+      VERIFIED_SHA: ee1ef8c20b1056450ae550a65032175dab20e194
+      VERIFIED_PACKAGE_RUN: '43182711421'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - name: Confirm fixed PR head, accepted CI and metadata-only diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          gh api "repos/$GH_REPO/pulls/43" > /tmp/heating-pr.json
+          python - <<'PY'
+          import json,os,subprocess
+          obj=json.load(open('/tmp/heating-pr.json'))
+          sha=os.environ['RELEASE_SHA']
+          assert obj['head']['sha']==sha, 'PR head has changed: abort one-time recovery'
+          assert obj['head']['ref']=='release/p0-native-live-ui-pipeline-20261111'
+          assert obj['head']['repo']['full_name']==os.environ['GH_REPO']
+          assert obj['draft'] is True and obj['merged'] is False
+          root=json.load(open('manifest.json'))
+          installed=json.load(open('releases/ha_v2/custom_components/heating_ai_v2/manifest.json'))
+          hacs=json.load(open('hacs.json'))
+          assert root==installed and root['version']=='0.2.0' and root['domain']=='heating_ai_v2'
+          assert hacs['zip_release'] is True and hacs['filename']=='heating_ai_v2.zip'
+          assert hacs['content_in_root'] is True and hacs['hide_default_branch'] is True
+          base=os.environ['VERIFIED_SHA']
+          raw=subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/compare/{base}...{sha}"])
+          diff=json.loads(raw)
+          assert diff['status']=='ahead' and diff['ahead_by']>=1 and diff['behind_by']==0
+          allowed={
+            'manifest.json',
+            'releases/ha_v2/custom_components/heating_ai_v2/manifest.json',
+            '.github/workflows/p0-live-package.yml',
+            '.github/workflows/heating-ai-v2-smoke.yml',
+          }
+          changed={f['filename'] for f in diff['files']}
+          assert changed<=allowed and {'manifest.json','releases/ha_v2/custom_components/heating_ai_v2/manifest.json'}<=changed, changed
+          print('Exact PR head and only permitted packaging/manifest changes verified:',sorted(changed))
+          raw=subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/actions/runs?head_sha={base}&per_page=100"])
+          runs=json.loads(raw)['workflow_runs']
+          successful={r['name'] for r in runs if r.get('head_sha')==base and r.get('event')=='pull_request' and r.get('conclusion')=='success'}
+          required={'P0 v2 live HA installable package','Heating AI 2.0 read-only HA 2026.11 import smoke','WP1A pure library','WP1B offline store and simulator','WP1C offline model and planner','WP2A offline integration and ledger','WP2B offline frontend and browser QA','WP2C isolated native Home Assistant'}
+          assert required <= successful, f'Missing verified baseline checks: {required-successful}'
+          print('All 8 already executed baseline checks PASS; no retesting required')
+          PY
+      - name: Retrieve the precise accepted package, not rebuild the controller
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$VERIFIED_PACKAGE_RUN" --repo "$GH_REPO" --name heating-ai-v2-live-shadow --dir ci-artifact
+      - name: Repack only the version manifest; all executable bytes stay tested
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib,zipfile
+          source=pathlib.Path('ci-artifact/heating-ai-v2-live-shadow.zip')
+          assert source.is_file() and source.stat().st_size>10000
+          prefix='custom_components/heating_ai_v2/'
+          new_manifest=pathlib.Path('manifest.json').read_bytes()
+          current=json.loads(new_manifest)
+          assert current['version']=='0.2.0'
+          target=pathlib.Path('heating_ai_v2.zip')
+          with zipfile.ZipFile(source,'r') as old,zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as new:
+              members=[n for n in old.namelist() if n.startswith(prefix) and not n.endswith('/')]
+              assert len(members)>25
+              for name in sorted(members):
+                  relative=name[len(prefix):]
+                  assert relative and not relative.startswith('/') and '..' not in pathlib.PurePosixPath(relative).parts
+                  assert '__pycache__' not in relative and not relative.endswith('.pyc')
+                  new.writestr(relative,new_manifest if relative=='manifest.json' else old.read(name))
+          with zipfile.ZipFile(target,'r') as bundle:
+              names=set(bundle.namelist())
+              needed={'manifest.json','__init__.py','config_flow.py','native_runtime.py',
+                      'native_api.py','critical_ledger.py','assets/livePanel.js','engine/SOURCE-SHA256.json'}
+              assert needed<=names, needed-names
+              assert bundle.read('manifest.json')==new_manifest
+              assert bundle.testzip() is None
+          print('Marketplace installable v0.2.0 verified',target.stat().st_size,hashlib.sha256(target.read_bytes()).hexdigest())
+          PY
+      - name: Publish immutable new release tagged at manifest-bearing commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v0.2.0 --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo 'v0.2.0 already exists; not replacing immutable version'
+            exit 0
+          fi
+          gh release create v0.2.0 heating_ai_v2.zip --repo "$GH_REPO" --target "$RELEASE_SHA" \
+            --title 'Heating AI 2.0 v0.2.0 — native backend, safe observation mode' \
+            --notes 'Correct Marketplace-release structure with hacs.json and manifest.json in this version tag; includes native backend, durable history/settings, three-tab UI, forecasts and diagnostics. Physical commands remain disabled: not an autonomous heating handoff. Existing AppDaemon controller and fan writers remain active. Installation is a separate, non-actuating step.'
