@@ -1,7 +1,7 @@
 {
   "domain": "heating_ai_v2",
-  "name": "Heating AI 2.0 — native backend (safe shadow)",
-  "version": "0.2.0",
+  "name": "Heating AI 2.0 — графік прогнозу і плану (SHADOW)",
+  "version": "0.2.1",
   "config_flow": true,
   "single_config_entry": true,
   "integration_type": "service",
