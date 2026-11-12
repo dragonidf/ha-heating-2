@@ -5,6 +5,8 @@ No real devices and NO Home Assistant service transport are provided.
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from datetime import datetime, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
@@ -33,9 +35,10 @@ def fake_state(role: str):
              "27" if role == "fireplace" else
              "230" if role.startswith("voltage_") else
              "100" if role == "kws_energy" else "0")
+    observed_at = datetime.now(timezone.utc)
     return SimpleNamespace(
         state=value, attributes={"unit_of_measurement": unit, "percentage": 42},
-        last_reported=datetime.now(timezone.utc),
+        last_reported=observed_at, last_updated=observed_at,
     )
 
 
@@ -55,7 +58,11 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         entry_id="synthetic_test_entry", data=bindings,
         async_on_unload=Mock(),
     )
+    tempdir = TemporaryDirectory(prefix="heating-v2-ha-smoke-")
     hass = SimpleNamespace(
+        config=SimpleNamespace(path=lambda *parts: str(Path(tempdir.name).joinpath(*parts))),
+        async_add_executor_job=lambda func, *args: asyncio.to_thread(func, *args),
+        async_create_task=lambda coro, name=None: asyncio.create_task(coro, name=name),
         data={},
         states=SimpleNamespace(get=states.get),
         http=SimpleNamespace(async_register_static_paths=AsyncMock()),
@@ -71,6 +78,7 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
     unsubs = [Mock(), Mock()]
     with (
         patch.object(component.er, "async_get", return_value=registry),
+        patch.object(component.websocket_api, "async_register_command") if hasattr(component, "websocket_api") else patch("homeassistant.components.websocket_api.async_register_command"),
         patch.object(component.panel_custom, "async_register_panel", new_callable=AsyncMock) as panel,
         patch.object(component.frontend, "async_remove_panel") as remove,
         patch.object(component, "async_track_state_change_event", return_value=unsubs[0]) as watched,
@@ -87,6 +95,7 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
                 raise AssertionError("Cross-device KWS incorrectly accepted")
             assert not hass.data.get(component.DOMAIN, {}), hass.data
             assert not watched.called and not timed.called and not panel.called
+            tempdir.cleanup()
             return
         if fail_panel:
             try:
@@ -98,6 +107,7 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
             assert not hass.data[component.DOMAIN].get(entry.entry_id)
             assert not watched.called and not timed.called
             assert hass.config_entries.async_unload_platforms.await_count == 1
+            tempdir.cleanup()
             return
         assert await component.async_setup_entry(hass, entry) is True
         runtime = hass.data[component.DOMAIN][entry.entry_id]
@@ -139,6 +149,7 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         for callback in entry.async_on_unload.call_args_list:
             callback.args[0]()
         assert unsubs[0].call_count == 1 and unsubs[1].call_count == 1
+        tempdir.cleanup()
 
 
 async def providers_case():
