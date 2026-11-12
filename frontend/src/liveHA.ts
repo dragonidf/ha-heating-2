@@ -108,6 +108,8 @@ export interface CoastSummary {
   min: number | null;
   end: number | null;
   hours: number;
+  computedAt: number | null;
+  trajectory: Point[];
   qualified: false;
 }
 export interface VirtualPlanSummary {
@@ -257,6 +259,7 @@ export interface NativeOverview {
     reason?: string;
   } | null;
   fan: { percentage_proposed?: number | null; reason?: string } | null;
+  coast: Record<string, unknown> | null;
   journal: {
     revision: number;
     fenced: boolean;
@@ -557,7 +560,8 @@ export class LiveHAAPI implements OperatorAPI {
       typeof x === "number" && Number.isInteger(x) && x >= 0 && x <= 72 ? x : 0;
     const safeTime = (x: unknown) =>
       typeof x === "number" && Number.isFinite(x) && x > 0 ? x : null;
-    const coastRaw = statusAttrs?.coast_preview ?? null;
+    const coastRaw = this.backend && !this.backendError && this.backend.coast
+      ? this.backend.coast : statusAttrs?.coast_preview ?? null;
     const coastValue =
       coastRaw && typeof coastRaw === "object" && !Array.isArray(coastRaw)
         ? (coastRaw as Record<string, unknown>)
@@ -572,8 +576,25 @@ export class LiveHAAPI implements OperatorAPI {
       min: coastNumber(coastValue.temperature_min_c),
       end: coastNumber(coastValue.temperature_end_c),
       hours: coastNumber(coastValue.hours_covered) ?? 0,
+      computedAt: safeTime(coastValue.computed_at),
+      trajectory: [],
       qualified: false,
     };
+    if (coast.status === "UNQUALIFIED_CONDITIONAL_COAST" &&
+        coast.computedAt !== null && now >= coast.computedAt &&
+        now - coast.computedAt <= 5400 &&
+        Array.isArray(coastValue.trajectory) && coastValue.trajectory.length <= 100) {
+      coast.trajectory = coastValue.trajectory.flatMap((point): Point[] => {
+        if (!point || typeof point !== "object" || Array.isArray(point)) return [];
+        const sample = point as Record<string, unknown>;
+        return typeof sample.at === "number" && Number.isFinite(sample.at) &&
+          sample.at >= now - 900 && sample.at <= now + 25 * 3600 &&
+          typeof sample.value === "number" && Number.isFinite(sample.value) &&
+          sample.value >= -30 && sample.value <= 60 &&
+          sample.quality === "estimated"
+          ? [{ at: sample.at, value: sample.value }] : [];
+      });
+    }
     const candidate = this.backend && !this.backendError && this.backend.plan
       ? this.backend.plan
       : statusAttrs?.virtual_plan;
