@@ -217,6 +217,38 @@ async def providers_case():
     assert monitor.plan is not None
     assert monitor.plan["status"] == "BLOCKED_INPUTS"
     assert monitor.plan["commands_sent"] == 0
+    # Legacy model publishes changing training journal and diagnostics on
+    # every old control tick. That metadata is not a thermal input: it must
+    # not erase the already calculated 24h plan between bounded replans.
+    plan_rows["legacy_model"] = {
+        "state": "ready",
+        "last_reported": now.isoformat(),
+        "attributes": {
+            "parameters": dict(
+                floor_air=0.03, room_loss=0.01, floor_decay=0.2,
+                heat_gain=1.0, fire_gain=0.02, version=6,
+            ),
+            "journal": ["first"],
+        },
+    }
+    plan_rows["power_model"] = {
+        "state": "fixed_6", "attributes": {"power_observation": "first"}
+    }
+    monitor.note_inputs(plan_rows)
+    kept_plan = {"status": "VIRTUAL_CONDITIONAL", "commands_sent": 0}
+    kept_coast = {"status": "UNQUALIFIED_CONDITIONAL_COAST"}
+    monitor.plan, monitor.coast = kept_plan, kept_coast
+    plan_rows["legacy_model"]["attributes"]["journal"].append("diagnostic")
+    plan_rows["power_model"]["attributes"]["power_observation"] = "next"
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is kept_plan and monitor.coast is kept_coast
+    plan_rows["legacy_model"]["attributes"]["parameters"]["room_loss"] = 0.02
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is None and monitor.coast is None
+    monitor.plan, monitor.coast = kept_plan, kept_coast
+    plan_rows["legacy_model"]["last_reported"] = (now - timedelta(hours=5)).isoformat()
+    monitor.note_inputs(plan_rows)
+    assert monitor.plan is None and monitor.coast is None
     # Changed temperature/settings invalidate previously computed suggestions.
     plan_rows["room"] = {"state": "20.5", "unit": "°C"}
     monitor.note_inputs(plan_rows)
