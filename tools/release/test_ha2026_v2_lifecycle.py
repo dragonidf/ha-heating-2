@@ -123,6 +123,12 @@ async def case(*, bad_meter: bool = False, fail_panel: bool = False):
         assert len(runtime.listeners) == 0
         assert watched.call_count == 1 and timed.call_count == 1
         assert entry.async_on_unload.call_count == 2
+        panel_args = panel.await_args.kwargs
+        module_url = panel_args["module_url"]
+        assert module_url.startswith("/heating_ai_v2/assets/livePanel.js?v=")
+        build = module_url.rsplit("=", 1)[-1]
+        assert len(build) == 12 and all(c in "0123456789abcdef" for c in build)
+        assert panel_args["webcomponent_name"] == "heating-ai-v2-panel-" + build
         assert not hasattr(hass, "services"), "Physical service transport must not exist"
         # Exercise repeated HA source changes and the periodic safety observer.
         # The subscriber count, state shape and allowed command count stay bounded.
