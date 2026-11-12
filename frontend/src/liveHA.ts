@@ -119,6 +119,8 @@ export interface VirtualPlanSummary {
   horizonHours: number;
   segmentCount: number;
   segments: { start: number; end: number }[];
+  trajectory: Point[];
+  computedAt: number | null;
   truncated: boolean;
   qualified: false;
   commandsSent: 0;
@@ -419,6 +421,8 @@ export class LiveHAAPI implements OperatorAPI {
       horizonHours: 0,
       segmentCount: 0,
       segments: [],
+      trajectory: [],
+      computedAt: null,
       truncated: false,
       qualified: false,
       commandsSent: 0,
@@ -590,6 +594,25 @@ export class LiveHAAPI implements OperatorAPI {
       planRaw.status === "VIRTUAL_CONDITIONAL"
         ? "VIRTUAL_CONDITIONAL"
         : "BLOCKED_INPUTS";
+    // The backend emits physical-simulation coordinates with explicit estimated
+    // quality. Never synthesize missing points or display stale scenarios.
+    const computedAt = safeTime(planRaw.computed_at);
+    const pointsRaw = planRaw.trajectory;
+    const trajectory: Point[] =
+      planStatus === "VIRTUAL_CONDITIONAL" &&
+      computedAt !== null && now - computedAt >= 0 && now - computedAt <= 5400 &&
+      Array.isArray(pointsRaw) && pointsRaw.length <= 320
+        ? pointsRaw.flatMap((item): Point[] => {
+            if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+            const p = item as Record<string, unknown>;
+            return typeof p.at === "number" && Number.isFinite(p.at) &&
+              p.at >= now - 900 && p.at <= now + 25 * 3600 &&
+              typeof p.value === "number" && Number.isFinite(p.value) &&
+              p.value >= -30 && p.value <= 60 && p.quality === "estimated"
+              ? [{ at: p.at, value: p.value }]
+              : [];
+          })
+        : [];
     const plan: VirtualPlanSummary = {
       status: planStatus,
       reason:
@@ -608,6 +631,8 @@ export class LiveHAAPI implements OperatorAPI {
           ? planRaw.segment_count
           : 0,
       segments: planStatus === "VIRTUAL_CONDITIONAL" ? segments : [],
+      trajectory,
+      computedAt,
       truncated: planRaw.segments_truncated === true,
       qualified: false,
       commandsSent: 0,
