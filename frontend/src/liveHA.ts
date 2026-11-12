@@ -259,7 +259,7 @@ export interface NativeOverview {
     reason?: string;
   } | null;
   fan: { percentage_proposed?: number | null; reason?: string } | null;
-  coast: Record<string, unknown> | null;
+  coast?: Record<string, unknown> | null;
   journal: {
     revision: number;
     fenced: boolean;
