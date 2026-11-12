@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 import logging
+from math import isfinite
 import time
 from collections.abc import Callable
 from datetime import timedelta
@@ -72,8 +73,25 @@ class SourceMonitor:
                 "fire_gain", "version")
         coefficients = (tuple(model.get(k) for k in keys)
                         if isinstance(model, dict) else None)
+
+        def stable_value(role: str) -> Any:
+            raw = (rows.get(role) or {}).get("state")
+            if role == "stored_heat":
+                # Derived stored-floor heat shifts by 0.01°C on almost every
+                # legacy telemetry tick. Replanning for those tiny changes
+                # continuously superseded a 15-s planner run. A 0.25°C
+                # bucket is for scheduling ONLY; diagnostics still solves
+                # using the original unrounded observation.
+                try:
+                    value = float(raw)
+                    if isfinite(value) and -30 <= value <= 90:
+                        return round(value * 4) / 4
+                except (TypeError, ValueError, OverflowError):
+                    pass
+            return raw
+
         key = tuple(
-            (role, (rows.get(role) or {}).get("state"),
+            (role, stable_value(role),
              (rows.get(role) or {}).get("unit") if role in
              ("room", "stored_heat", "day_target", "night_target",
               "day_upper", "night_upper") else None,
