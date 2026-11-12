@@ -56,6 +56,8 @@ def preview(room: float | None, stored: float | None,
         "temperature_end_c": None,
         "end_at": None,
         "hours_covered": 0,
+        "computed_at": None,
+        "trajectory": [],
         "scenario": "no_boiler_no_fire_no_ventilation_no_external_gain",
     }
     if (room is None or stored is None or not isinstance(coefficients, dict)
@@ -95,6 +97,9 @@ def preview(room: float | None, stored: float | None,
     )
     minimum = room
     steps = 0
+    # Sparse explanatory trajectory (15 min): never an executable plan.
+    # Keep it on the authenticated WebSocket; not in HA Recorder attributes.
+    trajectory = [{"at": now, "value": round(room, 3), "quality": "estimated"}]
     while state.at < horizon and steps < 288:
         length = min(300, horizon - state.at)
         outside = _temperature(points, state.at + length / 2)
@@ -109,6 +114,16 @@ def preview(room: float | None, stored: float | None,
         state = step(state, forcing, model, length)
         minimum = min(minimum, state.room.low)
         steps += 1
+        if steps % 3 == 0 or state.at >= horizon:
+            trajectory.append({
+                "at": state.at, "value": round(state.room.low, 3),
+                "quality": "estimated",
+            })
+    if steps and trajectory[-1]["at"] != state.at:
+        trajectory.append({
+            "at": state.at, "value": round(state.room.low, 3),
+            "quality": "estimated",
+        })
     if steps == 0:
         return empty
     return {
@@ -118,4 +133,6 @@ def preview(room: float | None, stored: float | None,
         "temperature_end_c": round(state.room.low, 2),
         "end_at": state.at,
         "hours_covered": round((state.at - now) / 3600, 2),
+        "computed_at": now,
+        "trajectory": trajectory,
     }
