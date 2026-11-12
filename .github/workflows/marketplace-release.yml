@@ -3,7 +3,7 @@ on:
   workflow_run:
     workflows:
       - P0 v2 live HA installable package
-      - WP2C isolated native Home Assistant
+      - Heating AI 2.0 read-only HA 2026.11 import smoke
     types: [completed]
     branches: [release/p0-native-live-ui-pipeline-20261111]
 permissions:
@@ -38,7 +38,7 @@ jobs:
           runs=json.loads(raw)['workflow_runs']
           good={r['name'] for r in runs if r.get('head_sha')==sha and
                 r.get('event')=='pull_request' and r.get('conclusion')=='success'}
-          needed={'P0 v2 live HA installable package','WP2C isolated native Home Assistant'}
+          needed={'P0 v2 live HA installable package','Heating AI 2.0 read-only HA 2026.11 import smoke'}
           if not needed.issubset(good):
               print(f'RELEASE BLOCKED for {sha}: incomplete checks {sorted(needed-good)}')
               with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('ready=false\n')
