@@ -61,7 +61,8 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write('tag=v'+version+'\n')
           print('Manifest / hard-OFF structural gate PASS, v'+version)
           PY
-          ! gh release view "${{ steps.manifest.outputs.tag }}" --repo "$GH_REPO" >/dev/null 2>&1
+          TAG="$(python -c 'import json; print("v"+json.load(open("manifest.json"))["version"])')"
+          ! gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24.19.0'
