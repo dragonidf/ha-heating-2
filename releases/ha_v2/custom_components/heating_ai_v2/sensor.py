@@ -65,6 +65,14 @@ class ShadowSensor(SensorEntity):
         # native WebSocket snapshot. Never write hundreds of forecast points
         # into a Recorder-backed HA state every two-second safety tick.
         plan = values.get("virtual_plan") or {}
+        coast = values.get("coast") or {}
+        coast_brief = {
+            key: coast[key] for key in (
+                "status", "temperature_min_c", "temperature_end_c",
+                "hours_covered", "computed_at", "forecast_qualified",
+                "commands_enabled", "scenario",
+            ) if key in coast
+        }
         plan_brief = {
             k: plan[k] for k in (
                 "status", "reason", "scenario_power_kw", "projected_min_c",
@@ -88,7 +96,7 @@ class ShadowSensor(SensorEntity):
             "kernel_intents": 0,
             "v2_entry_id": self.runtime.entry.entry_id,
             "provider_summary": values.get("providers", {}),
-            "coast_preview": values.get("coast", {}),
+            "coast_preview": coast_brief,
             "virtual_plan": plan_brief,
             "return_c_last_known": values["return_c_last_known"],
             "fireplace_c_last_known": values["fireplace_c_last_known"],
