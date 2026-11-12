@@ -19,7 +19,7 @@ const temp = (v: number | null) => v === null ? "—" : v.toFixed(1).replace("."
 const finite = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
 function timeOfDay(raw: unknown): number | null {
-  if (typeof raw !== "string" || !/^([01]\\d|2[0-3]):[0-5]\\d:00$/.test(raw)) return null;
+  if (typeof raw !== "string" || !/^(?:[01][0-9]|2[0-3]):[0-5][0-9]:00$/.test(raw)) return null;
   return Number(raw.slice(0, 2)) * 60 + Number(raw.slice(3, 5));
 }
 function targetAt(at: number, values: Record<string, string | number>): number | null {
