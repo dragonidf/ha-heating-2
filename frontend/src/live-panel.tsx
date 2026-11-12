@@ -28,6 +28,7 @@ export class HeatingAIV2Panel extends HTMLElement {
   private currentHass?: LiveHass;
   private currentPanel?: { config?: Record<string, unknown> };
   private holder?: HTMLElement;
+  private poll?: ReturnType<typeof setInterval>;
 
   set hass(value: LiveHass) {
     this.currentHass = value;
@@ -52,6 +53,8 @@ export class HeatingAIV2Panel extends HTMLElement {
     this.mount();
   }
   disconnectedCallback() {
+    if (this.poll) clearInterval(this.poll);
+    this.api?.close();
     this.root?.unmount();
     this.root = undefined;
     this.api = undefined;
@@ -74,6 +77,7 @@ export class HeatingAIV2Panel extends HTMLElement {
         typeof config.entry_id === "string" ? config.entry_id : undefined,
       );
       this.root.render(<LiveApp api={this.api} />);
+      this.poll = setInterval(() => void this.api?.refreshBackend(), 5000);
     } catch {
       this.root.render(
         <div className="app" role="alert">

@@ -238,7 +238,7 @@ def conditional_plan(
         stages_kw=(power,),
         stored_upper=50.0,
         armed=True, manual=False, actual_grid=actual_grid,
-        budget_kwh=None, known_spent_kwh=0, spend_complete=False,
+        budget_kwh=_scalar(rows.get("energy_budget_kwh"), 0, 1000), known_spent_kwh=0, spend_complete=False,
         return_probe=None, return_upper_c=65.0,
         return_max_age_s=1200, limits_qualified=True,
         state_max_age_s=300, beam=4, max_work=50000,
@@ -248,6 +248,9 @@ def conditional_plan(
         return {
             **_blocked("solver_" + proposal.reason),
             "work": proposal.work,
+        "computed_at": now,
+        "trajectory": [{"at": state.at, "value": state.room.low, "quality": "estimated"}
+                       for state in proposal.trajectory],
             "horizon_hours": round((cursor-now)/3600, 2),
         }
     segments = [
@@ -272,6 +275,9 @@ def conditional_plan(
         "segments": segments,
         "segments_truncated": len(proposal.segments) > MAX_SEGMENTS_UI,
         "work": proposal.work,
+        "computed_at": now,
+        "trajectory": [{"at": state.at, "value": state.room.low, "quality": "estimated"}
+                       for state in proposal.trajectory],
         "conditional_reasons": [
             "weather_issue_unknown", "normal_grid_future_unverified",
             "legacy_model_not_parity_verified",

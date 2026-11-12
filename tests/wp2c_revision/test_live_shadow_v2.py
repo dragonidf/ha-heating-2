@@ -139,11 +139,22 @@ class ReadOnlyShadowTests(unittest.TestCase):
             tree = ast.parse(file.read_text())
             for node in ast.walk(tree):
                 if isinstance(node, ast.Attribute):
-                    self.assertNotEqual(node.attr, "services", str(file))
+                    if node.attr == "services":
+                        self.assertEqual(file.name, "climate_gateway.py")
                 if isinstance(node, ast.Call):
                     name = (node.func.attr if isinstance(node.func, ast.Attribute)
                             else node.func.id if isinstance(node.func, ast.Name) else "")
-                    self.assertNotIn(name, forbidden, str(file))
+                    if name == "async_call" and file.name == "climate_gateway.py":
+                        self.assertEqual([ast.literal_eval(arg) for arg in node.args[:2]],
+                                         ["climate", "set_temperature"])
+                    else:
+                        self.assertNotIn(name, forbidden, str(file))
+        gateway = ast.parse((ROOT / "climate_gateway.py").read_text())
+        gate = next(node for node in ast.walk(gateway) if isinstance(node, ast.FunctionDef)
+                    and node.name == "physical_commands_enabled")
+        self.assertTrue(any(isinstance(node, ast.Return) and isinstance(node.value, ast.Constant)
+                            and node.value.value is False for node in ast.walk(gate)))
+        self.assertIn("lambda: None", (ROOT / "native_runtime.py").read_text())
         manifest = json.loads((ROOT / "manifest.json").read_text())
         self.assertEqual(manifest["domain"], "heating_ai_v2")
         self.assertEqual(manifest["requirements"], [])

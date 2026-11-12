@@ -35,7 +35,11 @@ def main() -> None:
         assert hashlib.sha256(raw).hexdigest() == digest, relative
     assert not (ENGINE / "ha_fake").exists()
     assert not (ENGINE / "simulator").exists()
-    assert not (ENGINE / "ha_native").exists()
+    # Only the selected accepted limiter/voltage dependencies, no synthetic backend/gateway.
+    assert {p.name for p in (ENGINE / "ha_native").glob("*.py")} == {
+        "__init__.py", "thermostat.py", "voltage.py", "meter.py", "store.py"}
+    assert not (ENGINE / "ha_native" / "backend.py").exists()
+    assert not (ENGINE / "ha_native" / "thermostat_executor.py").exists()
 
     ctl = importlib.import_module("custom_components.heating_ai_v2.engine.control")
     assert callable(ctl.reduce)

@@ -10,6 +10,7 @@ import type {
   Settings,
   Snapshot,
   Window,
+  Point,
 } from "./types";
 
 export interface LiveState {
@@ -21,6 +22,7 @@ export interface LiveState {
 export interface LiveHass {
   states: Record<string, LiveState | undefined>;
   connected?: boolean;
+  user?: { is_admin?: boolean };
   callWS?: (message: Record<string, unknown>) => Promise<unknown>;
 }
 export type BaseBindings = Record<
@@ -220,6 +222,62 @@ function blank(): Snapshot {
     },
   };
 }
+
+export interface NativeOverview {
+  version: [2, 0];
+  seq: number;
+  boot_id: string;
+  owner_epoch: number;
+  settings: {
+    revision: number;
+    values: Record<string, string | number>;
+    manual_pause: boolean;
+    energy_fault: string | null;
+    counter: number | null;
+    model_frozen: boolean;
+  };
+  safety: {
+    voltage_status: string;
+    reason: string;
+    ages: Record<string, number | null>;
+  };
+  controller: { mode: string; reason: string; actual_commands: number };
+  model: {
+    parameters: Record<string, number> | null;
+    qualification: string;
+    frozen: boolean;
+  };
+  one_shot: { state: string; expires: number | null };
+  plan: {
+    trajectory?: Point[];
+    horizon_hours?: number;
+    status?: string;
+    reason?: string;
+  } | null;
+  fan: { percentage_proposed?: number | null; reason?: string } | null;
+  journal: {
+    revision: number;
+    fenced: boolean;
+    commands: Record<string, { stage: string }>;
+  };
+  active_limit: {
+    band: string;
+    target: number | null;
+    upper: number | null;
+    ceiling: number | null;
+  };
+  physical_commands_enabled: false;
+  fault: string | null;
+}
+export interface NativeHistory {
+  actual: Point[];
+  energy: { start: number; end: number; kwh: number; category: string }[];
+  original: unknown;
+  original_status: string;
+  source: string;
+  truncated: boolean;
+}
+
 export class LiveHAAPI implements OperatorAPI {
   readonly native = true;
   readonly live = true;
@@ -227,11 +285,129 @@ export class LiveHAAPI implements OperatorAPI {
   readonly feed = new SnapshotFeed(blank());
   readonly model = { revision: 0, candidate: false, frozen: true };
   readonly view = emptyView(Date.now() / 1000);
-  readonly dataErrors = [
-    "Архів оригінальних прогнозів та керування Heating AI 2.0 ще не перенесено.",
-  ];
+  get dataErrors() {
+    return this.backend
+      ? []
+      : [
+          "Native backend ще не підтверджено; жодних демоданих або прав керування.",
+        ];
+  }
   readonly scenario = undefined;
+  backend: NativeOverview | null = null;
+  backendError: string | null = null;
+  private nativeFlight = false;
+  private closed = false;
   private currentHass: LiveHass;
+  async nativeRequest(
+    operation: string,
+    payload: Record<string, unknown> = {},
+  ): Promise<unknown> {
+    if (
+      this.closed ||
+      !this.entryId ||
+      !this.currentHass.callWS ||
+      this.currentHass.connected === false
+    )
+      throw Error("Native backend недоступний");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        this.currentHass.callWS({
+          type: "heating_ai_v2/backend",
+          entry_id: this.entryId,
+          version: [2, 0],
+          operation,
+          payload,
+        }),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                Error("Native backend timeout: результат не підтверджений"),
+              ),
+            8000,
+          );
+        }),
+      ]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+  async refreshBackend() {
+    if (this.nativeFlight || this.closed || !this.entryId) return;
+    this.nativeFlight = true;
+    try {
+      const result = await this.nativeRequest("snapshot");
+      if (!result || typeof result !== "object")
+        throw Error("Invalid native snapshot");
+      const data = result as Partial<NativeOverview>;
+      if (
+        data.version?.join(".") !== "2.0" ||
+        typeof data.seq !== "number" ||
+        !data.settings ||
+        !data.safety ||
+        !data.controller ||
+        !data.boot_id ||
+        data.physical_commands_enabled !== false
+      )
+        throw Error("Invalid native contract");
+      if (!this.closed) {
+        this.backend = data as NativeOverview;
+        this.backendError = null;
+      }
+    } catch {
+      if (!this.closed)
+        this.backendError =
+          "Native backend недоступний — запис і керування заблоковані";
+    } finally {
+      this.nativeFlight = false;
+      if (!this.closed)
+        this.feed.reset({ ...this.feed.value, seq: this.feed.value.seq + 1 });
+    }
+  }
+  get canWriteNative() {
+    return (
+      !!this.backend &&
+      !this.backend.fault &&
+      !this.backendError &&
+      this.currentHass.user?.is_admin === true &&
+      this.currentHass.connected !== false
+    );
+  }
+  async mutateNative(
+    operation: string,
+    values: Record<string, string | number>,
+    expected: number,
+  ) {
+    const backend = this.backend;
+    if (!backend || !this.canWriteNative) throw Error("Запис недоступний");
+    const result = await this.nativeRequest(operation, {
+      values,
+      expected_revision: expected,
+      request_id: crypto.randomUUID(),
+      boot_id: backend.boot_id,
+      owner_epoch: backend.owner_epoch,
+    });
+    if (!result || typeof result !== "object" || !("status" in result))
+      throw Error("Невалідна відповідь");
+    await this.refreshBackend();
+    return String(result.status);
+  }
+  async nativeHistory(range: Window): Promise<NativeHistory> {
+    const data = await this.nativeRequest("history", { ...range });
+    if (
+      !data ||
+      typeof data !== "object" ||
+      !("actual" in data) ||
+      !("energy" in data)
+    )
+      throw Error("Invalid archive response");
+    return data as NativeHistory;
+  }
+  close() {
+    this.closed = true;
+  }
+
   telemetry: LiveTelemetry = {
     origin: "ha_last_known",
     plan: {
@@ -530,6 +706,7 @@ export class LiveHAAPI implements OperatorAPI {
       notices,
     };
     this.feed.reset(next);
+    void this.refreshBackend();
   }
   canChange() {
     return false;

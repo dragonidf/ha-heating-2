@@ -36,7 +36,7 @@ export function LiveApp({ api }: { api: LiveHAAPI }) {
             </strong>
             <span className="brand-caption">Комфорт під контролем</span>
           </div>
-          <Badge tone="control">Реальні дані · лише читання</Badge>
+          <Badge tone="control">Реальні дані · native HA · керування OFF</Badge>
         </div>
         <nav className="main-nav" aria-label="Основні вкладки">
           {(
@@ -72,7 +72,7 @@ export function LiveApp({ api }: { api: LiveHAAPI }) {
             ? "Home Assistant · реальні датчики"
             : "Немає зв'язку · останні показники"}
         </span>
-        <span>Новий контролер: SHADOW</span>
+        <span>Новий контролер: native backend · physical OFF</span>
       </div>
       <main id="live-main" ref={main} tabIndex={-1}>
         {api.dataErrors.map((msg) => (

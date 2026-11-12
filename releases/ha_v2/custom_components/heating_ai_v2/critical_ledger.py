@@ -57,10 +57,12 @@ def _fingerprint(record):
 class CriticalLedger:
     physical_commands_enabled = False
 
-    def __init__(self, data_dir, *, owner_id, boot_id, owner_epoch):
-        for value in (owner_id, boot_id):
-            _text(value)
-        _counter(owner_epoch)
+    def __init__(self, data_dir, *, owner_id=None, boot_id=None, owner_epoch=None):
+        supplied = (owner_id, boot_id, owner_epoch) != (None, None, None)
+        if supplied:
+            for value in (owner_id, boot_id):
+                _text(value)
+            _counter(owner_epoch)
         root = Path(data_dir).absolute()
         if not root.is_dir() or root.resolve() != root:
             raise LedgerError('Trusted non-symlink directory required')
@@ -88,6 +90,8 @@ class CriticalLedger:
             self._inode = (st.st_dev, st.st_ino)
             with self._transaction(initial=created) as con:
                 if created:
+                    if not supplied:
+                        raise LedgerError('Initial server identity required')
                     con.execute('CREATE TABLE journal (id INTEGER PRIMARY KEY CHECK(id=1), '
                                 'revision INTEGER NOT NULL, body TEXT NOT NULL, checksum TEXT NOT NULL)')
                     con.execute('PRAGMA user_version=1')
@@ -95,7 +99,8 @@ class CriticalLedger:
                                 owner_epoch=owner_epoch, fenced=False, commands={})
                     self._write(con, 0, body, insert=True)
                 revision, body = self._read(con)
-                self._identity(body, owner_id, boot_id, owner_epoch)
+                if supplied:
+                    self._identity(body, owner_id, boot_id, owner_epoch)
                 if any(r['stage'] in ('PREPARED', 'SENT') for r in body['commands'].values()):
                     self._unknown(body, heat_only=False)
                     body['fenced'] = True

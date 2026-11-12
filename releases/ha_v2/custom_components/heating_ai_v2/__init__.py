@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+import asyncio
+from functools import partial
 from time import monotonic
 import logging
 from pathlib import Path
@@ -35,6 +37,8 @@ class ShadowRuntime:
         self._fan_fault = False
         self._fan_state = None
         self.source_monitor = None
+        self.native = None
+        self._observe_task = None
         self.plan_rows: dict[str, dict[str, Any] | None] = {}
         self.refresh()
 
@@ -48,7 +52,11 @@ class ShadowRuntime:
                 "state": state.state,
                 "unit": state.attributes.get("unit_of_measurement", ""),
                 "last_reported": state.last_reported.isoformat(),
+                "last_updated": state.last_updated.isoformat(),
                 "attributes": (
+                    {key: state.attributes.get(key) for key in
+                     ("current_temperature", "temperature", "min_temp", "max_temp", "target_temp_step")}
+                    if role == "thermostat" else
                     {"percentage": state.attributes.get("percentage")}
                     if role == "circulation" else
                     {"parameters": state.attributes.get("parameters")}
@@ -57,7 +65,7 @@ class ShadowRuntime:
             } if state is not None else None)
         self.plan_rows = rows
         if self.source_monitor is not None:
-            self.source_monitor.note_inputs(rows)
+            self.source_monitor.note_inputs(self.native.planning_rows(rows) if self.native else rows)
         self.values = snapshot(rows)
         self.values["virtual_plan"] = (
             self.source_monitor.plan if self.source_monitor and self.source_monitor.plan
@@ -71,7 +79,8 @@ class ShadowRuntime:
         )
         try:
             from .shadow_kernel import shadow_decision
-            self.values['kernel'] = shadow_decision(self.values)
+            self.values['kernel'] = (shadow_decision(self.values) if self.native is None
+                                     else self.native.decision)
             self._kernel_fault = False
         except Exception:
             self.values['kernel'] = {'mode': 'FAULT', 'permit': False,
@@ -81,8 +90,15 @@ class ShadowRuntime:
             self._kernel_fault = True
         try:
             from .fan_shadow import project
+            fan_values = dict(self.values)
+            if self.native is not None:
+                preferences = self.native.persisted['values']
+                fan_values['fan_mode_last_known'] = preferences.get('fan_mode', fan_values.get('fan_mode_last_known'))
+                fan_values['fan_speed_percent_last_known'] = {
+                    role: preferences.get(role, fan_values['fan_speed_percent_last_known'].get(role))
+                    for role in ('fan_night', 'fan_standard', 'fan_intense')}
             self._fan_state, self.values["fan"] = project(
-                self.values, self._fan_state, monotonic(), dt_util.now().hour
+                fan_values, self._fan_state, monotonic(), dt_util.now().hour
             )
             self._fan_fault = False
         except Exception:
@@ -100,6 +116,17 @@ class ShadowRuntime:
             else {"status": "UNAVAILABLE", "commands_enabled": False,
                   "forecast_qualified": False}
         )
+        if self.native is not None:
+            try:
+                import time
+                self.native.tick(rows, self.values, time.time(), monotonic())
+                self.values['kernel'] = self.native.decision
+                self.values['native'] = self.native.overview()
+                if self._observe_task is None or self._observe_task.done():
+                    self._observe_task = self.hass.async_create_task(self.native.observe())
+            except Exception:
+                self.native.fault = 'native_safety_fault'
+                self.native.gateway.stopped = True
         for notify in tuple(self.listeners):
             notify()
 
@@ -129,6 +156,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady('Missing accepted deterministic control engine')
 
     runtime = ShadowRuntime(hass, entry)
+    from .native_runtime import NativeController
+    from .climate_gateway import ha_service, ha_readback
+    def open_native():
+        directory = Path(hass.config.path('.storage', 'heating_ai_v2', entry.entry_id))
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        return NativeController(directory, runtime.plan_rows,
+            partial(ha_service, hass), partial(ha_readback, hass))
+    try:
+        runtime.native = await hass.async_add_executor_job(open_native)
+        runtime.native.gateway.entity_id = entry.data['thermostat']
+    except Exception as exc:
+        raise ConfigEntryNotReady('Native durable state unavailable; commands inhibited') from exc
+    if not hass.data[DOMAIN].get('_api'):
+        from .native_api import register
+        register(hass)
+        hass.data[DOMAIN]['_api'] = True
     hass.data[DOMAIN][entry.entry_id] = runtime
 
     @callback
@@ -164,14 +207,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, list(entry.data.values()), changed
         ))
         entry.async_on_unload(async_track_time_interval(
-            hass, tick, timedelta(seconds=60),
+            hass, tick, timedelta(seconds=2),
             name='heating_ai_v2_shadow_monitor'
         ))
         if "weather_forecast" in entry.data or "outage_calendar" in entry.data:
             from .source_monitor import SourceMonitor
             monitor = SourceMonitor(
                 hass, dict(entry.data), runtime.refresh,
-                lambda: runtime.plan_rows,
+                lambda: runtime.native.planning_rows(runtime.plan_rows),
             )
             monitor.start()
             runtime.source_monitor = monitor
@@ -184,6 +227,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             frontend.async_remove_panel(hass, 'heating-ai-v2', warn_if_unknown=False)
         if forwarded:
             await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
+        if runtime._observe_task is not None:
+            await runtime._observe_task
+        runtime.native.gateway.stopped = True
         runtime.listeners.clear()
         hass.data[DOMAIN].pop(entry.entry_id, None)
         raise
@@ -198,5 +244,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if runtime is not None:
         if runtime.source_monitor is not None:
             await runtime.source_monitor.close()
+        runtime.native.gateway.stopped = True
+        if runtime._observe_task is not None:
+            await runtime._observe_task
         runtime.listeners.clear()
     return True

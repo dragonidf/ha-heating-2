@@ -19,7 +19,8 @@ PURE = (
     "contracts", "control", "thermal", "planner", "control_store",
     "learning", "evidence", "fan_policy", "offline", "migration",
 )
-ALLOWED = frozenset(PURE)
+NATIVE_FILES = ("__init__.py", "thermostat.py", "voltage.py", "meter.py", "store.py")
+ALLOWED = frozenset((*PURE, "ha_native"))
 SOURCE = ROOT / "packages"
 DEST = Path("p0-release/custom_components/heating_ai_v2/engine")
 NAMESPACE = "custom_components.heating_ai_v2.engine"
@@ -33,11 +34,13 @@ def package(destination: Path) -> dict[str, object]:
         '"""Accepted pure Heating AI 2.0 modules, namespaced for HA."""\n'
     )
     hashes: dict[str, str] = {}
-    for family in PURE:
+    for family in (*PURE, "ha_native"):
         source = SOURCE / family
         if not source.is_dir() or not (source / "__init__.py").is_file():
             raise RuntimeError(f"Missing accepted pure module: {family}")
         for original in sorted(source.rglob("*.py")):
+            if family == "ha_native" and original.name not in NATIVE_FILES:
+                continue
             if original.is_symlink() or not original.is_file():
                 raise RuntimeError("Unexpected source file type")
             relative = original.relative_to(SOURCE)

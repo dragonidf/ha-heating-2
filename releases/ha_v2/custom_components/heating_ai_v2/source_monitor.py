@@ -27,7 +27,7 @@ PLANNING_ROLES = (
     "room", "stored_heat", "legacy_model", "grid",
     "day_target", "night_target", "day_upper", "night_upper",
     "sleep_start", "sleep_end", "heating_start", "heating_end",
-    "strategy", "power_model",
+    "strategy", "power_model", "energy_budget_kwh",
 )
 
 
@@ -117,6 +117,7 @@ class SourceMonitor:
             self._warn_once("weather")
         self.plan = self.coast = None
         self.notify()
+        self.schedule()
 
     def _warn_once(self, source: str) -> None:
         if source not in self._faults:
