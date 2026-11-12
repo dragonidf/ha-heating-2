@@ -185,6 +185,65 @@ describe("Actual Home Assistant custom panel mounting", () => {
     expect(ha.states["climate.boiler"]?.state).toBe("heat");
   });
 
+  it("gets the full trajectory from authenticated backend while HA Recorder attributes stay compact", async () => {
+    const ha = hass();
+    const now = Date.now() / 1000;
+    const plan = {
+      status: "VIRTUAL_CONDITIONAL",
+      reason: "comfort_shortfall",
+      computed_at: now,
+      projected_min_c: 20.4,
+      nominal_energy_kwh: 4.3,
+      horizon_hours: 24,
+      segment_count: 1,
+      segments_truncated: false,
+      segments: [{ start: now + 450, end: now + 2400, conditional: true }],
+      trajectory: [300, 600, 900].map(offset => ({
+        at: now + offset, value: 21.2 - offset / 3500, quality: "estimated",
+      })),
+    };
+    const row = ha.states["sensor.v2_status"];
+    expect(row).toBeDefined();
+    // A real sensor must NOT publish the expensive forecast curve into Recorder.
+    const { trajectory: _hidden, ...compact } = plan;
+    row!.attributes.virtual_plan = compact;
+    ha.callWS = async message => {
+      if (message.type === "heating_ai_v2/backend" && message.operation === "snapshot") {
+        return {
+          version: [2, 0], seq: 1, boot_id: "isolated", owner_epoch: 0,
+          settings: {
+            revision: 0, values: {
+              day_target: 21.5, night_target: 20.5,
+              sleep_start: "23:00:00", sleep_end: "06:30:00",
+            }, manual_pause: true, energy_fault: null, counter: null, model_frozen: true,
+          },
+          safety: { voltage_status: "UNQUALIFIED", reason: "shadow", ages: {} },
+          controller: { mode: "safe_hold", reason: "hard_stop", actual_commands: 0 },
+          active_limit: { band: "day", target: 21.5, upper: 22.0, ceiling: 24.5 },
+          model: { parameters: null, qualification: "NOT_PARITY_VERIFIED", frozen: true },
+          one_shot: { state: "unknown_outcome", expires: null },
+          journal: { revision: 0, fenced: true, commands: {} },
+          fan: null, plan, physical_commands_enabled: false, fault: null,
+        };
+      }
+      return { "sensor.room": [{ s: "21.5", lu: now - 600 }] };
+    };
+    const panel = document.createElement("heating-ai-v2-panel") as HTMLElement & {
+      hass: LiveHass; panel: { config: Record<string, string> };
+    };
+    panel.panel = { config: { ...mapping, entry_id: "synthetic-entry" } };
+    panel.hass = ha;
+    document.body.appendChild(panel);
+    await waitFor(() => {
+      const root = panel.shadowRoot;
+      expect(root?.querySelectorAll("path.timeline-forecast").length).toBeGreaterThan(0);
+      expect(root?.querySelectorAll("rect.timeline-heat").length).toBe(1);
+      expect(root?.textContent).toContain("20,4°");
+      expect(root?.textContent).toContain("SHADOW · без команд");
+    });
+    expect((row!.attributes.virtual_plan as Record<string, unknown>).trajectory).toBeUndefined();
+  });
+
   it("refuses missing bindings rather than showing synthetic readings", async () => {
     const panel = document.createElement(
       "heating-ai-v2-panel",
