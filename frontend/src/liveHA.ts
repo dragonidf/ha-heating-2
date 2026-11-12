@@ -440,6 +440,8 @@ export class LiveHAAPI implements OperatorAPI {
       min: null,
       end: null,
       hours: 0,
+      computedAt: null,
+      trajectory: [],
       qualified: false,
     },
     sources: {
