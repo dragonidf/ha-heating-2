@@ -10,7 +10,7 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: heating-ai-v2-marketplace-v0.1.0
+  group: heating-ai-v2-marketplace-release
   cancel-in-progress: false
 jobs:
   publish:
@@ -25,7 +25,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       SHA: ${{ github.event.workflow_run.head_sha }}
-      RELEASE_TAG: v0.1.0
     steps:
       - name: Require successful package and native HA checks for EXACT commit
         id: gate
@@ -55,11 +54,12 @@ jobs:
           test -n "$run_id"
           gh run download "$run_id" --repo "$GH_REPO" --name heating-ai-v2-live-shadow --dir ci-artifact
       - name: Repackage exact tested integration at ZIP ROOT for Marketplace
+        id: package
         if: steps.gate.outputs.ready == 'true'
         shell: bash
         run: |
           python - <<'PY'
-          import hashlib,json,pathlib,zipfile
+          import hashlib,json,os,pathlib,zipfile
           original=pathlib.Path('ci-artifact/heating-ai-v2-live-shadow.zip')
           assert original.is_file() and original.stat().st_size > 10000
           prefix='custom_components/heating_ai_v2/'
@@ -79,7 +79,9 @@ jobs:
               assert {'manifest.json','__init__.py','config_flow.py','assets/livePanel.js','engine/SOURCE-SHA256.json','critical_ledger.py'} <= names
               manifest=json.loads(archive.read('manifest.json'))
               assert manifest['domain']=='heating_ai_v2'
-              assert manifest['version']=='0.1.0'
+              version=manifest['version']
+              assert isinstance(version,str) and len(version.split('.')) == 3 and all(part.isdigit() for part in version.split('.'))
+              with open(os.environ['GITHUB_OUTPUT'],'a') as output: output.write('release_tag=v' + version + '\n')
               assert manifest.get('config_flow') is True
               assert archive.testzip() is None
           print(json.dumps({'file':str(target),'bytes':target.stat().st_size,
@@ -90,10 +92,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view "$RELEASE_TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
-            echo "Release $RELEASE_TAG already exists; never replace an installed artifact."
+          TAG="${{ steps.package.outputs.release_tag }}"
+          test -n "$TAG"
+          if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo "Immutable release $TAG already exists."
             exit 0
           fi
-          gh release create "$RELEASE_TAG" heating_ai_v2.zip --repo "$GH_REPO" --target "$SHA" \
-            --title 'Heating AI 2.0 v0.1.0 — read-only SHADOW' \
-            --notes 'Installable Home Assistant 2026.11 Marketplace integration, native 3-tab UI and telemetry; SHADOW ONLY. No thermostat or fan actuator writer. Old controller remains responsible. Never interpret this as physical launch. A later reviewed release is required for full autonomous control.'
+          gh release create "$TAG" heating_ai_v2.zip --repo "$GH_REPO" --target "$SHA" \
+            --title "Heating AI 2.0 $TAG — check enabled features before switching owners" \
+            --notes 'Versioned HA 2026.11 Marketplace integration. Never auto-enable physical commands, disable the existing controller, or infer physical ACK from HA echo. Separate qualified one-writer handoff remains required.'
