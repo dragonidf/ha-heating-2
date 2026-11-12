@@ -55,10 +55,31 @@ class SourceMonitor:
 
     @callback
     def note_inputs(self, rows: dict[str, dict[str, Any] | None]) -> None:
-        """Invalidate cached proposals when any material source value changes."""
+        """Invalidate only on inputs actually read by the planner.
+
+        Legacy model and power entities publish changing diagnostic/history
+        attributes on every control cycle. Hashing all their attributes made
+        a valid 24h scenario disappear every few seconds while replanning was
+        deliberately throttled to once per minute.
+        """
+        from .shadow_coast import recently_reported
+
+        now = time.time()
+        model = ((rows.get("legacy_model") or {}).get("attributes") or {}).get("parameters")
+        # Match shadow_plan._model: diagnostics, training journal and evidence
+        # counters are not thermal coefficients.
+        keys = ("floor_air", "room_loss", "floor_decay", "heat_gain",
+                "fire_gain", "version")
+        coefficients = (tuple(model.get(k) for k in keys)
+                        if isinstance(model, dict) else None)
         key = tuple(
             (role, (rows.get(role) or {}).get("state"),
-             repr((rows.get(role) or {}).get("attributes", {})))
+             (rows.get(role) or {}).get("unit") if role in
+             ("room", "stored_heat", "day_target", "night_target",
+              "day_upper", "night_upper") else None,
+             coefficients if role == "legacy_model" else None,
+             recently_reported(rows.get(role), now) if role in
+             ("room", "stored_heat", "legacy_model") else None)
             for role in PLANNING_ROLES
         )
         if key != self._input_key:
